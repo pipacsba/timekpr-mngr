@@ -71,4 +71,4 @@ def main_page():
              ui.label().bind_text_from(state, 'text', backward=lambda x: f"Szöveg: {x}")
 
 # HA add-onban a host 0.0.0.0 kell legyen, a portot pedig a configban nyitjuk meg
-ui.run(host='0.0.0.0', port=8080, title='HA Addon', reload=False)
+ui.run(host='0.0.0.0', port=5002, title='HA Addon', reload=False)
