@@ -37,23 +37,21 @@ def save_data():
 state = load_data()
 
 # -------------------------------------------------
-# ### NEW: Inject HA ingress base (once, globally)
-# -------------------------------------------------
-ui.add_head_html("""
-<script>
-(function () {
-    const match = window.location.pathname.match(/^\\/api\\/hassio_ingress\\/[^/]+/);
-    window.INGRESS_BASE = match ? match[0] : '';
-})();
-</script>
-""")
-
-# -------------------------------------------------
 # UI
 # -------------------------------------------------
 @ui.page('/')
 def main_page():
     ui.dark_mode().enable()
+
+    # Inject ingress base HERE (page scope)
+    ui.add_head_html("""
+    <script>
+    (function () {
+        const match = window.location.pathname.match(/^\\/api\\/hassio_ingress\\/[^/]+/);
+        window.INGRESS_BASE = match ? match[0] : '';
+    })();
+    </script>
+    """)
 
     with ui.card().classes('w-full max-w-lg mx-auto p-6 q-pa-md items-stretch'):
         ui.label('Beállítások').classes('text-2xl font-bold mb-4 text-center')
