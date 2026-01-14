@@ -28,12 +28,15 @@ def save_data():
 
 state = load_data()
 
-ui.add_head_html('''
-     <base href="{{ request.script_root }}/">
-     ''')
+
 
 @ui.page('/')
 def main_page():
+    ui.add_head_html('''
+         <base href="{{ request.script_root }}/">
+         ''')
+    
+    
     ui.dark_mode().enable()
     
     with ui.card().classes('w-full max-w-lg mx-auto p-6'):
