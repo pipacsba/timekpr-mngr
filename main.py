@@ -28,8 +28,6 @@ def save_data():
 
 state = load_data()
 
-# 🔑 CRITICAL LINE FOR HA INGRESS
-app.config.root_path = ""
 
 @ui.page('/')
 def main_page():
