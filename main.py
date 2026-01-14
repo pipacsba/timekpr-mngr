@@ -1,107 +1,21 @@
-import json
-import os
+from fastapi import FastAPI
 from nicegui import ui
+from nicegui.fastapi import configure as configure_nicegui
 
-# --- Adatkezelés ---
-DATA_FILE = '/data/my_data.json' if os.path.exists('/data') else 'my_data.json'
+# Create a FastAPI app
+app = FastAPI()
 
-default_data = {
-    "dropdown": "Opció A",
-    "text": "",
-    "list_items": []
-}
+# Configure NiceGUI with relative static paths
+configure_nicegui(
+    app,
+    static_url_path="nicegui-static",  # key change
+    title="HA Addon NiceGUI",
+)
 
-def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return default_data.copy()
-
-def save_data():
-    data_to_save = {
-        "dropdown": state["dropdown"],
-        "text": state["text"],
-        "list_items": [
-            line.strip()
-            for line in list_textarea.value.splitlines()
-            if line.strip()
-        ]
-    }
-
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-
-    ui.notify('Sikeres mentés!', type='positive')
-
-
-state = load_data()
-
-# -------------------------------------------------
-# UI
-# -------------------------------------------------
+# Now define your NiceGUI UI
 @ui.page('/')
 def main_page():
-    ui.dark_mode().enable()
+    ui.label("Hello HA NiceGUI ingress!")
 
-    # Inject ingress base HERE (page scope)
-    ui.add_head_html("""
-    <script>
-    (function () {
-        const match = window.location.pathname.match(/^\\/api\\/hassio_ingress\\/[^/]+/);
-        window.INGRESS_BASE = match ? match[0] : '';
-    })();
-    </script>
-    """)
-
-    with ui.card().classes('w-full max-w-lg mx-auto p-6 q-pa-md items-stretch'):
-        ui.label('Beállítások').classes('text-2xl font-bold mb-4 text-center')
-
-        ui.label('Válassz módot:')
-        ui.select(
-            ["Opció A", "Opció B", "Opció C"],
-            value=state["dropdown"]
-        ).bind_value(state, 'dropdown').classes('w-full mb-4')
-
-        ui.label('Egyedi elnevezés:')
-        ui.input(
-            placeholder='Írj ide valamit...'
-        ).bind_value(state, 'text').classes('w-full mb-4')
-
-        ui.label('Lista elemek (soronként):')
-        global list_textarea
-        list_textarea = ui.textarea(
-            value='\n'.join(state["list_items"]),
-            placeholder='Első elem\nMásodik elem'
-        ).classes('w-full mb-6')
-
-        ui.button('Mentés', on_click=save_data).classes('w-full bg-blue-600')
-
-        with ui.expansion('Mentett adatok ellenőrzése', icon='bug_report').classes('mt-4 w-full'):
-            ui.label().bind_text_from(
-                state, 'dropdown',
-                backward=lambda x: f"Mód: {x}"
-            )
-            ui.label().bind_text_from(
-                state, 'text',
-                backward=lambda x: f"Szöveg: {x}"
-            )
-
-        # -------------------------------------------------
-        # ### NEW: Example ingress-safe API call (future use)
-        # -------------------------------------------------
-        ui.button(
-            'Ingress base teszt (console)',
-            on_click=lambda: ui.run_javascript("""
-                console.log('INGRESS_BASE =', window.INGRESS_BASE);
-            """)
-        ).classes('w-full mt-4')
-
-# -------------------------------------------------
-# Run
-# -------------------------------------------------
-ui.run(
-    host='0.0.0.0',
-    port=5002,
-    reload=False,
-    service_worker=False,
-)
+# Run the NiceGUI app on host/port like before
+ui.run_with(app, host="0.0.0.0", port=5002, reload=False)
