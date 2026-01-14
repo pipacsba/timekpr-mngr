@@ -104,4 +104,5 @@ ui.run(
     port=5002,
     title='HA Addon',
     reload=False,
+    root_path='',  # <-- CRITICAL
 )
