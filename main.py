@@ -2,6 +2,27 @@ import json
 import os
 from nicegui import ui
 
+# --- INGRESS FIX START ---
+# Ez a middleware figyeli a HA által küldött fejlécet és beállítja az útvonalat
+class IngressMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # A Home Assistant ebben a fejlécben küldi a dinamikus útvonalat
+        ingress_path = request.headers.get("X-Ingress-Path")
+        
+        if ingress_path:
+            # Beállítjuk a root_path-t, így a NiceGUI tudni fogja,
+            # hogy pl. a /_nicegui/ws helyett a /api/hassio_ingress/xyz/_nicegui/ws-re kell csatlakozni
+            request.scope['root_path'] = ingress_path
+            
+        response = await call_next(request)
+        return response
+
+# Hozzáadjuk a middleware-t az alkalmazáshoz
+app.add_middleware(IngressMiddleware)
+# --- INGRESS FIX END ---
+
+
+
 # --- Adatkezelés ---
 # Home Assistant add-onoknál a /data mappa az állandó tárhely
 DATA_FILE = '/data/my_data.json' if os.path.exists('/data') else 'my_data.json'
