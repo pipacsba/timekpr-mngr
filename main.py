@@ -102,7 +102,6 @@ def main_page():
 ui.run(
     host='0.0.0.0',
     port=5002,
-    title='HA Addon',
     reload=False,
-    root_path='',  # <-- CRITICAL
+    service_worker=False,
 )
