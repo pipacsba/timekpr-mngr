@@ -2,3 +2,5 @@ paramiko==3.3.1
 python-dotenv==1.0.0
 bcrypt==4.0.1
 nicegui
+fastapi
+uvicorn
