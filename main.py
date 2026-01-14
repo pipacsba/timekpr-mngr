@@ -34,7 +34,11 @@ app.config.root_path = ""
 @ui.page('/')
 def main_page():
     ui.dark_mode().enable()
+    ui.add_head_html('''
+         <base href="{{ request.script_root }}/">
+         ''')
 
+    
     with ui.card().classes('w-full max-w-lg mx-auto p-6'):
         ui.label('Beállítások').classes('text-2xl font-bold mb-4')
 
