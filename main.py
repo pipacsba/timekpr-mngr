@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
-
 from nicegui import ui, app as nicegui_app
 
 
@@ -10,7 +9,7 @@ class HassIngressMiddleware(BaseHTTPMiddleware):
         path = request.scope['path']
 
         if path.startswith('/api/hassio_ingress/'):
-            # Strip /api/hassio_ingress/<TOKEN>
+            # Strip: /api/hassio_ingress/<TOKEN>
             parts = path.split('/', 3)
             request.scope['path'] = '/' + (parts[3] if len(parts) > 3 else '')
 
@@ -31,8 +30,9 @@ def main_page():
 
 
 # ---------- Mount NiceGUI ----------
-fastapi_app.mount('/', nicegui_app.app)
+# IMPORTANT: mount the NiceGUI ASGI app directly
+fastapi_app.mount('/', nicegui_app)
 
 
-# ---------- Run with ----------
+# ---------- Run ----------
 # uvicorn main:fastapi_app --host 0.0.0.0 --port 5002
