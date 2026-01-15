@@ -30,6 +30,18 @@ fastapi_app = FastAPI()
 # ---------- NiceGUI UI ----------
 @ui.page("/")
 def main_page():
+    ui.add_head_html("""
+        <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                for (const reg of regs) {
+                    reg.unregister();
+                }
+            });
+        }
+        </script>
+        """)
+    
     ui.dark_mode().enable()
     ui.label("NiceGUI behind Home Assistant ingress").classes("text-h5")
     ui.button("Test", on_click=lambda: ui.notify("Ingress OK 🎉"))
