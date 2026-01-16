@@ -111,5 +111,14 @@ ui.run_with(
 # A fejlesztéshez/futtatáshoz viszont kell ez a blokk, ha "python main.py"-t futtatsz:
 if __name__ == '__main__':
     import uvicorn
-    # A config.yaml-ben megadott port (8080)
-    uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False)
+    # A ws_max_size byte-ban van megadva. 
+    # Itt beállítunk kb. 100 MB-ot (1024 * 1024 * 100), ami bőven elég szövegekhez.
+    uvicorn.run(
+        "main:app", 
+        host="0.0.0.0", 
+        port=5002, 
+        reload=False,
+        ws_max_size=1024 * 1024 * 100,  # <-- EZ A SOR A KULCS
+        ws_ping_interval=None,  # Opcionális: stabilabb kapcsolat HA alatt
+        ws_ping_timeout=None    # Opcionális: stabilabb kapcsolat HA alatt
+    )
