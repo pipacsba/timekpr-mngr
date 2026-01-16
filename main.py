@@ -6,35 +6,40 @@ from nicegui import ui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# 1. Kényszerítjük a MIME típusokat (Alpine miatt továbbra is kell)
+# 1. Kényszerítjük a MIME típusokat (Fonts hozzáadva!)
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
+mimetypes.add_type("font/ttf", ".ttf")
 
 app = FastAPI()
 
-# Útvonalak előkészítése a kézi kiszolgáláshoz
+# Útvonalak előkészítése
 nicegui_path = os.path.dirname(nicegui.__file__)
 static_dir = os.path.join(nicegui_path, 'static')
 version = nicegui.__version__
 
-# --- A MEGOLDÁS: KÉZI FILE KISZOLGÁLÁS ---
-# Mivel a `mount` nem működik, létrehozunk egy konkrét végpontot,
-# ami elkapja a static fájlokra érkező kéréseket, és byte-ról byte-ra visszaadja őket.
-@app.get(f"/_nicegui/{version}/static/{{filename}}")
-async def manual_static_serve(filename: str):
-    file_path = os.path.join(static_dir, filename)
+# --- A JAVÍTOTT KÉZI KISZOLGÁLÓ ---
+# A változás: {file_path:path}
+# Ez azt mondja a FastAPI-nak, hogy a perjeleket (/) is fogadja el,
+# tehát a "fonts/file.woff2" is átjön, nem csak a "file.css".
+@app.get(f"/_nicegui/{version}/static/{{file_path:path}}")
+async def manual_static_serve(file_path: str):
+    # Összerakjuk a teljes útvonalat
+    full_path = os.path.join(static_dir, file_path)
     
-    if os.path.exists(file_path):
-        # Kitaláljuk a fájl típusát
-        media_type, _ = mimetypes.guess_type(file_path)
+    if os.path.exists(full_path):
+        # Típus kitalálása
+        media_type, _ = mimetypes.guess_type(full_path)
         if not media_type:
-            # Ha nem sikerült kitalálni, kézzel segítünk
-            if filename.endswith('.css'): media_type = 'text/css'
-            elif filename.endswith('.js'): media_type = 'application/javascript'
+            # Fallback típusok, ha a guess nem megy
+            if file_path.endswith('.woff2'): media_type = 'font/woff2'
+            elif file_path.endswith('.css'): media_type = 'text/css'
+            elif file_path.endswith('.js'): media_type = 'application/javascript'
             else: media_type = 'application/octet-stream'
             
-        # Felolvassuk és visszaküldjük
-        with open(file_path, 'rb') as f:
+        with open(full_path, 'rb') as f:
             content = f.read()
         return Response(content=content, media_type=media_type)
     
@@ -86,10 +91,9 @@ def main_page():
         list_textarea = ui.textarea(value='\n'.join(state["list_items"])).classes('w-full').props('debounce=1000')
         ui.button('Mentés', on_click=save_data).classes('w-full mt-4')
 
-# UI Indítása a saját appunkon
-ui.run_with(app, storage_secret='secret_key')
+ui.run_with(app, storage_secret='secret')
 
 if __name__ == '__main__':
     import uvicorn
-    # A te portod: 5005
+    # Port: 5005
     uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False, ws_max_size=200*1024*1024)
