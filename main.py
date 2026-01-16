@@ -8,6 +8,35 @@ import mimetypes # <-- Ezt importáld
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("text/javascript", ".js")
 
+
+print("--- DIAGNOSZTIKA START ---")
+# Megnézzük, hol van telepítve a nicegui
+base_path = os.path.dirname(nicegui.__file__)
+static_path = os.path.join(base_path, 'static')
+print(f"NiceGUI telepítési hely: {base_path}")
+print(f"Statikus mappa helye: {static_path}")
+
+# Megnézzük, létezik-e a mappa
+if os.path.exists(static_path):
+    print("A 'static' mappa LÉTEZIK.")
+    # Kilistázzuk az első 5 fájlt, hogy lássuk, van-e benne valami
+    try:
+        files = os.listdir(static_path)
+        print(f"Fájlok a static mappában ({len(files)} db): {files[:5]}")
+        
+        # Konkrétan keressük a problémás fájlt
+        if 'fonts.css' in files:
+            print("SZUPER: A 'fonts.css' ott van a mappában!")
+        else:
+            print("HIBA: A 'fonts.css' hiányzik a mappából!")
+    except Exception as e:
+        print(f"Hiba a mappa olvasásakor: {e}")
+else:
+    print("KRITIKUS HIBA: A 'static' mappa NEM LÉTEZIK ezen az útvonalon!")
+print("--- DIAGNOSZTIKA END ---")
+
+
+
 # 1. LÉPÉS: Saját FastAPI app létrehozása
 # Így teljes kontrollunk van a szerver felett, még mielőtt a NiceGUI elindulna
 app = FastAPI()
