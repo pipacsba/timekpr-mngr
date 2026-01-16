@@ -49,7 +49,7 @@ app.add_middleware(IngressMiddleware)
 
 # --- ADATKEZELÉS ---
 DATA_FILE = '/data/my_data.json' if os.path.exists('/data') else 'my_data.json'
-default_data = {"dropdown": "Opció A", "text": "", "list_items": []}
+default_data = {"dropdown": "A", "text": "", "list_items": []}
 
 def load_data():
     if os.path.exists(DATA_FILE):
