@@ -1,155 +1,101 @@
 import json
 import os
+import mimetypes
+import nicegui # <-- EZ HIÁNYZOTT AZ ELŐBB
 from nicegui import ui
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
-import mimetypes # <-- Ezt importáld
+from starlette.staticfiles import StaticFiles
 
+# 1. VÉDELEM: Kényszerítjük a típusokat (Alpine Linux miatt)
 mimetypes.add_type("text/css", ".css")
-mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("application/javascript", ".js")
 
-
-print("--- DIAGNOSZTIKA START ---")
-# Megnézzük, hol van telepítve a nicegui
-base_path = os.path.dirname(nicegui.__file__)
-static_path = os.path.join(base_path, 'static')
-print(f"NiceGUI telepítési hely: {base_path}")
-print(f"Statikus mappa helye: {static_path}")
-
-# Megnézzük, létezik-e a mappa
-if os.path.exists(static_path):
-    print("A 'static' mappa LÉTEZIK.")
-    # Kilistázzuk az első 5 fájlt, hogy lássuk, van-e benne valami
-    try:
-        files = os.listdir(static_path)
-        print(f"Fájlok a static mappában ({len(files)} db): {files[:5]}")
-        
-        # Konkrétan keressük a problémás fájlt
-        if 'fonts.css' in files:
-            print("SZUPER: A 'fonts.css' ott van a mappában!")
-        else:
-            print("HIBA: A 'fonts.css' hiányzik a mappából!")
-    except Exception as e:
-        print(f"Hiba a mappa olvasásakor: {e}")
-else:
-    print("KRITIKUS HIBA: A 'static' mappa NEM LÉTEZIK ezen az útvonalon!")
-print("--- DIAGNOSZTIKA END ---")
-
-
-
-# 1. LÉPÉS: Saját FastAPI app létrehozása
-# Így teljes kontrollunk van a szerver felett, még mielőtt a NiceGUI elindulna
 app = FastAPI()
 
-# 2. LÉPÉS: Az Ingress Middleware (A javítás)
+# 2. VÉDELEM: Kézi statikus fájl kiszolgálás
+# Megkeressük, hol van telepítve a nicegui csomag a konténerben
+try:
+    nicegui_path = os.path.dirname(nicegui.__file__)
+    static_dir = os.path.join(nicegui_path, 'static')
+    version = nicegui.__version__
+    
+    print(f"DEBUG: NiceGUI path: {nicegui_path}")
+    print(f"DEBUG: Static dir: {static_dir}")
+
+    if os.path.exists(static_dir):
+        # A FastAPI-nak megmondjuk: "Ha bárki a /_nicegui/VERZIO/static-ot keresi,
+        # szolgáld ki direktben ebből a mappából."
+        app.mount(
+            f'/_nicegui/{version}/static', 
+            StaticFiles(directory=static_dir), 
+            name='force_static'
+        )
+        print("DEBUG: Statikus fájlok kézi mountolása SIKERES.")
+    else:
+        print("DEBUG: HIBA - A static mappa nem található!")
+except Exception as e:
+    print(f"DEBUG: Hiba a mountolás közben: {e}")
+
+# 3. VÉDELEM: Ingress Middleware (Hogy a HA proxy működjön)
 class IngressMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Megnézzük, hogy a Home Assistant küldött-e Ingress fejlécet
         ingress_path = request.headers.get("X-Ingress-Path")
-        
         if ingress_path:
-            # Ha van ingress path (pl. /api/hassio_ingress/TOKEN),
-            # akkor beállítjuk ezt root_path-nak.
-            # Így a NiceGUI tudni fogja, hogy minden linket ezzel kell kezdeni.
             request.scope['root_path'] = ingress_path
-        
-        # Opcionális debug: Ha látni akarod a logban, mi történik
-        # print(f"Path: {request.url.path}, Root: {request.scope.get('root_path')}")
-        
         return await call_next(request)
 
-# Hozzáadjuk a middleware-t a saját appunkhoz
 app.add_middleware(IngressMiddleware)
 
-# --- ADATKEZELÉS (Változatlan) ---
+# --- ADATKEZELÉS ---
 DATA_FILE = '/data/my_data.json' if os.path.exists('/data') else 'my_data.json'
-
-default_data = {
-    "dropdown": "Opció A",
-    "text": "",
-    "list_items": []
-}
+default_data = {"dropdown": "Opció A", "text": "", "list_items": []}
 
 def load_data():
     if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception:
-            return default_data.copy()
+        try: return json.load(open(DATA_FILE))
+        except: return default_data.copy()
     return default_data.copy()
 
 state = load_data()
-
-# Fontos: A textarea változót itt deklaráljuk, hogy elérhető legyen a save_data-ban
 list_textarea = None
 
 def save_data():
-    if list_textarea is None: return
-    
-    data_to_save = {
-        "dropdown": state["dropdown"],
-        "text": state["text"],
-        "list_items": [line.strip() for line in list_textarea.value.splitlines() if line.strip()]
-    }
-    
-    try:
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-        ui.notify('Sikeres mentés!', type='positive')
-    except Exception as e:
-        ui.notify(f'Hiba a mentéskor: {e}', type='negative')
+    if list_textarea:
+        state["list_items"] = [l.strip() for l in list_textarea.value.splitlines() if l.strip()]
+        state["text"] = state.get("text", "")
+        state["dropdown"] = state.get("dropdown", "")
+        with open(DATA_FILE, 'w') as f: json.dump(state, f, indent=2)
+        ui.notify('Mentve')
 
-# --- MEGJELENÍTÉS (UI) ---
+# --- UI ---
 @ui.page('/')
 def main_page():
     global list_textarea
+    # Sötét mód (most már be kell töltenie a CSS-t hozzá)
     ui.dark_mode().enable()
-
-    with ui.card().classes('w-full max-w-lg mx-auto p-6 q-pa-md items-stretch'):
-        ui.label('Beállítások').classes('text-2xl font-bold mb-4 text-center')
-
-        ui.label('Válassz módot:')
-        ui.select(["Opció A", "Opció B", "Opció C"], value=state["dropdown"]) \
-            .bind_value(state, 'dropdown').classes('w-full mb-4')
-
-        ui.label('Egyedi elnevezés:')
-        ui.input(placeholder='Írj ide valamit...').bind_value(state, 'text').classes('w-full mb-4')
-
-        ui.label('Lista elemek (soronként):')
-        list_textarea = ui.textarea(
-            value='\n'.join(state["list_items"]), 
-            placeholder='Első elem\nMásodik elem'
-        ).classes('w-full mb-6').props('debounce=1000') # <-- 1000ms várakozás gépelés után
+    
+    with ui.card().classes('w-full max-w-lg mx-auto p-4'):
+        ui.label('Beállítások').classes('text-2xl font-bold mb-4')
         
-        # Debug infó
-        with ui.expansion('Debug Infó').classes('mt-4'):
-             ui.label('Ha ezt látod, a JS és CSS betöltött!').classes('text-green-500')
+        ui.select(["A", "B", "C"], value=state["dropdown"]).bind_value(state, 'dropdown').classes('w-full')
+        
+        ui.input(placeholder='Szöveg').bind_value(state, 'text').classes('w-full')
+        
+        list_textarea = ui.textarea(value='\n'.join(state["list_items"])).classes('w-full').props('debounce=1000')
+        
+        ui.button('Mentés', on_click=save_data).classes('w-full mt-4')
 
-# 3. LÉPÉS: Indítás a ui.run_with segítségével
-# Ez a kulcs: Nem a ui.run()-t hívjuk, hanem rákötjük a NiceGUI-t a már beállított szerverünkre.
-# A storage_secret fontos a session kezeléshez
-ui.run_with(
-    app, 
-    title='HA Addon',
-    storage_secret='random_string_ide',
-)
+# Indítás
+ui.run_with(app, storage_secret='secret_key_random')
 
-# Megjegyzés: Ha ui.run_with-et használsz, a uvicorn indítást dockerben
-# a main.py alján lévő "if __name__..." helyett máshogy is lehet kezelni,
-# de egyszerűbb, ha hagyjuk, hogy a Dockerfile CMD parancsa indítsa a uvicorn-t.
-#
-# A fejlesztéshez/futtatáshoz viszont kell ez a blokk, ha "python main.py"-t futtatsz:
 if __name__ == '__main__':
     import uvicorn
-    # A config.yaml-ben megadott port (8080)
-    # ws_max_size = 200 MB (byte-ban)
-    # timeout_keep_alive = megnövelve, hogy ne dobja el a kapcsolatot lassú hálózatnál
+    # 5005-ös port (Alpine + Config szerint)
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
         port=5002, 
-        reload=False,
-        ws_max_size=200 * 1024 * 1024, 
-        timeout_keep_alive=60
+        reload=False, 
+        ws_max_size=200*1024*1024
     )
