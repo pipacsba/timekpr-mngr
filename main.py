@@ -3,6 +3,10 @@ import os
 from nicegui import ui
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+import mimetypes # <-- Ezt importáld
+
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("text/javascript", ".js")
 
 # 1. LÉPÉS: Saját FastAPI app létrehozása
 # Így teljes kontrollunk van a szerver felett, még mielőtt a NiceGUI elindulna
@@ -87,9 +91,7 @@ def main_page():
         list_textarea = ui.textarea(
             value='\n'.join(state["list_items"]), 
             placeholder='Első elem\nMásodik elem'
-        ).classes('w-full mb-6').props('debounce=1000') # <-- 1000ms (1 másodperc) késleltetés
-
-        ui.button('Mentés', on_click=save_data).classes('w-full bg-blue-600')
+        ).classes('w-full mb-6').props('debounce=1000') # <-- 1000ms várakozás gépelés után
         
         # Debug infó
         with ui.expansion('Debug Infó').classes('mt-4'):
@@ -111,14 +113,14 @@ ui.run_with(
 # A fejlesztéshez/futtatáshoz viszont kell ez a blokk, ha "python main.py"-t futtatsz:
 if __name__ == '__main__':
     import uvicorn
-    # A ws_max_size byte-ban van megadva. 
-    # Itt beállítunk kb. 100 MB-ot (1024 * 1024 * 100), ami bőven elég szövegekhez.
+    # A config.yaml-ben megadott port (8080)
+    # ws_max_size = 200 MB (byte-ban)
+    # timeout_keep_alive = megnövelve, hogy ne dobja el a kapcsolatot lassú hálózatnál
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
-        port=5002, 
+        port=8080, 
         reload=False,
-        ws_max_size=1024 * 1024 * 100,  # <-- EZ A SOR A KULCS
-        ws_ping_interval=None,  # Opcionális: stabilabb kapcsolat HA alatt
-        ws_ping_timeout=None    # Opcionális: stabilabb kapcsolat HA alatt
+        ws_max_size=200 * 1024 * 1024, 
+        timeout_keep_alive=60
     )
