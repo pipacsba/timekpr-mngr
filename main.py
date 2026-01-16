@@ -119,7 +119,7 @@ if __name__ == '__main__':
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
-        port=8080, 
+        port=5002, 
         reload=False,
         ws_max_size=200 * 1024 * 1024, 
         timeout_keep_alive=60
