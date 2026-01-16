@@ -87,7 +87,7 @@ def main_page():
         list_textarea = ui.textarea(
             value='\n'.join(state["list_items"]), 
             placeholder='Első elem\nMásodik elem'
-        ).classes('w-full mb-6')
+        ).classes('w-full mb-6').props('debounce=1000') # <-- 1000ms (1 másodperc) késleltetés
 
         ui.button('Mentés', on_click=save_data).classes('w-full bg-blue-600')
         
