@@ -1,9 +1,7 @@
 # navigation.py
 """
-Navigation and routing for TimeKPR Manager (NiceGUI)
-- Slot-safe
-- Header is top-level
-- Multi-server and multi-user menus
+Slot-safe navigation and routing for TimeKPR Manager
+- Headers and menus created inside page callbacks
 - Compatible with NiceGUI >=1.16
 """
 
@@ -15,45 +13,12 @@ from ui.stats_dashboard import render_stats_dashboard
 
 
 # -------------------------------------------------------------------
-# Fallback page
+# Helper: Header/Menu builder (slot-safe)
 # -------------------------------------------------------------------
-def _no_server_page():
-    ui.label('No server found').classes('text-red text-2xl')
-    ui.label('Please add a server configuration first.')
-    ui.link('Go to Servers', '/servers')
-
-
-# -------------------------------------------------------------------
-# Page callbacks
-# -------------------------------------------------------------------
-def home_page():
-    ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
-    ui.label('Manage server configuration, users, and statistics.')
-
-
-def server_config_page(server_name: str):
-    render_config_editor(server_name=server_name, config_type='server')
-
-
-def user_config_page(server_name: str, username: str):
-    render_config_editor(server_name=server_name, config_type='user', username=username)
-
-
-def stats_page(server_name: str, username: str):
-    render_stats_dashboard(server_name=server_name, username=username)
-
-
-# -------------------------------------------------------------------
-# Build header / navigation (slot-safe)
-# -------------------------------------------------------------------
-def build_navigation():
-    """
-    Create the top-level header with server/user menus.
-    Must be called in the main thread / active slot.
-    """
+def build_header():
     servers = load_servers()
 
-    # Header must be a top-level element
+    # Top-level header must be inside page callback
     with ui.header().classes('items-center justify-between'):
         ui.label('TimeKPR').classes('text-lg font-bold')
 
@@ -77,27 +42,65 @@ def build_navigation():
                             with ui.menu(username):
                                 ui.menu_item(
                                     'Config',
-                                    on_click=lambda s=server_name, u=username: ui.navigate.to(f'/server/{s}/user/{u}')
+                                    on_click=lambda s=server_name, u=username:
+                                        ui.navigate.to(f'/server/{s}/user/{u}')
                                 )
                                 ui.menu_item(
                                     'Statistics',
-                                    on_click=lambda s=server_name, u=username: ui.navigate.to(f'/server/{s}/stats/{u}')
+                                    on_click=lambda s=server_name, u=username:
+                                        ui.navigate.to(f'/server/{s}/stats/{u}')
                                 )
 
 
 # -------------------------------------------------------------------
-# Register all page routes
+# Pages
+# -------------------------------------------------------------------
+def home_page():
+    build_header()
+    ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
+    ui.label('Manage server configuration, users, and statistics.')
+
+
+def servers_page_wrapper():
+    build_header()
+    servers_page()
+
+
+def server_config_page(server_name: str):
+    build_header()
+    render_config_editor(server_name=server_name, config_type='server')
+
+
+def user_config_page(server_name: str, username: str):
+    build_header()
+    render_config_editor(server_name=server_name, config_type='user', username=username)
+
+
+def stats_page(server_name: str, username: str):
+    build_header()
+    render_stats_dashboard(server_name=server_name, username=username)
+
+
+def no_server_page():
+    build_header()
+    ui.label('No server found').classes('text-red text-2xl')
+    ui.label('Please add a server configuration first.')
+    ui.link('Go to Servers', '/servers')
+
+
+# -------------------------------------------------------------------
+# Register all routes (slot-safe)
 # -------------------------------------------------------------------
 def register_routes():
     servers = load_servers()
 
     # Home and servers pages
     ui.page('/', on_visit=home_page)
-    ui.page('/servers', on_visit=servers_page)
+    ui.page('/servers', on_visit=servers_page_wrapper)
 
     # If no servers exist
     if not servers:
-        ui.page('/server/{server_name}', on_visit=_no_server_page)
+        ui.page('/server/{server_name}', on_visit=no_server_page)
         return
 
     # Server and user pages
