@@ -18,7 +18,7 @@ from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 import threading
 
-from ui/navigation import build_navigation, register_routes
+from ui.navigation import build_navigation, register_routes
 from ssh_sync import run_sync_loop
 
 # 1. Kényszerítjük a MIME típusokat (Fonts hozzáadva!)
