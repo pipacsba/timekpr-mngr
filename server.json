@@ -1,20 +1,15 @@
 {
-  "main_server": {
+  "srv1": {
     "host": "example.com",
     "port": 22,
     "user": "admin",
-    "key": "main_key.pem",
-
+    "key": "srv1.pem",
     "server_config": "/etc/timekpr/server.conf",
-
-    "user_configs": {
-      "alice": "/etc/timekpr/users/alice.conf",
-      "bob": "/etc/timekpr/users/bob.conf"
-    },
-
-    "stat_files": {
-      "alice": "/var/lib/timekpr/stats/alice.conf",
-      "bob": "/var/lib/timekpr/stats/bob.conf"
+    "users": {
+      "alice": {
+        "config": "/etc/timekpr/users/alice.conf",
+        "stats": "/var/lib/timekpr/stats/alice.conf"
+      }
     }
   }
 }
