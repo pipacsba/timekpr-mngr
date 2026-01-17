@@ -1,0 +1,14 @@
+app/
+ ├── main.py                 # NiceGUI entrypoint
+ ├── state.py                # global UI state
+ ├── storage.py              # /Data paths, load/save helpers
+ ├── servers.py              # server model & CRUD
+ ├── ssh_sync.py             # background sync logic
+ ├── config_parser.py        # Program1 logic
+ ├── ui/
+ │    ├── navigation.py
+ │    ├── dashboard.py
+ │    ├── servers_page.py
+ │    ├── config_editor.py
+ │    └── stats_dashboard.py
+ └── requirements.txt
