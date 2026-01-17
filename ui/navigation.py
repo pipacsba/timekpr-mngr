@@ -113,8 +113,8 @@ def build_navigation():
 # -------------------------------------------------------------------
 
 def register_routes():
-    ui.page('/', home_page)
-    ui.page('/servers', servers_page)
+    ui.page('/')
+    ui.page('/servers')
 
     servers = load_servers()
 
