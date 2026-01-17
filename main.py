@@ -5,7 +5,7 @@ TimeKPR Next
 - Background SSH sync
 - Uvicorn deployment
 """
-
+import eznemfogelindulni
 import json
 import os
 import mimetypes
