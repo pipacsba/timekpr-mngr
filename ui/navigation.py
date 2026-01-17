@@ -119,7 +119,7 @@ def register_routes():
     servers = load_servers()
 
     if not servers:
-        ui.page('/server/{server_name}', _no_server_page)
+        ui.page('/server/{server_name}', title='_no_server_page')
         return
 
     for server_name in servers:
