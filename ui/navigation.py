@@ -1,6 +1,6 @@
 # navigation.py
 """
-Application navigation and routing.
+Application navigation and routing (slot-safe).
 
 Responsibilities:
 - Top navigation bar
@@ -62,50 +62,52 @@ def stats_page(server_name: str, username: str):
 
 
 # -------------------------------------------------------------------
-# Navigation bar
+# Header / navigation bar (slot-safe)
 # -------------------------------------------------------------------
 
 def build_navigation():
+    """
+    Build top header and menus inside the main UI slot.
+    Must be called after NiceGUI is running.
+    """
     servers = load_servers()
 
-    with ui.header().classes('items-center justify-between'):
-        ui.label('TimeKPR').classes('text-lg font-bold')
+    # Wrap in a container slot to avoid "slot stack is empty" errors
+    with ui.row().classes('w-full'):
+        with ui.header().classes('items-center justify-between'):
+            ui.label('TimeKPR').classes('text-lg font-bold')
 
-        with ui.row().classes('items-center'):
-            ui.link('Home', '/')
-            ui.link('Servers', '/servers')
+            with ui.row().classes('items-center'):
+                ui.link('Home', '/')
+                ui.link('Servers', '/servers')
 
-            if not servers:
-                return
+                if not servers:
+                    return
 
-            for server_name in servers:
-                with ui.menu(server_name):
-                    ui.menu_item(
-                        'Server config',
-                        on_click=lambda s=server_name:
-                        ui.navigate.to(f'/server/{s}')
-                    )
+                # Server menus
+                for server_name in servers:
+                    with ui.menu(server_name):
+                        ui.menu_item(
+                            'Server config',
+                            on_click=lambda s=server_name:
+                            ui.navigate.to(f'/server/{s}')
+                        )
 
-                    users = list_users(server_name)
-                    if users:
-                        ui.separator()
-
-                        for username in users:
-                            with ui.menu(username):
-                                ui.menu_item(
-                                    'Config',
-                                    on_click=lambda s=server_name, u=username:
-                                    ui.navigate.to(
-                                        f'/server/{s}/user/{u}'
+                        users = list_users(server_name)
+                        if users:
+                            ui.separator()
+                            for username in users:
+                                with ui.menu(username):
+                                    ui.menu_item(
+                                        'Config',
+                                        on_click=lambda s=server_name, u=username:
+                                        ui.navigate.to(f'/server/{s}/user/{u}')
                                     )
-                                )
-                                ui.menu_item(
-                                    'Statistics',
-                                    on_click=lambda s=server_name, u=username:
-                                    ui.navigate.to(
-                                        f'/server/{s}/stats/{u}'
+                                    ui.menu_item(
+                                        'Statistics',
+                                        on_click=lambda s=server_name, u=username:
+                                        ui.navigate.to(f'/server/{s}/stats/{u}')
                                     )
-                                )
 
 
 # -------------------------------------------------------------------
@@ -113,30 +115,30 @@ def build_navigation():
 # -------------------------------------------------------------------
 
 def register_routes():
-    ui.page('/')
-    ui.page('/servers')
+    ui.page('/', on_visit=home_page)
+    ui.page('/servers', on_visit=servers_page)
 
     servers = load_servers()
 
     if not servers:
-        ui.page('/server/{server_name}', title='_no_server_page')
+        ui.page('/server/{server_name}', on_visit=_no_server_page)
         return
 
     for server_name in servers:
         ui.page(
             f'/server/{server_name}',
-            lambda s=server_name: server_config_page(s),
+            on_visit=lambda s=server_name: server_config_page(s),
         )
 
         for username in list_users(server_name):
             ui.page(
                 f'/server/{server_name}/user/{username}',
-                lambda s=server_name, u=username:
+                on_visit=lambda s=server_name, u=username:
                 user_config_page(s, u),
             )
 
             ui.page(
                 f'/server/{server_name}/stats/{username}',
-                lambda s=server_name, u=username:
+                on_visit=lambda s=server_name, u=username:
                 stats_page(s, u),
             )
