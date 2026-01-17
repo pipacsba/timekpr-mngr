@@ -9,7 +9,7 @@ TimeKPR Next
 import threading
 from nicegui import ui, app as nicegui_app
 
-from navigation import register_routes
+from ui.navigation import register_routes
 from ssh_sync import run_sync_loop
 
 
