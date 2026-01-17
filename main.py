@@ -10,6 +10,7 @@ import json
 import os
 import mimetypes
 import nicegui
+from nicegui import ui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
