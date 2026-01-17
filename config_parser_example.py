@@ -2,46 +2,57 @@ from nicegui import ui
 from pathlib import Path
 import re
 
-CONFIG_FILE = 'config.txt'
+CONFIGS = {
+    'server': {
+        'title': 'Server Configuration',
+        'file': 'configs/server.conf',
+    },
+    'user': {
+        'title': 'User Configuration',
+        'file': 'configs/user.conf',
+    },
+    'stats': {
+        'title': 'User Statistics',
+        'file': 'configs/user_stats.conf',
+    },
+}
 
+
+# ---------- Parsing ----------
 
 def parse_config(path: str):
-    """
-    Parse the configuration file into structured sections.
-    """
     sections = []
-    current_section = None
+    current = None
 
     with open(path, 'r', encoding='utf-8') as f:
         for line in f:
             raw = line.rstrip()
-
             if not raw:
                 continue
 
-            # Section header
+            # [SECTION]
             if raw.startswith('[') and raw.endswith(']'):
-                current_section = {
+                current = {
                     'title': raw[1:-1],
                     'items': []
                 }
-                sections.append(current_section)
+                sections.append(current)
                 continue
 
-            # Comment line
+            # Comments
             if raw.startswith('#'):
-                if current_section is not None:
-                    current_section['items'].append({
+                if current:
+                    current['items'].append({
                         'type': 'comment',
                         'text': raw.lstrip('#').strip()
                     })
                 continue
 
             # KEY = VALUE
-            match = re.match(r'^([A-Z0-9_]+)\s*=\s*(.+)$', raw)
-            if match and current_section is not None:
-                key, value = match.groups()
-                current_section['items'].append({
+            m = re.match(r'^([A-Z0-9_]+)\s*=\s*(.+)$', raw)
+            if m and current:
+                key, value = m.groups()
+                current['items'].append({
                     'type': 'field',
                     'key': key,
                     'value': value.strip()
@@ -50,24 +61,22 @@ def parse_config(path: str):
     return sections
 
 
+# ---------- UI helpers ----------
+
 def create_input(key, value):
-    """
-    Create appropriate input widget based on value type.
-    """
-    # Boolean
     if value in ('True', 'False'):
         return ui.switch(key, value=value == 'True')
 
-    # Integer
     if value.isdigit():
         return ui.number(key, value=int(value))
 
-    # Everything else -> text input
     return ui.input(key, value=value)
 
 
-def build_ui(sections):
-    ui.label('Configuration Editor').classes('text-2xl font-bold mb-4')
+def render_config_page(title: str, filepath: str):
+    ui.label(title).classes('text-2xl font-bold mb-4')
+
+    sections = parse_config(filepath)
 
     for section in sections:
         with ui.card().classes('w-full mb-6'):
@@ -78,17 +87,51 @@ def build_ui(sections):
                     ui.label(item['text']).classes(
                         'text-sm text-gray-600 italic'
                     )
-
                 elif item['type'] == 'field':
-                    create_input(item['key'], item['value']).classes(
-                        'w-full'
-                    )
+                    create_input(item['key'], item['value']).classes('w-full')
 
+
+def navigation():
+    with ui.row().classes('mb-6 gap-4'):
+        ui.link('Server Config', '/server')
+        ui.link('User Config', '/user')
+        ui.link('User Statistics', '/stats')
+
+
+# ---------- Pages ----------
 
 @ui.page('/')
 def index():
-    sections = parse_config(CONFIG_FILE)
-    build_ui(sections)
+    ui.label('TimeKPR Configuration').classes('text-3xl font-bold mb-4')
+    navigation()
+    ui.label('Select a configuration page above.')
 
 
-ui.run(title='Config Viewer')
+@ui.page('/server')
+def server_config():
+    navigation()
+    render_config_page(
+        CONFIGS['server']['title'],
+        CONFIGS['server']['file'],
+    )
+
+
+@ui.page('/user')
+def user_config():
+    navigation()
+    render_config_page(
+        CONFIGS['user']['title'],
+        CONFIGS['user']['file'],
+    )
+
+
+@ui.page('/stats')
+def stats_page():
+    navigation()
+    render_config_page(
+        CONFIGS['stats']['title'],
+        CONFIGS['stats']['file'],
+    )
+
+
+ui.run(title='TimeKPR Config Manager')
