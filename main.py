@@ -9,6 +9,7 @@ TimeKPR Next
 import json
 import os
 import mimetypes
+import nicegui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
