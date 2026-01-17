@@ -1,0 +1,42 @@
+# app/main.py
+
+from nicegui import ui
+
+# --- core initialization ---
+import storage          # ensures /Data paths exist
+import ssh_sync         # starts background sync thread
+import state            # global UI state (current_server)
+
+# --- UI pages (importing registers routes) ---
+from ui.dashboard import dashboard
+from ui.servers_page import servers_page
+from ui.config_editor import config_page
+from ui.stats_dashboard import stats_page
+from ui.navigation import navigation
+
+# -------------------------------------------------
+# Root layout (optional but recommended)
+# -------------------------------------------------
+
+@ui.page('/')
+def root():
+    navigation()
+    dashboard()
+
+
+# -------------------------------------------------
+# Application entrypoint
+# -------------------------------------------------
+
+def main():
+    ui.run(
+        title='Unified Config Manager',
+        host='0.0.0.0',
+        port=8080,
+        reload=False,      # set True for development
+        show=False,        # avoids auto-opening browser on servers
+    )
+
+
+if __name__ == '__main__':
+    main()
