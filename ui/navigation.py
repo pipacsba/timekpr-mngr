@@ -1,26 +1,29 @@
-# app/navigation.py
+# navigation.py
 """
-Application navigation and page layout.
+Application navigation and routing.
 
 Responsibilities:
-- Top-level navigation bar
+- Top navigation bar
 - Page routing
-- Context selection (server, user)
+- Wiring UI pages together
 """
 
 from nicegui import ui
 
 from servers import load_servers, list_users
-from config_editor import render_editor
+from ui.servers_page import servers_page
+from ui.config_editor import render_config_editor
+from ui.stats_dashboard import render_stats_dashboard
 
 
 # -------------------------------------------------------------------
-# Helpers
+# Fallback pages
 # -------------------------------------------------------------------
 
 def _no_server_page():
-    ui.label('No server found').classes('text-red text-xl')
-    ui.label('Please configure a server first.')
+    ui.label('No server found').classes('text-red text-2xl')
+    ui.label('Please add a server configuration first.')
+    ui.link('Go to Servers', '/servers')
 
 
 # -------------------------------------------------------------------
@@ -28,19 +31,23 @@ def _no_server_page():
 # -------------------------------------------------------------------
 
 def home_page():
-    ui.label('TimeKPR Configuration Manager').classes('text-2xl font-bold')
-    ui.label('Select a server from the menu to begin.')
+    ui.label('TimeKPR Configuration Manager').classes(
+        'text-3xl font-bold mb-4'
+    )
+    ui.label(
+        'Manage server configuration, users, and statistics.'
+    )
 
 
 def server_config_page(server_name: str):
-    render_editor(
+    render_config_editor(
         server_name=server_name,
         config_type='server',
     )
 
 
 def user_config_page(server_name: str, username: str):
-    render_editor(
+    render_config_editor(
         server_name=server_name,
         config_type='user',
         username=username,
@@ -48,15 +55,14 @@ def user_config_page(server_name: str, username: str):
 
 
 def stats_page(server_name: str, username: str):
-    render_editor(
+    render_stats_dashboard(
         server_name=server_name,
-        config_type='stats',
         username=username,
     )
 
 
 # -------------------------------------------------------------------
-# Navigation builder
+# Navigation bar
 # -------------------------------------------------------------------
 
 def build_navigation():
@@ -65,11 +71,11 @@ def build_navigation():
     with ui.header().classes('items-center justify-between'):
         ui.label('TimeKPR').classes('text-lg font-bold')
 
-        with ui.row():
+        with ui.row().classes('items-center'):
             ui.link('Home', '/')
+            ui.link('Servers', '/servers')
 
             if not servers:
-                ui.link('Servers', '/servers')
                 return
 
             for server_name in servers:
@@ -83,17 +89,22 @@ def build_navigation():
                     users = list_users(server_name)
                     if users:
                         ui.separator()
-                        for user in users:
-                            with ui.menu(f'User: {user}'):
+
+                        for username in users:
+                            with ui.menu(username):
                                 ui.menu_item(
                                     'Config',
-                                    on_click=lambda s=server_name, u=user:
-                                    ui.navigate.to(f'/server/{s}/user/{u}')
+                                    on_click=lambda s=server_name, u=username:
+                                    ui.navigate.to(
+                                        f'/server/{s}/user/{u}'
+                                    )
                                 )
                                 ui.menu_item(
-                                    'Stats',
-                                    on_click=lambda s=server_name, u=user:
-                                    ui.navigate.to(f'/server/{s}/stats/{u}')
+                                    'Statistics',
+                                    on_click=lambda s=server_name, u=username:
+                                    ui.navigate.to(
+                                        f'/server/{s}/stats/{u}'
+                                    )
                                 )
 
 
@@ -103,25 +114,29 @@ def build_navigation():
 
 def register_routes():
     ui.page('/', home_page)
+    ui.page('/servers', servers_page)
 
     servers = load_servers()
 
     if not servers:
-        ui.page('/servers', _no_server_page)
+        ui.page('/server/{server_name}', _no_server_page)
         return
 
     for server_name in servers:
         ui.page(
             f'/server/{server_name}',
-            lambda s=server_name: server_config_page(s)
+            lambda s=server_name: server_config_page(s),
         )
 
-        for user in list_users(server_name):
+        for username in list_users(server_name):
             ui.page(
-                f'/server/{server_name}/user/{user}',
-                lambda s=server_name, u=user: user_config_page(s, u)
+                f'/server/{server_name}/user/{username}',
+                lambda s=server_name, u=username:
+                user_config_page(s, u),
             )
+
             ui.page(
-                f'/server/{server_name}/stats/{user}',
-                lambda s=server_name, u=user: stats_page(s, u)
+                f'/server/{server_name}/stats/{username}',
+                lambda s=server_name, u=username:
+                stats_page(s, u),
             )
