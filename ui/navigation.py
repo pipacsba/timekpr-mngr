@@ -1,8 +1,9 @@
-# navigation.py
+# ui/navigation.py
 """
-Slot-safe navigation and routing for TimeKPR Manager
-- Headers and menus created inside page callbacks
-- Compatible with NiceGUI >=1.16
+Slot-safe navigation for TimeKPR Manager
+- Headers created inside page visits
+- Supports multi-server and multi-user menus
+- Compatible with NiceGUI >=1.16 and Uvicorn deployment
 """
 
 from nicegui import ui
@@ -13,21 +14,19 @@ from ui.stats_dashboard import render_stats_dashboard
 
 
 # -------------------------------------------------------------------
-# Helper: Header/Menu builder (slot-safe)
+# Helper: Build header inside page callback
 # -------------------------------------------------------------------
 def build_header():
     servers = load_servers()
 
-    # Top-level header must be inside page callback
+    # Header must be top-level inside page callback
     with ui.header().classes('items-center justify-between'):
         ui.label('TimeKPR').classes('text-lg font-bold')
 
         with ui.row().classes('items-center'):
-            # Global links
             ui.link('Home', '/')
             ui.link('Servers', '/servers')
 
-            # Server menus
             for server_name in servers:
                 with ui.menu(server_name):
                     ui.menu_item(
@@ -53,7 +52,7 @@ def build_header():
 
 
 # -------------------------------------------------------------------
-# Pages
+# Page callbacks
 # -------------------------------------------------------------------
 def home_page():
     build_header()
@@ -89,21 +88,19 @@ def no_server_page():
 
 
 # -------------------------------------------------------------------
-# Register all routes (slot-safe)
+# Register all routes
 # -------------------------------------------------------------------
 def register_routes():
     servers = load_servers()
 
-    # Home and servers pages
+    # Home and Servers
     ui.page('/', on_visit=home_page)
     ui.page('/servers', on_visit=servers_page_wrapper)
 
-    # If no servers exist
     if not servers:
         ui.page('/server/{server_name}', on_visit=no_server_page)
         return
 
-    # Server and user pages
     for server_name in servers:
         ui.page(f'/server/{server_name}', on_visit=lambda s=server_name: server_config_page(s))
 
