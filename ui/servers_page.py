@@ -20,6 +20,9 @@ from servers import (
 )
 from storage import KEYS_DIR
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"ui.servers.py is called at all")
 
 # -------------------------------------------------------------------
 # Helpers
@@ -132,6 +135,7 @@ def _add_user_dialog(server_name: str):
 # -------------------------------------------------------------------
 
 def servers_page():
+    logger.info(f"ui.servers.py servers_page generation is started")
     ui.label('Servers').classes('text-2xl font-bold')
 
     ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
