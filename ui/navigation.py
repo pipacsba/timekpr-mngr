@@ -20,6 +20,7 @@ def build_header():
 # -------------------
 # Pages
 # -------------------
+@ui.page('/')
 def home_page():
     logger.info("home_page called")
     build_header()
