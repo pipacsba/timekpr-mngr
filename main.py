@@ -7,7 +7,7 @@ from nicegui import ui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ui.navigation
+import ui.navigation
 
 import logging
 import sys
