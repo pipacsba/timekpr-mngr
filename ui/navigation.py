@@ -1,10 +1,10 @@
 #ui/navigation.py
 """
-Slot-safe navigation for TimeKPR Manager
-- Headers created inside page visits
-- Supports multi-server and multi-user menus
-- Fully compatible with NiceGUI >=1.16 and HA ingress
-- Handles first-run: no servers / no users
+Safe slot-based navigation for TimeKPR Manager
+- Fully slot-safe
+- Handles first-run (no servers / no users)
+- Compatible with HA Ingress
+- No automatic navigation redirects to avoid endless loops
 """
 
 from nicegui import ui
@@ -15,7 +15,7 @@ from ui.stats_dashboard import render_stats_dashboard
 
 
 # -------------------------------------------------------------------
-# Helper: build the common header inside page callbacks
+# Helper: build the top header inside page callbacks
 # -------------------------------------------------------------------
 def build_header():
     servers = load_servers()
@@ -50,24 +50,25 @@ def build_header():
 
 
 # -------------------------------------------------------------------
-# Page definitions
+# Page callbacks
 # -------------------------------------------------------------------
 
-# Landing page (root)
 def home_page():
-    servers = load_servers()
+    """Landing page"""
     build_header()
-
-    if not servers:
-        ui.navigate.to('/welcome')
-        return
+    servers = load_servers()
 
     ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
     ui.label('Manage server configuration, users, and statistics.')
 
+    if not servers:
+        ui.label('No servers configured yet.').classes('text-red-700 font-semibold mt-4')
+        ui.label('Please go to the Servers page to add your first server.').classes('text-gray-600 mt-1')
+        ui.button('Go to Servers', on_click=lambda: ui.navigate.to('/servers')).classes('mt-2')
 
-# Welcome page (first-run, no servers)
+
 def welcome_page():
+    """First-run welcome page (not auto-navigated to)"""
     build_header()
     ui.label('Welcome to TimeKPR Manager').classes('text-3xl font-bold mb-4')
     ui.label('No servers configured yet.').classes('text-lg text-red-600')
@@ -75,74 +76,63 @@ def welcome_page():
     ui.button('Go to Servers', on_click=lambda: ui.navigate.to('/servers')).props('unelevated').classes('mt-4')
 
 
-# Servers list page
 def servers_page_wrapper():
     build_header()
     servers_page()
 
 
-# Server config page
 def server_config_page(server_name: str):
     build_header()
     render_config_editor(server_name=server_name, config_type='server')
 
 
-# User config page
 def user_config_page(server_name: str, username: str):
     build_header()
     render_config_editor(server_name=server_name, config_type='user', username=username)
 
 
-# Stats dashboard page
 def stats_page(server_name: str, username: str):
     build_header()
     render_stats_dashboard(server_name=server_name, username=username)
 
 
-# Fallback for missing server/user
 def no_server_page():
     build_header()
-    ui.label('No server found').classes('text-red text-2xl')
-    ui.label('Please add a server configuration first.')
-    ui.link('Go to Servers', '/servers')
+    ui.label('No server found').classes('text-red-700 font-bold')
+    ui.label('Please add a server configuration first.').classes('text-gray-600')
+    ui.button('Go to Servers', on_click=lambda: ui.navigate.to('/servers')).classes('mt-2')
 
 
 # -------------------------------------------------------------------
-# Route registration
+# Register routes
 # -------------------------------------------------------------------
 def register_routes():
-    """
-    Register all NiceGUI pages.
-    This must be called at app startup, after importing this module.
-    """
-
     servers = load_servers()
 
-    # Root
+    # Root / home
     ui.page('/', on_visit=home_page)
 
-    # First-run / welcome page
+    # Welcome page (optional first-run)
     ui.page('/welcome', on_visit=welcome_page)
 
     # Servers list page
     ui.page('/servers', on_visit=servers_page_wrapper)
 
-    # If no servers exist, register fallback routes
-    if not servers:
+    # Dynamic server/user pages
+    if servers:
+        for server_name in servers:
+            ui.page(f'/server/{server_name}', on_visit=lambda s=server_name: server_config_page(s))
+            for username in list_users(server_name):
+                ui.page(
+                    f'/server/{server_name}/user/{username}',
+                    on_visit=lambda s=server_name, u=username: user_config_page(s, u)
+                )
+                ui.page(
+                    f'/server/{server_name}/stats/{username}',
+                    on_visit=lambda s=server_name, u=username: stats_page(s, u)
+                )
+    else:
+        # Fallback pages if no servers
         ui.page('/server/{server_name}', on_visit=no_server_page)
         ui.page('/server/{server_name}/user/{username}', on_visit=no_server_page)
         ui.page('/server/{server_name}/stats/{username}', on_visit=no_server_page)
-        return
-
-    # Otherwise, register per-server / per-user pages
-    for server_name in servers:
-        ui.page(f'/server/{server_name}', on_visit=lambda s=server_name: server_config_page(s))
-        for username in list_users(server_name):
-            ui.page(
-                f'/server/{server_name}/user/{username}',
-                on_visit=lambda s=server_name, u=username: user_config_page(s, u)
-            )
-            ui.page(
-                f'/server/{server_name}/stats/{username}',
-                on_visit=lambda s=server_name, u=username: stats_page(s, u)
-            )
