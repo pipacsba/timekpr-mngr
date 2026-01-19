@@ -39,26 +39,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.info(f"Something works... at least I can log!")
 
-# -------------------------------------------------------------------
-#Add HTTP + WS middleware logging
-# -------------------------------------------------------------------
-
-from fastapi import Request
-import logging
-
-log = logging.getLogger("asgi")
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    log.info(f"HTTP {request.method} {request.url}")
-    return await call_next(request)
-
-from starlette.websockets import WebSocket
-
-@app.middleware("websocket")
-async def log_ws(ws: WebSocket, call_next):
-    log.info(f"WS connect {ws.url}")
-    await call_next(ws)
 
 # -------------------------------------------------------------------
 # 1. Ensure directories exist
@@ -139,6 +119,31 @@ threading.Thread(
 # 6. Expose FastAPI app for Uvicorn
 # -------------------------------------------------------------------
 app = nicegui_app  # Uvicorn entrypoint
+
+# -------------------------------------------------------------------
+#Add HTTP + WS middleware logging
+# -------------------------------------------------------------------
+
+from fastapi import Request
+import logging
+
+log = logging.getLogger("asgi")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    log.info(f"HTTP {request.method} {request.url}")
+    return await call_next(request)
+
+from starlette.websockets import WebSocket
+
+@app.middleware("websocket")
+async def log_ws(ws: WebSocket, call_next):
+    log.info(f"WS connect {ws.url}")
+    await call_next(ws)
+
+
+
+
 # This initializes NiceGUI internals for Uvicorn
 ui.run_with(app, storage_secret='secret')
 
