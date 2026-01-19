@@ -11,6 +11,10 @@ from ui.navigation import register_routes
 
 import logging
 import sys
+
+# -------------------
+# Logging setup
+# -------------------
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
@@ -18,24 +22,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
-# -------------------------------------------------------------------
-# MIME TYPES (required for HA ingress)
-# -------------------------------------------------------------------
+# -------------------
+# MIME types (for HA Ingress static files)
+# -------------------
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("font/woff", ".woff")
 mimetypes.add_type("font/ttf", ".ttf")
 
-# -------------------------------------------------------------------
-# FastAPI app (SINGLE ASGI ROOT)
-# -------------------------------------------------------------------
+# -------------------
+# FastAPI app (single ASGI root)
+# -------------------
 app = FastAPI()
 
-# -------------------------------------------------------------------
-# Ingress middleware (HTTP ONLY – SAFE)
-# -------------------------------------------------------------------
+# -------------------
+# Ingress middleware (HTTP only)
+# -------------------
 class IngressMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         ingress_path = request.headers.get("X-Ingress-Path")
@@ -45,9 +48,9 @@ class IngressMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(IngressMiddleware)
 
-# -------------------------------------------------------------------
-# Manual static serving (NiceGUI fonts/css/js)
-# -------------------------------------------------------------------
+# -------------------
+# Manual static serving for NiceGUI assets
+# -------------------
 nicegui_path = os.path.dirname(nicegui.__file__)
 static_dir = os.path.join(nicegui_path, "static")
 version = nicegui.__version__
@@ -64,21 +67,20 @@ async def nicegui_static(file_path: str):
     with open(full_path, "rb") as f:
         return Response(f.read(), media_type=media_type)
 
-# -------------------------------------------------------------------
-# Register UI routes (NO SIDE EFFECTS)
-# -------------------------------------------------------------------
+# -------------------
+# Register UI routes (once)
+# -------------------
 register_routes()
 logger.info("Register routes completed")
 
-
-# -------------------------------------------------------------------
-# Attach NiceGUI to FastAPI (ONCE)
-# -------------------------------------------------------------------
+# -------------------
+# Attach NiceGUI to FastAPI
+# -------------------
 ui.run_with(app, storage_secret="timekpr-secret")
 
-# -------------------------------------------------------------------
-# Uvicorn entry
-# -------------------------------------------------------------------
+# -------------------
+# Uvicorn entrypoint
+# -------------------
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
