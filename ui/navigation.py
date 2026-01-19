@@ -127,11 +127,10 @@ def register_routes():
     # Welcome page (optional first-run)
     ui.page('/welcome', on_visit=welcome_page)
 
-    # Servers list page
-    ui.page('/servers', on_visit=servers_page_wrapper)
-
     # Dynamic server/user pages
     if servers:
+    # Servers list page
+        ui.page('/servers', on_visit=servers_page_wrapper)
         logger.info(f"if servers passed for {len(servers)} servers")
         for server_name in servers:
             ui.page(f'/server/{server_name}', on_visit=lambda s=server_name: server_config_page(s))
@@ -145,8 +144,5 @@ def register_routes():
                     on_visit=lambda s=server_name, u=username: stats_page(s, u)
                 )
     else:
-        # Fallback pages if no servers
-        logger.info(f"How the hack does this server_name parameter got value?")
-        ui.page('/server', on_visit=no_server_page)
-        ui.page('/server', on_visit=no_server_page)
+        logger.info("No servers configured, registering fallback page")
         ui.page('/server', on_visit=no_server_page)
