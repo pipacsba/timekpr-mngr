@@ -139,7 +139,7 @@ def register_routes():
                 )
     else:
         # Fallback pages if no servers
-        logger.info(f"How the hack does this server_name parameter got value? {(server_name)} if we got {len(servers)} servers?")
+        logger.info(f"How the hack does this server_name parameter got value?")
         ui.page('/server/{server_name}', on_visit=no_server_page)
         ui.page('/server/{server_name}/user/{username}', on_visit=no_server_page)
         ui.page('/server/{server_name}/stats/{username}', on_visit=no_server_page)
