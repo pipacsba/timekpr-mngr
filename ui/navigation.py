@@ -1,3 +1,4 @@
+#ui/navigation.py
 """
 Slot-safe navigation for TimeKPR Manager
 - Headers created inside page visits
