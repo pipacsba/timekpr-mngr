@@ -1,25 +1,36 @@
+# main.py
 """
-TimeKPR Manager
-- Slot-safe NiceGUI
+TimeKPR Manager – slot-safe, HA Ingress / Uvicorn compatible
+
+- /data storage
+- Slot-safe UI with first-run welcome page
 - Background SSH sync
-- HA Ingress / Uvicorn ready
 """
 
 import os
-import json
 import mimetypes
 import threading
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from nicegui import ui, app as nicegui_app
+
+import nicegui
+from nicegui import ui
+from nicegui import app as nicegui_app
 
 from ui.navigation import register_routes
 from ssh_sync import run_sync_loop
+from storage import DATA_ROOT, KEYS_DIR, _ensure_dirs
 
 # -------------------------------------------------------------------
-# Force MIME types for fonts and JS/CSS
+# 1. Ensure directories exist
+# -------------------------------------------------------------------
+_ensure_dirs()
+KEYS_DIR.mkdir(parents=True, exist_ok=True)
+
+# -------------------------------------------------------------------
+# 2. Force MIME types for fonts and JS/CSS
 # -------------------------------------------------------------------
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
@@ -28,98 +39,70 @@ mimetypes.add_type("font/woff", ".woff")
 mimetypes.add_type("font/ttf", ".ttf")
 
 # -------------------------------------------------------------------
-# FastAPI root app
+# 3. FastAPI app
 # -------------------------------------------------------------------
-app = FastAPI()
+fastapi_app = FastAPI()
 
-# -------------------------------------------------------------------
-# Manual static server (needed for HA ingress / NiceGUI assets)
-# -------------------------------------------------------------------
-nicegui_path = Path(__import__('nicegui').__file__).parent
-static_dir = nicegui_path / 'static'
-version = __import__('nicegui').__version__
+# Serve NiceGUI static manually
+nicegui_path = os.path.dirname(nicegui.__file__)
+static_dir = os.path.join(nicegui_path, "static")
+version = nicegui.__version__
 
-@app.get(f"/_nicegui/{version}/static/{{file_path:path}}")
+@fastapi_app.get(f"/_nicegui/{version}/static/{{file_path:path}}")
 async def manual_static_serve(file_path: str):
-    full_path = static_dir / file_path
-    if not full_path.exists():
-        return Response("File not found", status_code=404)
+    full_path = os.path.join(static_dir, file_path)
+    if os.path.exists(full_path):
+        media_type, _ = mimetypes.guess_type(full_path)
+        if not media_type:
+            if file_path.endswith('.woff2'): media_type = 'font/woff2'
+            elif file_path.endswith('.css'): media_type = 'text/css'
+            elif file_path.endswith('.js'): media_type = 'application/javascript'
+            else: media_type = 'application/octet-stream'
+        with open(full_path, 'rb') as f:
+            return Response(f.read(), media_type=media_type)
+    return Response("File not found", status_code=404)
 
-    media_type, _ = mimetypes.guess_type(str(full_path))
-    if not media_type:
-        if file_path.endswith('.woff2'):
-            media_type = 'font/woff2'
-        elif file_path.endswith('.woff'):
-            media_type = 'font/woff'
-        elif file_path.endswith('.css'):
-            media_type = 'text/css'
-        elif file_path.endswith('.js'):
-            media_type = 'application/javascript'
-        else:
-            media_type = 'application/octet-stream'
+# HA Ingress middleware
+class IngressMiddleware:
+    def __init__(self, app):
+        self.app = app
 
-    return Response(content=full_path.read_bytes(), media_type=media_type)
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'http':
+            headers = dict(scope.get('headers', []))
+            ingress_path = headers.get(b'x-ingress-path')
+            if ingress_path:
+                scope['root_path'] = ingress_path.decode()
+        await self.app(scope, receive, send)
 
-# -------------------------------------------------------------------
-# Ingress middleware for HA
-# -------------------------------------------------------------------
-class IngressMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        ingress_path = request.headers.get("X-Ingress-Path")
-        if ingress_path:
-            request.scope['root_path'] = ingress_path
-        return await call_next(request)
-
-app.add_middleware(IngressMiddleware)
+fastapi_app.add_middleware(BaseHTTPMiddleware, dispatch=IngressMiddleware(fastapi_app))
 
 # -------------------------------------------------------------------
-# Persistent storage path
+# 4. Initialize NiceGUI
 # -------------------------------------------------------------------
-DATA_DIR = Path('/data') if Path('/data').exists() else Path('.')
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+# Attach to FastAPI app
+nicegui_app = nicegui.app
+nicegui_app.fastapi_app = fastapi_app
 
-DATA_FILE = DATA_DIR / 'my_data.json'
-default_state = {"dropdown": "A", "text": "", "list_items": []}
-
-def load_state():
-    if DATA_FILE.exists():
-        try:
-            return json.loads(DATA_FILE.read_text())
-        except json.JSONDecodeError:
-            return default_state.copy()
-    return default_state.copy()
-
-state = load_state()
-list_textarea = None
-
-def save_state():
-    if list_textarea:
-        state["list_items"] = [l.strip() for l in list_textarea.value.splitlines() if l.strip()]
-        with open(DATA_FILE, 'w') as f:
-            json.dump(state, f, indent=2)
-        ui.notify('Saved')
-
-# -------------------------------------------------------------------
-# Register all pages / routes
-# -------------------------------------------------------------------
+# Register all routes
 register_routes()
 
 # -------------------------------------------------------------------
-# Background SSH sync thread (daemon)
+# 5. Start background SSH sync (daemon thread)
 # -------------------------------------------------------------------
 threading.Thread(
     target=run_sync_loop,
-    kwargs={'interval_seconds': 180},  # every 3 minutes
-    daemon=True
+    kwargs={'interval_seconds': 180},
+    daemon=True,
 ).start()
 
 # -------------------------------------------------------------------
-# Expose NiceGUI app for Uvicorn
+# 6. Expose FastAPI app for Uvicorn
 # -------------------------------------------------------------------
-app = nicegui_app
+app = nicegui_app  # Uvicorn entrypoint
 
 # -------------------------------------------------------------------
-# Optional development run (do not use in Docker HA)
+# 7. Optional: development run with Python directly
 # -------------------------------------------------------------------
 if __name__ in {"__main__", "__mp_main__"}:
     import uvicorn
@@ -129,4 +112,6 @@ if __name__ in {"__main__", "__mp_main__"}:
         port=5002,
         reload=False,
         ws_max_size=200*1024*1024,
+        log_level="info",
+        app_dir=str(Path(__file__).parent),
     )
