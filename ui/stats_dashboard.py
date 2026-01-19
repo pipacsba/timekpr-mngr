@@ -14,6 +14,11 @@ from nicegui import ui
 from storage import stats_cache_dir
 
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"ui.stats_dashboard.py is called at all")
+
+
 # -------------------------------------------------------------------
 # Parsing helpers
 # -------------------------------------------------------------------
@@ -71,6 +76,7 @@ def _stat_card(title: str, value: str, icon: str):
 # -------------------------------------------------------------------
 
 def render_stats_dashboard(server_name: str, username: str):
+    logger.info(f"ui.stats_dashboard.py render_stats_dashboard generation is started")
     stats = _load_stats(server_name, username)
 
     ui.label(f'Statistics: {username}').classes(
