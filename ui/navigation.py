@@ -19,6 +19,7 @@ from ui.stats_dashboard import render_stats_dashboard
 # -------------------------------------------------------------------
 def build_header():
     servers = load_servers()
+    logger.info(f"Building header for {len(servers)} servers")
 
     with ui.header().classes('items-center justify-between bg-primary text-white'):
         ui.label('TimeKPR').classes('text-lg font-bold')
