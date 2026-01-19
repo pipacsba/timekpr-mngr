@@ -8,6 +8,10 @@ Do NOT put business logic here.
 
 from typing import Optional
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"state.py is called at all")
+
 # Currently selected server name
 current_server: Optional[str] = None
 
