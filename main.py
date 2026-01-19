@@ -10,6 +10,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from ui.navigation import register_routes
 
 import logging
+import sys
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 logger = logging.getLogger(__name__)
 
 
