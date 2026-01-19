@@ -37,6 +37,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+logger.info(f"Something works... at least I can log!")
 
 
 # -------------------------------------------------------------------
