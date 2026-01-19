@@ -58,7 +58,7 @@ app.add_middleware(IngressMiddleware)
 
 # --- ADATKEZELÉS ---
 DATA_FILE = '/data/my_data.json' if os.path.exists('/data') else 'my_data.json'
-default_data = {"dropdown": "A", "text": "", "list_items": []}
+default_data = {"dropdown": "Opció A", "text": "", "list_items": []}
 state = default_data.copy()
 
 def load_data():
@@ -97,4 +97,4 @@ ui.run_with(app, storage_secret='secret')
 if __name__ == '__main__':
     import uvicorn
     # Port: 5005
-    uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False, ws_max_size=10*1024*1024)
+    uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False, ws_max_size=200*1024*1024)
