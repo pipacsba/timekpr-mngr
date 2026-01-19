@@ -8,11 +8,16 @@ import threading
 import socket
 import paramiko
 
+import logging 
+logger = logging.getLogger(__name__)
+
 # ============================================================
 # Paths & constants
 # ============================================================
 
-DATA_ROOT = Path('/Data')
+logger.info(f"server_logic.py is called at all")
+
+DATA_ROOT = Path('/data')
 SERVERS_FILE = DATA_ROOT / 'servers.json'
 CACHE_DIR = DATA_ROOT / 'cache'
 KEY_DIR = DATA_ROOT / 'ssh_keys'
