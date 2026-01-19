@@ -125,6 +125,7 @@ def register_routes():
 
     # Dynamic server/user pages
     if servers:
+        logger.info(f"if servers passed for {len(servers)} servers")
         for server_name in servers:
             ui.page(f'/server/{server_name}', on_visit=lambda s=server_name: server_config_page(s))
             for username in list_users(server_name):
@@ -138,6 +139,7 @@ def register_routes():
                 )
     else:
         # Fallback pages if no servers
+        logger.info(f"How the hack does this server_name parameter got value? {(server_name)} if we got {len(servers)} servers?")
         ui.page('/server/{server_name}', on_visit=no_server_page)
         ui.page('/server/{server_name}/user/{username}', on_visit=no_server_page)
         ui.page('/server/{server_name}/stats/{username}', on_visit=no_server_page)
