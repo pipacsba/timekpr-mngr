@@ -2,7 +2,7 @@
 TimeKPR Manager
 - Slot-safe NiceGUI
 - Background SSH sync
-- HA ingress / Uvicorn ready
+- HA Ingress / Uvicorn ready
 """
 
 import os
@@ -33,7 +33,7 @@ mimetypes.add_type("font/ttf", ".ttf")
 app = FastAPI()
 
 # -------------------------------------------------------------------
-# Manual static server (needed for HA ingress / nicegui static)
+# Manual static server (needed for HA ingress / NiceGUI assets)
 # -------------------------------------------------------------------
 nicegui_path = Path(__import__('nicegui').__file__).parent
 static_dir = nicegui_path / 'static'
@@ -61,7 +61,7 @@ async def manual_static_serve(file_path: str):
     return Response(content=full_path.read_bytes(), media_type=media_type)
 
 # -------------------------------------------------------------------
-# Ingress middleware
+# Ingress middleware for HA
 # -------------------------------------------------------------------
 class IngressMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -76,12 +76,9 @@ app.add_middleware(IngressMiddleware)
 # Persistent storage path
 # -------------------------------------------------------------------
 DATA_DIR = Path('/data') if Path('/data').exists() else Path('.')
-DATA_FILE = DATA_DIR / 'my_data.json'
-
-# Ensure storage exists
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# Load state
+DATA_FILE = DATA_DIR / 'my_data.json'
 default_state = {"dropdown": "A", "text": "", "list_items": []}
 
 def load_state():
@@ -103,12 +100,12 @@ def save_state():
         ui.notify('Saved')
 
 # -------------------------------------------------------------------
-# Register NiceGUI pages / routes
+# Register all pages / routes
 # -------------------------------------------------------------------
 register_routes()
 
 # -------------------------------------------------------------------
-# Background SSH sync thread
+# Background SSH sync thread (daemon)
 # -------------------------------------------------------------------
 threading.Thread(
     target=run_sync_loop,
@@ -117,12 +114,12 @@ threading.Thread(
 ).start()
 
 # -------------------------------------------------------------------
-# Expose ASGI app for Uvicorn
+# Expose NiceGUI app for Uvicorn
 # -------------------------------------------------------------------
-app = nicegui_app  # <- important: exposes NiceGUI as FastAPI app
+app = nicegui_app
 
 # -------------------------------------------------------------------
-# Optional direct run for development
+# Optional development run (do not use in Docker HA)
 # -------------------------------------------------------------------
 if __name__ in {"__main__", "__mp_main__"}:
     import uvicorn
