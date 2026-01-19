@@ -10,6 +10,10 @@ from typing import Dict
 from storage import SERVERS_FILE, load_json, save_json
 
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"servers.py is called at all")
+
 # -------------------------------------------------------------------
 # Public API
 # -------------------------------------------------------------------
