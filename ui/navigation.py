@@ -109,6 +109,7 @@ def no_server_page():
 # -------------------------------------------------------------------
 def register_routes():
     servers = load_servers()
+    logger.info(f"Register routes for {len(servers)} servers")
 
     # Root / home
     ui.page('/', on_visit=home_page)
