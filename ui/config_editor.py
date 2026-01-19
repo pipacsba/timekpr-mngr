@@ -24,6 +24,11 @@ from storage import (
 )
 
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"ui.config_editor.py is called at all")
+
+
 # -------------------------------------------------------------------
 # Data model (UI-local, simple)
 # -------------------------------------------------------------------
@@ -116,6 +121,8 @@ def render_config_editor(
     """
     config_type: 'server' | 'user' | 'stats'
     """
+  
+    logger.info(f"config_editor.py render:config_editor is started.")
 
     # Resolve paths
     if config_type == 'server':
