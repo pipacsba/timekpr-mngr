@@ -15,7 +15,7 @@ from typing import Any
 # Root & directory layout
 # -------------------------------------------------------------------
 
-DATA_ROOT = Path('/Data')
+DATA_ROOT = Path('/data')
 
 CACHE_DIR = DATA_ROOT / 'cache'
 KEYS_DIR = DATA_ROOT / 'ssh_keys'
