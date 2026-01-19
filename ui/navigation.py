@@ -23,34 +23,8 @@ logger = logging.getLogger(__name__)
 def build_header():
     servers = load_servers()
     logger.info(f"Building header for {len(servers)} servers")
-
-    with ui.header().classes('items-center justify-between bg-primary text-white'):
-        ui.label('TimeKPR').classes('text-lg font-bold')
-        with ui.row().classes('items-center'):
-            ui.link('Home', '/')
-            ui.link('Servers', '/servers')
-
-            # Multi-server menus
-            for server_name in servers:
-                with ui.menu(server_name):
-                    ui.menu_item(
-                        'Server config',
-                        on_click=lambda s=server_name: ui.navigate.to(f'/server/{s}')
-                    )
-
-                    users = list_users(server_name)
-                    if users:
-                        ui.separator()
-                        for username in users:
-                            with ui.menu(username):
-                                ui.menu_item(
-                                    'Config',
-                                    on_click=lambda s=server_name, u=username: ui.navigate.to(f'/server/{s}/user/{u}')
-                                )
-                                ui.menu_item(
-                                    'Statistics',
-                                    on_click=lambda s=server_name, u=username: ui.navigate.to(f'/server/{s}/stats/{u}')
-                                )
+    with ui.header():
+        ui.label("TEST HEADER")
 
 
 # -------------------------------------------------------------------
