@@ -1,47 +1,26 @@
 # main.py
-"""
-TimeKPR Manager – HA Ingress / Uvicorn compatible
-- Slot-safe UI with first-run welcome page
-- Background SSH sync safe
-"""
-
 import os
+import json
 import mimetypes
-import threading
-from pathlib import Path
-
-from fastapi import FastAPI
-from starlette.middleware.base import BaseHTTPMiddleware
-
 import nicegui
 from nicegui import ui
+from fastapi import FastAPI, Request, Response
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from ui.navigation import register_routes
-from ssh_sync import run_sync_loop
-from storage import DATA_ROOT, KEYS_DIR, _ensure_dirs
 
 import logging
 import sys
-
-# -------------------------------------------------------------------
-# Logging
-# -------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(threadName)s: %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
-logger.info("Starting TimeKPR Manager...")
+
 
 # -------------------------------------------------------------------
-# Ensure directories exist
-# -------------------------------------------------------------------
-_ensure_dirs()
-KEYS_DIR.mkdir(parents=True, exist_ok=True)
-
-# -------------------------------------------------------------------
-# Force MIME types for fonts & JS/CSS
+# MIME TYPES (required for HA ingress)
 # -------------------------------------------------------------------
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
@@ -50,64 +29,62 @@ mimetypes.add_type("font/woff", ".woff")
 mimetypes.add_type("font/ttf", ".ttf")
 
 # -------------------------------------------------------------------
-# FastAPI app
+# FastAPI app (SINGLE ASGI ROOT)
 # -------------------------------------------------------------------
-fastapi_app = FastAPI()
+app = FastAPI()
 
 # -------------------------------------------------------------------
-# HA Ingress middleware
+# Ingress middleware (HTTP ONLY – SAFE)
 # -------------------------------------------------------------------
 class IngressMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
+    async def dispatch(self, request: Request, call_next):
         ingress_path = request.headers.get("X-Ingress-Path")
         if ingress_path:
-            # Apply HA Ingress root path
             request.scope["root_path"] = ingress_path
         return await call_next(request)
 
-fastapi_app.add_middleware(IngressMiddleware)
+app.add_middleware(IngressMiddleware)
 
 # -------------------------------------------------------------------
-# Attach NiceGUI to FastAPI
+# Manual static serving (NiceGUI fonts/css/js)
 # -------------------------------------------------------------------
-nicegui_app = nicegui.app
-nicegui_app.fastapi_app = fastapi_app
+nicegui_path = os.path.dirname(nicegui.__file__)
+static_dir = os.path.join(nicegui_path, "static")
+version = nicegui.__version__
 
-# Register all UI routes
+@app.get(f"/_nicegui/{version}/static/{{file_path:path}}")
+async def nicegui_static(file_path: str):
+    full_path = os.path.join(static_dir, file_path)
+    if not os.path.exists(full_path):
+        return Response("Not found", status_code=404)
+
+    media_type, _ = mimetypes.guess_type(full_path)
+    media_type = media_type or "application/octet-stream"
+
+    with open(full_path, "rb") as f:
+        return Response(f.read(), media_type=media_type)
+
+# -------------------------------------------------------------------
+# Register UI routes (NO SIDE EFFECTS)
+# -------------------------------------------------------------------
 register_routes()
-logger.info("UI routes registered.")
+logger.info("Register routes completed")
+
 
 # -------------------------------------------------------------------
-# Background SSH sync
+# Attach NiceGUI to FastAPI (ONCE)
 # -------------------------------------------------------------------
-threading.Thread(
-    target=run_sync_loop,
-    kwargs={"interval_seconds": 180},
-    daemon=True,
-).start()
-logger.info("Background SSH sync started.")
+ui.run_with(app, storage_secret="timekpr-secret")
 
 # -------------------------------------------------------------------
-# Expose app for Uvicorn
+# Uvicorn entry
 # -------------------------------------------------------------------
-app = nicegui_app  # Uvicorn entrypoint
-
-# -------------------------------------------------------------------
-# Run NiceGUI
-# -------------------------------------------------------------------
-ui.run_with(app, storage_secret="secret")
-
-# -------------------------------------------------------------------
-# Optional: direct Python run
-# -------------------------------------------------------------------
-if __name__ in {"__main__", "__mp_main__"}:
+if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=5002,
         reload=False,
-        ws_max_size=20*1024*1024,
-        log_level="info",
-        app_dir=str(Path(__file__).parent),
+        ws_max_size=200 * 1024 * 1024,
     )
