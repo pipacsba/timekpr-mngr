@@ -25,6 +25,9 @@ from storage import (
     pending_stats_dir,
 )
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"config_editor.py is called at all")
 
 # -------------------------------------------------------------------
 # Data model
