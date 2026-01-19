@@ -124,24 +124,22 @@ app = nicegui_app  # Uvicorn entrypoint
 #Add HTTP + WS middleware logging
 # -------------------------------------------------------------------
 
-from fastapi import Request
-import logging
+#from fastapi import Request
+#import logging
 
-log = logging.getLogger("asgi")
+#log = logging.getLogger("asgi")
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    log.info(f"HTTP {request.method} {request.url}")
-    return await call_next(request)
+#@app.middleware("http")
+#async def log_requests(request: Request, call_next):
+#    log.info(f"HTTP {request.method} {request.url}")
+#    return await call_next(request)
 
-from starlette.websockets import WebSocket
+#from starlette.websockets import WebSocket
 
-@app.middleware("websocket")
-async def log_ws(ws: WebSocket, call_next):
-    log.info(f"WS connect {ws.url}")
-    await call_next(ws)
-
-
+#@app.middleware("websocket")
+#async def log_ws(ws: WebSocket, call_next):
+#    log.info(f"WS connect {ws.url}")
+#    await call_next(ws)
 
 
 # This initializes NiceGUI internals for Uvicorn
