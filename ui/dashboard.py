@@ -1,4 +1,4 @@
-# app/dashboard.py
+# ui/dashboard.py
 """
 User statistics dashboards.
 
@@ -14,6 +14,10 @@ from typing import Dict
 from nicegui import ui
 
 from storage import stats_cache_dir
+
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"ui.dashboard.py is called at all")
 
 
 # -------------------------------------------------------------------
@@ -75,6 +79,7 @@ def _seconds_to_human(seconds: float) -> str:
 # -------------------------------------------------------------------
 
 def render_dashboard(server_name: str, username: str):
+    logger.info(f"ui.dashboard.py render_dashboard is started")
     stats = load_user_stats(server_name, username)
 
     if not stats:
