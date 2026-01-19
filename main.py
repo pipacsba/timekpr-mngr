@@ -100,6 +100,8 @@ threading.Thread(
 # 6. Expose FastAPI app for Uvicorn
 # -------------------------------------------------------------------
 app = nicegui_app  # Uvicorn entrypoint
+# This initializes NiceGUI internals for Uvicorn
+ui.run_with(app, storage_secret='secret', startup=False)
 
 # -------------------------------------------------------------------
 # 7. Optional: development run with Python directly
