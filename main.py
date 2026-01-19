@@ -7,7 +7,7 @@ from nicegui import ui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ui.navigation import register_routes
+from ui.navigation
 
 import logging
 import sys
@@ -70,8 +70,8 @@ async def nicegui_static(file_path: str):
 # -------------------
 # Register UI routes (once)
 # -------------------
-register_routes()
-logger.info("Register routes completed")
+#register_routes()
+#logger.info("Register routes completed")
 
 # -------------------
 # Attach NiceGUI to FastAPI
