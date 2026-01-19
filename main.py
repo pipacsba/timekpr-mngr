@@ -103,6 +103,7 @@ nicegui_app.fastapi_app = fastapi_app
 
 # Register all routes
 register_routes()
+logger.info(f"Register routes finished!")
 
 # -------------------------------------------------------------------
 # 5. Start background SSH sync (daemon thread)
