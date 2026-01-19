@@ -13,6 +13,9 @@ from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # -------------------------------------------------------------------
 # Helper: build the top header inside page callbacks
