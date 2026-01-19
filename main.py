@@ -23,6 +23,22 @@ from ui.navigation import register_routes
 from ssh_sync import run_sync_loop
 from storage import DATA_ROOT, KEYS_DIR, _ensure_dirs
 
+import logging
+import sys
+
+# -------------------------------------------------------------------
+# Global logging setup
+# -------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,              # DEBUG for more detail
+    format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
 # -------------------------------------------------------------------
 # 1. Ensure directories exist
 # -------------------------------------------------------------------
