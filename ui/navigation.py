@@ -60,6 +60,7 @@ def build_header():
 def home_page():
     """Landing page"""
     build_header()
+    logger.info(f"Headers built for home_page")
     servers = load_servers()
 
     ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
@@ -74,6 +75,7 @@ def home_page():
 def welcome_page():
     """First-run welcome page (not auto-navigated to)"""
     build_header()
+    logger.info(f"Headers built for welcome_page")
     ui.label('Welcome to TimeKPR Manager').classes('text-3xl font-bold mb-4')
     ui.label('No servers configured yet.').classes('text-lg text-red-600')
     ui.label('Please add a server configuration to get started.').classes('text-gray-600')
@@ -82,26 +84,31 @@ def welcome_page():
 
 def servers_page_wrapper():
     build_header()
+    logger.info(f"Headers built for servers_page")
     servers_page()
 
 
 def server_config_page(server_name: str):
     build_header()
+    logger.info(f"Headers built for server config page")
     render_config_editor(server_name=server_name, config_type='server')
 
 
 def user_config_page(server_name: str, username: str):
     build_header()
+    logger.info(f"Headers built for user config page")
     render_config_editor(server_name=server_name, config_type='user', username=username)
 
 
 def stats_page(server_name: str, username: str):
     build_header()
+    logger.info(f"Headers built for stats page")
     render_stats_dashboard(server_name=server_name, username=username)
 
 
 def no_server_page():
     build_header()
+    logger.info(f"Headers built for no server page")
     ui.label('No server found').classes('text-red-700 font-bold')
     ui.label('Please add a server configuration first.').classes('text-gray-600')
     ui.button('Go to Servers', on_click=lambda: ui.navigate.to('/servers')).classes('mt-2')
