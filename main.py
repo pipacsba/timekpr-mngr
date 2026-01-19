@@ -62,6 +62,8 @@ async def nicegui_static(file_path: str):
 # Register UI routes (NO SIDE EFFECTS)
 # -------------------------------------------------------------------
 register_routes()
+logger.info("Register routes completed")
+
 
 # -------------------------------------------------------------------
 # Attach NiceGUI to FastAPI (ONCE)
