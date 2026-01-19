@@ -96,4 +96,4 @@ ui.run_with(app, storage_secret='secret')
 if __name__ == '__main__':
     import uvicorn
     # Port: 5005
-    uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False, ws_max_size=200*1024*1024)
+    uvicorn.run("main:app", host="0.0.0.0", port=5002, reload=False, ws_max_size=10*1024*1024)
