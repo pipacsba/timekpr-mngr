@@ -9,6 +9,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from ui.navigation import register_routes
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 # -------------------------------------------------------------------
 # MIME TYPES (required for HA ingress)
 # -------------------------------------------------------------------
