@@ -9,6 +9,10 @@ from pathlib import Path
 import json
 from typing import Any
 
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"storage.py is called at all")
+
 # -------------------------------------------------------------------
 # Root & directory layout (configurable)
 # -------------------------------------------------------------------
