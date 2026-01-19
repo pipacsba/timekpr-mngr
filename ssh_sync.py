@@ -25,7 +25,9 @@ from storage import (
     pending_user_dir,
     pending_stats_dir,
 )
-
+import logging 
+logger = logging.getLogger(__name__)
+logger.info(f"ssh_sync.py is called at all")
 
 # -------------------------------------------------------------------
 # SSH helpers
