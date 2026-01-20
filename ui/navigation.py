@@ -20,6 +20,7 @@ def build_header():
         ui.link('Servers', '/servers')
         dark = ui.dark_mode()
         ui.switch('Dark mode').bind_value(dark)
+        ui.colors(primary='#555')
 
 # -------------------
 # Pages
