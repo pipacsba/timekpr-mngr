@@ -19,6 +19,8 @@ ui.colors(
     info="#31ccec",
     warning="#f2c037"
 )
+dark = ui.dark_mode()
+dark.enable
 
 # -------------------
 # Header (called inside each page)
