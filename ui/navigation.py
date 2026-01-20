@@ -21,6 +21,7 @@ def build_header():
         ui.label('TimeKPR Manager').classes('text-lg font-bold')
         ui.link('Home', '/')
         ui.link('Servers', '/servers')
+        ui.link('pty', '/pty')
         dark = ui.dark_mode()
         dark.enable
 
