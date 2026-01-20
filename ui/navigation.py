@@ -34,16 +34,17 @@ def build_header():
 @ui.page('/')
 def home_page():
     logger.info("home_page called")
+    ui.navigate.to('/servers')
 #    dark = ui.dark_mode()
 #    dark.enable()
-    build_header()
-    servers = load_servers()
+#    build_header()
+#    servers = load_servers()
 
-    ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
-    ui.label('Manage server configuration, users, and statistics.')
+#    ui.label('TimeKPR Configuration Manager').classes('text-3xl font-bold mb-4')
+#    ui.label('Manage server configuration, users, and statistics.')
 
-    if not servers:
-        ui.navigate.to('/servers')
+#    if not servers:
+#        ui.navigate.to('/servers')
 
 
 @ui.page('/welcome')
