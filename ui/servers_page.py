@@ -198,7 +198,7 @@ def servers_page():
                         delete_server(s),
                         _refresh()
                     ),
-                ).props('color=negative')
+                ).props('color=negative').align('right')
 
             ui.label(f"Host: {server['host']}:{server.get('port', 22)}")
             ui.label(f"User: {server['user']}")
