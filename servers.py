@@ -79,7 +79,7 @@ def add_user(
     server_name: str,
     username: str,
     user_config_path: str= '/var/lib/timekpr/config/timekpr.USER.conf',
-    stats_path: str= '/var/lib/timekpr/config/USER.time',,
+    stats_path: str= '/var/lib/timekpr/config/USER.time',
 ) -> None:
     servers = load_servers()
     server = servers.get(server_name)
