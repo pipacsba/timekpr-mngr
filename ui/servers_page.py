@@ -29,7 +29,7 @@ logger.info(f"ui.servers.py is called at all")
 # -------------------------------------------------------------------
 
 def _refresh():
-    ui.navigate.to('/servers', reload=True)
+    ui.navigate.to('/servers')
 
 
 # -------------------------------------------------------------------
