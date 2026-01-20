@@ -18,14 +18,15 @@ logger = logging.getLogger(__name__)
 # Header (called inside each page)
 # -------------------
 def build_header():
+    dark = ui.dark_mode()
+    dark.enable()
     with ui.header().classes('items-center'):
         ui.colors(brand='#424242')
         ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
         ui.link('Home', '/').classes('font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
         ui.link('pty', '/pty').classes('font-bold text-brand')
-        dark = ui.dark_mode()
-        dark.enable()
+
 
 # -------------------
 # Pages
@@ -33,8 +34,8 @@ def build_header():
 @ui.page('/')
 def home_page():
     logger.info("home_page called")
-    dark = ui.dark_mode()
-    dark.enable()
+#    dark = ui.dark_mode()
+#    dark.enable()
     build_header()
     servers = load_servers()
 
