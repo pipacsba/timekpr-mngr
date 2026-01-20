@@ -215,11 +215,11 @@ def servers_page():
                         ui.label(username)
                         ui.space()
                         ui.button(
-                            icon='delete', color='warning',
-                            on_click=lambda s=server_name: (
-                                delete_server(s),
+                        ui.chip(icon='delete', color='warning',
+                            on_click=lambda u=username: (
+                                delete_user(u),
                                 _refresh()
-                            ),
+                            ),           
                         ).props('color=negative')
                         
             ui.button(
