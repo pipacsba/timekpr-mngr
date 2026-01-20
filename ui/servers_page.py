@@ -189,7 +189,7 @@ def servers_page():
 
     for server_name, server in servers.items():
         with ui.card().classes('mb-6'):
-            with ui.row().classes('items-center justify-between'):
+            with ui.row().classes('w-full'):
                 ui.label(server_name).classes('text-lg font-bold')
                 ui.space()
                 ui.button(
@@ -212,7 +212,7 @@ def servers_page():
                 ui.label('No users').classes('text-gray-500')
             else:
                 for username in users:
-                    with ui.row().classes('items-center justify-between'):
+                    with ui.row().classes('w-full'):
                         ui.label(username)
                         ui.space()
                         ui.button(
