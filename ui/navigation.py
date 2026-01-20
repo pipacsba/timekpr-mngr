@@ -43,8 +43,7 @@ def home_page():
     ui.label('Manage server configuration, users, and statistics.')
 
     if not servers:
-        ui.label('No servers configured yet.').classes('text-red-600 mt-4')
-        ui.button('Add server', on_click=lambda: ui.navigate.to('/servers'))
+        ui.navigate.to('/servers')
 
 
 @ui.page('/welcome')
