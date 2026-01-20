@@ -37,7 +37,7 @@ def _refresh():
 # -------------------------------------------------------------------
 
 def _add_server_dialog():
-    with ui.dialog() as dialog, ui.card().classes('w-[500px]'):
+    with ui.dialog() as dialog, ui.card().classes('w-lvw'):
         ui.label('Add Server').classes('text-lg font-bold')
 
         # -----------------------------
@@ -134,7 +134,7 @@ def _add_server_dialog():
 # -------------------------------------------------------------------
 
 def _add_user_dialog(server_name: str):
-    with ui.dialog() as dialog, ui.card().classes('w-max'):
+    with ui.dialog() as dialog, ui.card().classes('w-lvw'):
         ui.label(f'Add User to {server_name}').classes('text-lg font-bold')
 
         username = ui.input('Username')
