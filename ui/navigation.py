@@ -8,6 +8,8 @@ from ui.stats_dashboard import render_stats_dashboard
 import logging
 logger = logging.getLogger(__name__)
 
+
+
 # -------------------
 # Header (called inside each page)
 # -------------------
@@ -16,7 +18,8 @@ def build_header():
         ui.label('TimeKPR Manager').classes('text-lg font-bold')
         ui.link('Home', '/')
         ui.link('Servers', '/servers')
-
+        dark = ui.dark_mode()
+        ui.switch('Dark mode').bind_value(dark)
 
 # -------------------
 # Pages
