@@ -16,6 +16,8 @@ def build_header():
         ui.label('TimeKPR Manager').classes('text-lg font-bold')
         ui.link('Home', '/')
         ui.link('Servers', '/servers')
+        dark = ui.dark_mode()
+        dark.enable
 
 # -------------------
 # Pages
@@ -23,6 +25,8 @@ def build_header():
 @ui.page('/')
 def home_page():
     logger.info("home_page called")
+    dark = ui.dark_mode()
+    dark.enable
     build_header()
     servers = load_servers()
 
