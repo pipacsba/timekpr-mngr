@@ -192,12 +192,11 @@ def servers_page():
             with ui.row().classes('w-full'):
                 ui.label(server_name).classes('text-lg font-bold')
                 ui.space()
-                ui.button(
-                    icon='delete', color='warning',
+                ui.chip(icon='delete', color='warning',
                     on_click=lambda s=server_name: (
                         delete_server(s),
                         _refresh()
-                    ),
+                    ),                
                 ).props('color=negative')
 
             ui.label(f"Host: {server['host']}:{server.get('port', 22)}")
