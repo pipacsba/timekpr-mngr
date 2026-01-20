@@ -9,8 +9,10 @@ Responsibilities:
 - Never block the UI
 """
 
+import os
 import time
 import socket
+import hashlib
 import paramiko
 from pathlib import Path
 from typing import Dict
@@ -25,13 +27,22 @@ from storage import (
     pending_user_dir,
     pending_stats_dir,
 )
-import logging 
+
+import logging
 logger = logging.getLogger(__name__)
-logger.info(f"ssh_sync.py is called at all")
+logger.info("ssh_sync module loaded")
 
 # -------------------------------------------------------------------
-# SSH helpers
+# Helpers
 # -------------------------------------------------------------------
+
+def _file_hash(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
 
 def _connect(server: Dict) -> paramiko.SSHClient | None:
     """
@@ -42,21 +53,57 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
 
     try:
         client.connect(
-            hostname=server['host'],
-            port=server.get('port', 22),
-            username=server['user'],
-            key_filename=str(KEYS_DIR / server['key']),
+            hostname=server["host"],
+            port=server.get("port", 22),
+            username=server["user"],
+            key_filename=str(KEYS_DIR / server["key"]),
             timeout=5,
         )
         return client
 
-    except (socket.error, paramiko.SSHException):
+    except (socket.error, paramiko.SSHException) as e:
+        logger.debug(f"SSH connect failed: {e}")
         return None
 
 
-def _scp_get(sftp, remote: str, local: Path) -> None:
+def _scp_get_if_changed(sftp, remote: str, local: Path) -> bool:
+    """
+    Download remote file only if changed.
+    Returns True if local file was updated.
+    """
+    try:
+        remote_stat = sftp.stat(remote)
+    except FileNotFoundError:
+        return False
+
     local.parent.mkdir(parents=True, exist_ok=True)
-    sftp.get(remote, str(local))
+
+    if local.exists():
+        local_stat = local.stat()
+
+        # Fast path: same size and timestamp
+        if (
+            local_stat.st_size == remote_stat.st_size
+            and int(local_stat.st_mtime) == int(remote_stat.st_mtime)
+        ):
+            return False
+
+    tmp = local.with_suffix(local.suffix + ".tmp")
+
+    try:
+        sftp.get(remote, str(tmp))
+    except Exception as e:
+        logger.warning(f"Failed to download {remote}: {e}")
+        return False
+
+    if local.exists():
+        if _file_hash(tmp) == _file_hash(local):
+            tmp.unlink()
+            return False
+
+    tmp.replace(local)
+    os.utime(local, (remote_stat.st_atime, remote_stat.st_mtime))
+    return True
 
 
 def _scp_put(sftp, local: Path, remote: str) -> None:
@@ -81,28 +128,34 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
         paths = get_remote_paths(server_name)
 
         # --- server config ---
-        if 'server' in paths:
-            _scp_get(
+        if "server" in paths:
+            updated = _scp_get_if_changed(
                 sftp,
-                paths['server'],
-                server_cache_dir(server_name) / 'server.conf'
+                paths["server"],
+                server_cache_dir(server_name) / "server.conf",
             )
+            if updated:
+                logger.info(f"[{server_name}] server.conf updated")
 
         # --- user configs ---
-        for user, remote_path in paths.get('users', {}).items():
-            _scp_get(
+        for user, remote_path in paths.get("users", {}).items():
+            updated = _scp_get_if_changed(
                 sftp,
                 remote_path,
-                user_cache_dir(server_name) / f'{user}.conf'
+                user_cache_dir(server_name) / f"{user}.conf",
             )
+            if updated:
+                logger.info(f"[{server_name}] user {user} config updated")
 
         # --- stats ---
-        for user, remote_path in paths.get('stats', {}).items():
-            _scp_get(
+        for user, remote_path in paths.get("stats", {}).items():
+            updated = _scp_get_if_changed(
                 sftp,
                 remote_path,
-                stats_cache_dir(server_name) / f'{user}.stats'
+                stats_cache_dir(server_name) / f"{user}.stats",
             )
+            if updated:
+                logger.info(f"[{server_name}] stats for {user} updated")
 
         return True
 
@@ -127,26 +180,29 @@ def upload_pending(server_name: str, server: Dict) -> None:
         paths = get_remote_paths(server_name)
 
         # --- server config ---
-        server_file = pending_dir(server_name) / 'server.conf'
+        server_file = pending_dir(server_name) / "server.conf"
         if server_file.exists():
-            _scp_put(sftp, server_file, paths['server'])
+            _scp_put(sftp, server_file, paths["server"])
             server_file.unlink()
+            logger.info(f"[{server_name}] uploaded server.conf")
 
         # --- user configs ---
-        for file in pending_user_dir(server_name).glob('*.conf'):
+        for file in pending_user_dir(server_name).glob("*.conf"):
             username = file.stem
-            remote = paths.get('users', {}).get(username)
+            remote = paths.get("users", {}).get(username)
             if remote:
                 _scp_put(sftp, file, remote)
                 file.unlink()
+                logger.info(f"[{server_name}] uploaded user {username}")
 
         # --- stats ---
-        for file in pending_stats_dir(server_name).glob('*.stats'):
+        for file in pending_stats_dir(server_name).glob("*.stats"):
             username = file.stem
-            remote = paths.get('stats', {}).get(username)
+            remote = paths.get("stats", {}).get(username)
             if remote:
                 _scp_put(sftp, file, remote)
                 file.unlink()
+                logger.info(f"[{server_name}] uploaded stats for {username}")
 
     finally:
         client.close()
@@ -156,17 +212,22 @@ def upload_pending(server_name: str, server: Dict) -> None:
 # Periodic runner
 # -------------------------------------------------------------------
 
-def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
+def run_sync_loop(interval_seconds: int = 180) -> None:
     """
-    Stop-aware wrapper for Home Assistant / NiceGUI.
+    Main loop – run in a background thread.
     """
-    while not stop_event.is_set():
-        servers = load_servers()
+    logger.info("SSH sync loop started")
 
-        for name, server in servers.items():
-            reachable = sync_from_server(name, server)
-            if reachable:
-                upload_pending(name, server)
+    while True:
+        try:
+            servers = load_servers()
 
-        stop_event.wait(interval_seconds)
+            for name, server in servers.items():
+                reachable = sync_from_server(name, server)
+                if reachable:
+                    upload_pending(name, server)
 
+        except Exception as e:
+            logger.exception(f"SSH sync loop error: {e}")
+
+        time.sleep(interval_seconds)
