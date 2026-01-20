@@ -191,7 +191,9 @@ def servers_page():
         with ui.card().classes('mb-6'):
             with ui.row().classes('w-full'):
                 #ui.label(server_name).classes('text-lg font-bold')
-                ui.link(server_name, f'/server/{server_name}')
+                #ui.link(server_name, f'/server/{server_name}')
+                with ui.link(target=f'/server/{server_name}'):
+                    ui.label(server_name).classes('text-lg font-bold')
                 
                 ui.space()
                 ui.chip(icon='delete', color='warning',
