@@ -8,9 +8,6 @@ from ui.stats_dashboard import render_stats_dashboard
 import logging
 logger = logging.getLogger(__name__)
 
-dark = ui.dark_mode()
-dark.enable
-
 # -------------------
 # Header (called inside each page)
 # -------------------
