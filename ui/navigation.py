@@ -21,7 +21,6 @@ def build_header():
     dark = ui.dark_mode()
     dark.enable()
     with ui.header().classes('items-center'):
-        ui.colors(brand='#424242')
         ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
         #ui.link('Home', '/').classes('font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
