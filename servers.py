@@ -49,7 +49,7 @@ def add_server(
     user: str,
     key: str,
     port: int = 22,
-    server_config: str = '/etc/timekpr/server.conf',
+    server_config: str = '/etc/timekpr/timekpr.conf',
 ) -> None:
     servers = load_servers()
 
@@ -78,8 +78,8 @@ def delete_server(name: str) -> None:
 def add_user(
     server_name: str,
     username: str,
-    user_config_path: str,
-    stats_path: str,
+    user_config_path: str= '/var/lib/timekpr/config/timekpr.USER.conf',
+    stats_path: str= '/var/lib/timekpr/config/USER.time',,
 ) -> None:
     servers = load_servers()
     server = servers.get(server_name)
