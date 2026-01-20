@@ -156,17 +156,17 @@ def upload_pending(server_name: str, server: Dict) -> None:
 # Periodic runner
 # -------------------------------------------------------------------
 
-def run_sync_loop(interval_seconds: int = 180) -> None:
+def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     """
-    Main loop – run in a background thread or NiceGUI task.
+    Stop-aware wrapper for Home Assistant / NiceGUI.
     """
-    while True:
+    while not stop_event.is_set():
         servers = load_servers()
 
         for name, server in servers.items():
             reachable = sync_from_server(name, server)
-
             if reachable:
                 upload_pending(name, server)
 
-        time.sleep(interval_seconds)
+        stop_event.wait(interval_seconds)
+
