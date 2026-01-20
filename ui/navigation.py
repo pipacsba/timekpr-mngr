@@ -34,8 +34,8 @@ def build_header():
 @ui.page('/')
 def home_page():
     logger.info("home_page called")
-    #ui.navigate.to('/servers')
     ui.navigate.history.replace('/servers')
+    ui.navigate.to('/servers')
 #    dark = ui.dark_mode()
 #    dark.enable()
 #    build_header()
