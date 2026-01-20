@@ -5,6 +5,11 @@ from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
 
+import os
+import pty
+import signal
+from functools import partial
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -89,3 +94,35 @@ else:
                     build_header()
                     render_stats_dashboard(s, u)
             make_user_page(server, user)
+
+@ui.page('/pty')
+def pty_page():
+    terminal = ui.xterm()
+
+    pty_pid, pty_fd = pty.fork()  # create a new pseudo-terminal (pty) fork of the process
+    if pty_pid == pty.CHILD:
+        os.execv('/bin/bash', ('bash',))  # child process of the fork gets replaced with "bash"
+    print('Terminal opened')
+
+    @partial(core.loop.add_reader, pty_fd)
+    def pty_to_terminal():
+        try:
+            data = os.read(pty_fd, 1024)
+        except OSError:
+            print('Stopping reading from pty')  # error reading the pty; probably bash was exited
+            core.loop.remove_reader(pty_fd)
+        else:
+            terminal.write(data)
+
+    @terminal.on_data
+    def terminal_to_pty(event: events.XtermDataEventArguments):
+        try:
+            os.write(pty_fd, event.data.encode('utf-8'))
+        except OSError:
+            pass  # error writing to the pty; probably bash was exited
+
+    @ui.context.client.on_delete
+    def kill_bash():
+        os.close(pty_fd)
+        os.kill(pty_pid, signal.SIGKILL)
+        print('Terminal closed')
