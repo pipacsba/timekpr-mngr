@@ -9,7 +9,7 @@ import os
 import pty
 import signal
 from functools import partial
-from nicegui import events, ui
+from nicegui import core, events
 
 import logging
 logger = logging.getLogger(__name__)
