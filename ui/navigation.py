@@ -24,7 +24,7 @@ def build_header():
         ui.link('Servers', '/servers')
         ui.link('pty', '/pty')
         dark = ui.dark_mode()
-        dark.enable
+        dark.enable()
 
 # -------------------
 # Pages
@@ -33,7 +33,7 @@ def build_header():
 def home_page():
     logger.info("home_page called")
     dark = ui.dark_mode()
-    dark.enable
+    dark.enable()
     build_header()
     servers = load_servers()
 
