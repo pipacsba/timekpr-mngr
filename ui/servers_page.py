@@ -214,7 +214,6 @@ def servers_page():
                     with ui.row().classes('w-full'):
                         ui.label(username)
                         ui.space()
-                        ui.button(
                         ui.chip(icon='delete', color='warning',
                             on_click=lambda  s=server_name, u=username: (
                                 delete_user(u),
