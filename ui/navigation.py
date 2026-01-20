@@ -14,9 +14,6 @@ from nicegui import core, events
 import logging
 logger = logging.getLogger(__name__)
 
-dark = ui.dark_mode()
-dark.enable()
-
 # -------------------
 # Header (called inside each page)
 # -------------------
