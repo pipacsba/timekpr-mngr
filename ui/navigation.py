@@ -19,10 +19,11 @@ logger = logging.getLogger(__name__)
 # -------------------
 def build_header():
     with ui.header().classes('items-center'):
-        ui.label('TimeKPR Manager').classes('text-lg font-bold')
-        ui.link('Home', '/')
-        ui.link('Servers', '/servers')
-        ui.link('pty', '/pty')
+        ui.colors(brand='#424242')
+        ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
+        ui.link('Home', '/').classes('font-bold text-brand')
+        ui.link('Servers', '/servers').classes('font-bold text-brand')
+        ui.link('pty', '/pty').classes('font-bold text-brand')
         dark = ui.dark_mode()
         dark.enable()
 
