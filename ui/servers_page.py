@@ -193,7 +193,7 @@ def servers_page():
                 ui.label(server_name).classes('text-lg font-bold')
 
                 ui.button(
-                    icon='delete', color='warning'
+                    icon='delete', color='warning',
                     on_click=lambda s=server_name: (
                         delete_server(s),
                         _refresh()
@@ -215,7 +215,7 @@ def servers_page():
                     with ui.row().classes('items-center justify-between'):
                         ui.label(username)
                         ui.button(
-                            icon='delete', color='warning'
+                            icon='delete', color='warning',
                             on_click=lambda s=server_name: (
                                 delete_server(s),
                                 _refresh()
