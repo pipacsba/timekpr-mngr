@@ -220,6 +220,9 @@ def servers_page():
                         with ui.link(target=f'/server/{server_name}/user/{username}'):
                                 ui.label(username)
                         ui.space()
+                        with ui.link(target=f'/server/{server_name}/stats/{username}'):
+                                ui.chip(icon='bar_chart').props('color=negative')
+                        ui.space()
                         ui.chip(icon='delete', color='warning',
                             on_click=lambda  s=server_name, u=username: (
                                 delete_user(s, u),
