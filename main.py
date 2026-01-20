@@ -13,6 +13,8 @@ from ssh_sync import run_sync_loop_with_stop
 import logging
 import sys
 import threading #for ssh
+from contextlib import asynccontextmanager # for ssh
+
 
 # -------------------
 # Logging setup
@@ -33,10 +35,39 @@ mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("font/woff", ".woff")
 mimetypes.add_type("font/ttf", ".ttf")
 
+
+# =========================================================
+# SSH BACKGROUND WORKER STATE
+# =========================================================
+stop_event = threading.Event()
+ssh_thread: threading.Thread | None = None
+
+# =========================================================
+# FastAPI lifespan (MODERN + SAFE)
+# =========================================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global ssh_thread
+
+    logger.info("Starting SSH sync worker")
+    ssh_thread = threading.Thread(
+        target=run_sync_loop_with_stop,
+        args=(stop_event,),
+        daemon=True,
+        name="SSH-Sync",
+    )
+    ssh_thread.start()
+
+    yield  # ---- application runs here ----
+
+    logger.info("Stopping SSH sync worker")
+    stop_event.set()
+
+
 # -------------------
 # FastAPI app (single ASGI root)
 # -------------------
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 # -------------------
 # Ingress middleware (HTTP only)
@@ -68,30 +99,6 @@ async def nicegui_static(file_path: str):
 
     with open(full_path, "rb") as f:
         return Response(f.read(), media_type=media_type)
-
-# =========================================================
-# SSH BACKGROUND THREAD (SAFE)
-# =========================================================
-stop_event = threading.Event()
-ssh_thread: threading.Thread | None = None
-
-@app.on_event("startup")
-def start_ssh_worker():
-    global ssh_thread
-    logger.info("Starting SSH sync worker")
-
-    ssh_thread = threading.Thread(
-        target=run_sync_loop_with_stop,
-        args=(stop_event,),
-        daemon=True,
-        name="SSH-Sync",
-    )
-    ssh_thread.start()
-
-@app.on_event("shutdown")
-def stop_ssh_worker():
-    logger.info("Stopping SSH sync worker")
-    stop_event.set()
 
 # -------------------
 # Attach NiceGUI to FastAPI
