@@ -76,8 +76,6 @@ async def nicegui_static(file_path: str):
 # -------------------
 # Attach NiceGUI to FastAPI
 # -------------------
-dark = ui.dark_mode()
-dark.enable()
 ui.run_with(app, storage_secret="timekpr-secret")
 
 # -------------------
