@@ -190,7 +190,9 @@ def servers_page():
     for server_name, server in servers.items():
         with ui.card().classes('mb-6'):
             with ui.row().classes('w-full'):
-                ui.label(server_name).classes('text-lg font-bold')
+                #ui.label(server_name).classes('text-lg font-bold')
+                ui.link(server_name, f'/server/{s}')
+                
                 ui.space()
                 ui.chip(icon='delete', color='warning',
                     on_click=lambda s=server_name: (
