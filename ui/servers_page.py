@@ -140,11 +140,11 @@ def _add_user_dialog(server_name: str):
         username = ui.input('Username')
         user_conf = ui.input(
             'User config path',
-            value='/etc/timekpr/users/username.conf'
+            value='/var/lib/timekpr/config/timekpr.USER.conf'
         )
         stats_conf = ui.input(
             'Stats path',
-            value='/var/lib/timekpr/stats/username.stats'
+            value='/var/lib/timekpr/work/USER.time'
         )
 
         def save():
