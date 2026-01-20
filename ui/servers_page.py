@@ -216,7 +216,7 @@ def servers_page():
                         ui.space()
                         ui.chip(icon='delete', color='warning',
                             on_click=lambda  s=server_name, u=username: (
-                                delete_user(u),
+                                delete_user(s, u),
                                 _refresh()
                             ),           
                         ).props('color=negative')
