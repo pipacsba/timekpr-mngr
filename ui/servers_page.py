@@ -192,13 +192,19 @@ def servers_page():
             with ui.row().classes('items-center justify-between'):
                 ui.label(server_name).classes('text-lg font-bold')
 
-                ui.button(
-                    'Delete',
-                    on_click=lambda s=server_name: (
+                ui.icon('delete', color='warning'
+                        on_click=lambda s=server_name: (
                         delete_server(s),
                         _refresh()
                     ),
-                ).props('color=negative')
+                ).classes('text-5xl')
+                #ui.button(
+                #    'Delete',
+                #    on_click=lambda s=server_name: (
+                #        delete_server(s),
+                #        _refresh()
+                #    ),
+                #).props('color=negative')
 
             ui.label(f"Host: {server['host']}:{server.get('port', 22)}")
             ui.label(f"User: {server['user']}")
@@ -207,11 +213,6 @@ def servers_page():
             ui.separator()
 
             ui.label('Users').classes('font-semibold')
-            ui.button(
-                'Add user',
-                on_click=lambda s=server_name: _add_user_dialog(s),
-            ).classes('mb-2')
-
             users = server.get('users', {})
             if not users:
                 ui.label('No users').classes('text-gray-500')
@@ -219,10 +220,21 @@ def servers_page():
                 for username in users:
                     with ui.row().classes('items-center justify-between'):
                         ui.label(username)
-                        ui.button(
-                            'Delete',
-                            on_click=lambda s=server_name, u=username: (
-                                delete_user(s, u),
+                        ui.icon('delete', color='warning'
+                                on_click=lambda s=server_name: (
+                                delete_server(s),
                                 _refresh()
                             ),
-                        ).props('color=negative')
+                        ).classes('text-5xl')
+                        #ui.button(
+                        #    'Delete',
+                        #    on_click=lambda s=server_name, u=username: (
+                        #        delete_user(s, u),
+                        #        _refresh()
+                        #    ),
+                        #).props('color=negative')
+                        
+            ui.button(
+                'Add user',
+                on_click=lambda s=server_name: _add_user_dialog(s),
+            ).classes('mb-2')
