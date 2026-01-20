@@ -134,7 +134,7 @@ def _add_server_dialog():
 # -------------------------------------------------------------------
 
 def _add_user_dialog(server_name: str):
-    with ui.dialog() as dialog, ui.card():
+    with ui.dialog() as dialog, ui.card().classes('w-max')::
         ui.label(f'Add User to {server_name}').classes('text-lg font-bold')
 
         username = ui.input('Username')
