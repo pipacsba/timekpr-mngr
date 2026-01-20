@@ -37,53 +37,94 @@ def _refresh():
 # -------------------------------------------------------------------
 
 def _add_server_dialog():
-    with ui.dialog() as dialog, ui.card():
+    with ui.dialog() as dialog, ui.card().classes('w-[500px]'):
         ui.label('Add Server').classes('text-lg font-bold')
 
+        # -----------------------------
+        # Basic server fields
+        # -----------------------------
         name = ui.input('Server name')
         host = ui.input('Host')
         port = ui.input('Port', value='22')
         user = ui.input('SSH user')
         server_conf = ui.input(
             'Server config path',
-            value='/etc/timekpr/server.conf'
+            value='/etc/timekpr/timekpr.conf'
         )
 
-        key_file: Path | None = None
+        ui.separator()
+
+        # -----------------------------
+        # SSH key handling
+        # -----------------------------
+        ui.label('SSH Key').classes('font-semibold')
+
+        def list_keys() -> list[str]:
+            return sorted(
+                p.name for p in KEYS_DIR.iterdir()
+                if p.is_file()
+            )
+
+        keys = list_keys()
+
+        selected_key = ui.select(
+            options=keys,
+            label='Select existing SSH key',
+            value=keys[0] if keys else None,
+        )
+
+        # Disable dropdown if no keys exist
+        selected_key.disable() if not keys else None
+
+        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600')
 
         def upload_key(e):
-            nonlocal key_file
-            key_file = KEYS_DIR / e.name
-            key_file.write_bytes(e.content)
+            target = KEYS_DIR / e.name
+            target.write_bytes(e.content)
+
+            updated_keys = list_keys()
+            selected_key.options = updated_keys
+            selected_key.value = e.name
+            selected_key.enable()
+
+            ui.notify(f'SSH key "{e.name}" uploaded', type='positive')
 
         ui.upload(
             label='Upload SSH private key',
-            on_upload=upload_key,
             auto_upload=True,
+            on_upload=upload_key,
         )
 
+        ui.separator()
+
+        # -----------------------------
+        # Actions
+        # -----------------------------
         def save():
             if not name.value or not host.value or not user.value:
                 ui.notify('Missing required fields', type='negative')
                 return
 
-            if not key_file:
-                ui.notify('SSH key required', type='negative')
+            if not selected_key.value:
+                ui.notify('SSH key is required', type='negative')
                 return
 
             add_server(
                 name=name.value,
                 host=host.value,
                 user=user.value,
-                key=key_file.name,
+                key=selected_key.value,
                 port=int(port.value),
                 server_config=server_conf.value,
             )
+
+            ui.notify('Server added successfully', type='positive')
             dialog.close()
             _refresh()
 
-        ui.button('Create', on_click=save)
-        ui.button('Cancel', on_click=dialog.close)
+        with ui.row().classes('justify-end gap-2'):
+            ui.button('Cancel', on_click=dialog.close)
+            ui.button('Create', on_click=save)
 
     dialog.open()
 
