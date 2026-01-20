@@ -192,7 +192,7 @@ def servers_page():
             with ui.row().classes('items-center justify-between'):
                 ui.label(server_name).classes('text-lg font-bold')
 
-                ui.icon('delete', color='warning'
+                ui.icon('delete', color='warning',
                         on_click=lambda s=server_name: (
                         delete_server(s),
                         _refresh()
@@ -220,7 +220,7 @@ def servers_page():
                 for username in users:
                     with ui.row().classes('items-center justify-between'):
                         ui.label(username)
-                        ui.icon('delete', color='warning'
+                        ui.icon('delete', color='warning',
                                 on_click=lambda s=server_name: (
                                 delete_server(s),
                                 _refresh()
