@@ -216,7 +216,7 @@ def servers_page():
                         ui.space()
                         ui.button(
                         ui.chip(icon='delete', color='warning',
-                            on_click=lambda u=username: (
+                            on_click=lambda  s=server_name, u=username: (
                                 delete_user(u),
                                 _refresh()
                             ),           
