@@ -140,33 +140,59 @@ def pty_page():
 def browse_folders():
     build_header()
     
-    def read_file_content(filename: str):
-        """Reads content from the selected file and updates the UI."""
-        try:
-            path = os.path.join(DATA_ROOT, filename)
-            with open(path, 'r', encoding='utf-8') as f:
-                content_display.set_content(f'```text\n{f.read()}\n```')
-        except Exception as e:
-            ui.notify(f'Error reading file: {e}', type='negative')
+    def get_tree_data(path):
+        """Recursively builds a list of dicts for ui.tree."""
+        nodes = []
+        # Sort to show directories first, then files
+        items = sorted(os.listdir(path), key=lambda x: (not os.path.isdir(os.path.join(path, x)), x))
+        
+        for name in items:
+            full_path = os.path.join(path, name)
+            is_dir = os.path.isdir(full_path)
+            
+            node = {'id': full_path, 'label': name}
+            if is_dir:
+                # Recursively add children for subfolders
+                node['children'] = get_tree_data(full_path)
+                node['icon'] = 'folder'
+            else:
+                # Only include text-like files
+                if name.endswith(('.conf', '.json', '.stats')):
+                    node['icon'] = 'description'
+                    nodes.append(node)
+                continue # Skip non-text files
+                
+            nodes.append(node)
+        return nodes
     
-    # 2. Build the UI
+    def handle_select(e):
+        """Event handler for when a node in the tree is clicked."""
+        selected_path = e.value
+        if selected_path and os.path.isfile(selected_path):
+            try:
+                with open(selected_path, 'r', encoding='utf-8') as f:
+                    content_display.set_content(f'```text\n{f.read()}\n```')
+            except Exception as err:
+                ui.notify(f'Error: {err}', type='negative')
+        elif selected_path and os.path.isdir(selected_path):
+            # Optional: update display to indicate a folder was selected
+            content_display.set_content('*Select a file to view content*')
+    
+    # --- UI Layout ---
     with ui.row().classes('w-full h-screen no-wrap'):
-        # Sidebar: List of files
-        with ui.column().classes('w-1/4 bg-slate-100 p-4'):
-            ui.label('Files in /data').classes('text-lg font-bold')
+        # Sidebar: Directory Tree
+        with ui.column().classes('w-1/4 bg-slate-100 p-4 border-r'):
+            ui.label('File Explorer').classes('text-lg font-bold mb-2')
             
-            # Get list of files from local folder
-            files = [f for f in os.listdir(DATA_ROOT) if os.path.isfile(os.path.join(DATA_ROOT, f))]
-            
-            if not files:
+            tree_nodes = get_tree_data(DATA_ROOT)
+            if not tree_nodes:
                 ui.label('No files found').classes('italic text-gray-500')
             else:
-                for name in files:
-                    ui.button(name, on_click=lambda n=name: read_file_content(n)) \
-                        .props('flat align=left').classes('w-full')
+                # Create the tree with the built nodes
+                ui.tree(tree_nodes, label_key='label', on_select=handle_select).classes('w-full')
     
         # Main Area: Content display
         with ui.column().classes('w-3/4 p-4'):
-            ui.label('File Content').classes('text-lg font-bold')
-            content_display = ui.markdown('Select a file to view its content...') \
-                .classes('w-full border p-4 bg-white min-h-[500px]')
+            ui.label('File Content').classes('text-lg font-bold mb-2')
+            content_display = ui.markdown('Select a file from the tree to view...') \
+                .classes('w-full border p-4 bg-white min-h-[500px] overflow-auto')
