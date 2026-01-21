@@ -26,7 +26,7 @@ def build_header():
         #ui.link('Home', '/').classes('font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
         ui.link('pty', '/pty').classes('font-bold text-brand')
-        ui.link('pty', '/browse_folders').classes('font-bold text-brand')
+        ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
 
 
 # -------------------
@@ -104,6 +104,7 @@ else:
 
 @ui.page('/pty')
 def pty_page():
+    build_header()
     terminal = ui.xterm()
 
     pty_pid, pty_fd = pty.fork()  # create a new pseudo-terminal (pty) fork of the process
@@ -136,6 +137,7 @@ def pty_page():
 
 @ui.page('/browse_folders')
 def browse_folders():
+    build_header()
     
     def read_file_content(filename: str):
         """Reads content from the selected file and updates the UI."""
