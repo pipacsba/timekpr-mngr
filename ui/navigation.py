@@ -4,6 +4,7 @@ from servers import load_servers, list_users
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
+from storage import DATA_ROOT
 
 import os
 import pty
@@ -142,7 +143,7 @@ def browse_folders():
     def read_file_content(filename: str):
         """Reads content from the selected file and updates the UI."""
         try:
-            path = os.path.join(DATA_DIR, filename)
+            path = os.path.join(DATA_ROOT, filename)
             with open(path, 'r', encoding='utf-8') as f:
                 content_display.set_content(f'```text\n{f.read()}\n```')
         except Exception as e:
@@ -155,7 +156,7 @@ def browse_folders():
             ui.label('Files in /data').classes('text-lg font-bold')
             
             # Get list of files from local folder
-            files = [f for f in os.listdir(DATA_DIR) if os.path.isfile(os.path.join(DATA_DIR, f))]
+            files = [f for f in os.listdir(DATA_ROOT) if os.path.isfile(os.path.join(DATA_ROOT, f))]
             
             if not files:
                 ui.label('No files found').classes('italic text-gray-500')
