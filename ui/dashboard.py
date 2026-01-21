@@ -10,7 +10,7 @@ Responsibilities:
 
 from pathlib import Path
 from typing import Dict
-
+from datetime import datetime
 from nicegui import ui
 
 from storage import stats_cache_dir
@@ -34,8 +34,11 @@ def parse_stats(text: str) -> Dict[str, float]:
         TODAY_TIME = 3600
     """
     stats: Dict[str, float] = {}
+    time_format = '%Y-%m-%d %H:%M:%S %Z'
 
     for line in text.splitlines():
+        if line[0] in ["#", "["]
+            continue
         if '=' not in line:
             continue
         key, value = line.split('=', 1)
@@ -45,7 +48,8 @@ def parse_stats(text: str) -> Dict[str, float]:
         try:
             stats[key] = float(value)
         except ValueError:
-            continue
+            if key == "LAST_CHECKED"
+                stats[key] = datetime.strptime(f"{value} UTC", format)
 
     return stats
 
@@ -89,26 +93,56 @@ def render_dashboard(server_name: str, username: str):
     ui.label(f'Statistics for {username}').classes('text-2xl font-bold')
 
     with ui.row().classes('gap-6 mt-4'):
-        if 'TOTAL_TIME' in stats:
+        if 'LAST_CHECKED' in stats:
             _stat_card(
-                'Total Time',
-                _seconds_to_human(stats['TOTAL_TIME']),
-                icon='timeline'
+                'last update time of the file',
+                stats['LAST_CHECKED'],
+                icon='clock'
             )
 
-        if 'TODAY_TIME' in stats:
+        
+        if 'TIME_SPENT_BALANCE' in stats:
             _stat_card(
-                'Today',
-                _seconds_to_human(stats['TODAY_TIME']),
+                'total time balance spent for this day',
+                _seconds_to_human(stats['TIME_SPENT_BALANCE']),
                 icon='today'
             )
 
-        if 'WEEK_TIME' in stats:
+        if 'TIME_SPENT_DAY' in stats:
             _stat_card(
-                'This Week',
-                _seconds_to_human(stats['WEEK_TIME']),
+                'total time spent for this day',
+                _seconds_to_human(stats['TIME_SPENT_DAY']),
+                icon='today'
+            )
+
+        if 'TIME_SPENT_WEEK' in stats:
+            _stat_card(
+                'total spent for this week',
+                _seconds_to_human(stats['TIME_SPENT_WEEK']),
                 icon='date_range'
             )
+        
+        if 'TIME_SPENT_MONTH' in stats:
+            _stat_card(
+                'total spent for this month',
+                _seconds_to_human(stats['TIME_SPENT_MONTH']),
+                icon='date_range'
+            )
+
+        if 'PLAYTIME_SPENT_BALANCE' in stats:
+            _stat_card(
+                'total PlayTime balance spent for this day',
+                _seconds_to_human(stats['PLAYTIME_SPENT_BALANCE']),
+                icon='today'
+            )
+
+        if 'PLAYTIME_SPENT_DAY' in stats:
+            _stat_card(
+                'total PlayTime spent for this day',
+                _seconds_to_human(stats['PLAYTIME_SPENT_DAY']),
+                icon='today'
+            )
+    
 
     # Optional raw view
     with ui.expansion('Raw stats'):
