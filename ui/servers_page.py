@@ -218,7 +218,7 @@ def servers_page():
                     with ui.row().classes('w-full'):
                         #ui.label(username)
                         with ui.link(target=f'/server/{server_name}/user/{username}'):
-                                ui.label(username)
+                                ui.label(username.capitalize())
                         ui.space()
                         with ui.link(target=f'/server/{server_name}/stats/{username}'):
                                 ui.chip(icon='bar_chart')
