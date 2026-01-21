@@ -215,6 +215,9 @@ def upload_pending(server_name: str, server: Dict) -> None:
         client.close()
 
 
+def get_pending_status()
+    return change_upload_is_pending
+
 # -------------------------------------------------------------------
 # Periodic runner
 # -------------------------------------------------------------------
