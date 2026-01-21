@@ -2,51 +2,32 @@
 
 timekpr Manager Architecture  
 ```
-                        ┌─────────────────────┐  
-                        │   NiceGUI Frontend  │  
-                        │   (UI Pages & Menu) │  
-                        └─────────┬───────────┘  
-                                  │  
-             ┌────────────────────┼───────────────────────┐  
-             │                    │                       │  
-             │                    │                       │  
-   ┌─────────▼─────────┐  ┌───────▼─────────┐   ┌─────────▼─────────┐    
-   │ navigation.py     │  │ ui/config_editor│   │ ui/stats_dashboard│    
-   │ - Routes          │  │ - Server/user/  │   │ - User stats      │    
-   │ - Page wiring     │  │   stats editors │   │ - Dashboard cards │    
-   └─────────┬─────────┘  └───────────┬─────┘   └───────────┬───────┘    
-             │                        │                     │    
-             │                        │                     │    
-   ┌─────────▼─────────┐       ┌──────▼─────────┐   ┌───────▼─────────┐    
-   │ ui/servers_page.py│       │config_editor.py│   │ dashboard.py    │    
-   │ - Server CRUD     │       │ - Parsing logic│   │ - Parsing stats │    
-   │ - User CRUD       │       │ - Serialization│   │                 │    
-   └─────────┬─────────┘       └───────┬────────┘   └─────────────────┘    
-             │                         │    
-             │                         │    
-   ┌─────────▼─────────┐       ┌───────▼─────────┐    
-   │ servers.py        │       │storage.py       │    
-   │ - Load/add/delete │       │- Local cache    │    
-   │   servers/users   │       │- Pending uploads│    
-   │ - Server metadata │       │- /Data dirs     │    
-   └─────────┬─────────┘       └───────┬─────────┘    
-             │                         │    
-             │                         │    
-   ┌─────────▼─────────┐       ┌───────▼─────────┐    
-   │ ssh_sync.py       │       │ state.py        │    
-   │ - Background SSH  │       │ - Global app    │    
-   │   sync (SCP)      │       │ state (optional)│    
-   │ - Periodic pull   │       └─────────────────┘    
-   │ - Pending uploads │    
-   └─────────┬─────────┘    
-             │    
-             ▼    
-       Remote Servers    
-  ┌─────────────────────┐    
-  │ - Server config     │    
-  │ - User config files │    
-  │ - User stats files  │    
-  └─────────────────────┘    
+                    ┌───────────────────┐
+                    │     main.py       │
+                    │ (NiceGUI startup) │
+                    └────────┬──────────┘
+                             │
+         ┌───────────────────┴───────────────────┐
+         │                                       │
+┌──────────────────┐                    ┌──────────────────┐
+│   ssh_sync.py    │                    │ ui/navigation.py │
+│ (background job) │                    │ (page registry)  │
+└────────┬─────────┘                    └────────┬─────────┘
+         │                                       │
+         │                       ┌───────────────┼───────────────┐
+         │                       │               │               │
+┌──────────────────┐   ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│   servers.py     │   │ servers_page.py  │ │ stats_dashboard  │ │ config_editor    │
+│ (domain model)   │   │ (NiceGUI page)   │ │ (NiceGUI page)   │ │ (NiceGUI page)   │
+└────────┬─────────┘   └────────┬─────────┘ └────────┬─────────┘ └────────┬─────────┘
+         │                      │                    │                    │
+         └──────────────┬───────┴───────────┬────────┴──────────┬─────────┘
+                        │                   │                   │
+                  ┌───────────────────────────────────────────────────┐
+                  │                    storage.py                     │
+                  │          (persistence / state storage)            │
+                  └───────────────────────────────────────────────────┘
+  
 ```
 
 ## Data Flow
@@ -66,10 +47,3 @@ timekpr Manager Architecture
 - NiceGUI frontend (main.py):
   - Starts the UI
   - Launches SSH background sync thread
-
-## Key Features Shown in Diagram
-
-- Offline-safe: cached files allow UI access if server is down.
-- Queued uploads: changes saved locally until server is reachable.
-- Modular UI: config editor, server page, dashboard separated.
-- Multi-server/multi-user aware: menus and pages dynamically generated.
