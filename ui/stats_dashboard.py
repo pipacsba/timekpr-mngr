@@ -48,7 +48,7 @@ def _parse_stats(text: str) -> Dict[str, float]:
         try:
             stats[key] = float(value)
         except ValueError:
-            if key == "LAST_CHECKED"
+            if key == "LAST_CHECKED":
                 stats[key] = datetime.strptime(f"{value} UTC", format)
 
     return stats
