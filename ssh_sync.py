@@ -32,9 +32,16 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info("ssh_sync module loaded")
 
+#internal variables
+change_upload_is_pending = False
+
 # -------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------
+
+def _tree_has_any_file(directory):
+    # rglob("*") yields everything; we find the first entry where is_file() is True
+    return any(p.is_file() for p in Path(directory).rglob("*"))
 
 def _file_hash(path: Path) -> str:
     h = hashlib.sha256()
@@ -219,6 +226,8 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     
     while not stop_event.is_set():
         servers = load_servers()
+
+        change_upload_is_pending = _tree_has_any_file(pending_dir)
 
         for name, server in servers.items():
             reachable = sync_from_server(name, server)
