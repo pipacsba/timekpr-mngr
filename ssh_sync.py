@@ -20,6 +20,7 @@ from typing import Dict
 from servers import load_servers, get_remote_paths
 from storage import (
     KEYS_DIR,
+    PENDING_DIR,
     server_cache_dir,
     user_cache_dir,
     stats_cache_dir,
@@ -230,7 +231,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     while not stop_event.is_set():
         servers = load_servers()
 
-        change_upload_is_pending = _tree_has_any_file(pending_dir)
+        change_upload_is_pending = _tree_has_any_file(PENDING_DIR)
 
         for name, server in servers.items():
             reachable = sync_from_server(name, server)
