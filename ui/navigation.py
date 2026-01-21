@@ -1,6 +1,7 @@
 # ui/navigation.py
 from nicegui import ui
 from servers import load_servers, list_users
+from ssh_sync import get_pending_status
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
@@ -28,6 +29,8 @@ def build_header():
         ui.link('Servers', '/servers').classes('font-bold text-brand')
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
+        ui.space()
+        ui.label(f'{get_pending_status()}')
 
 
 # -------------------
