@@ -37,6 +37,8 @@ def _parse_stats(text: str) -> Dict[str, float]:
     time_format = '%Y-%m-%d %H:%M:%S %Z'
 
     for line in text.splitlines():
+        if not line:
+            continue
         if line[0] in ["#", "["]:
             continue
         if '=' not in line:
