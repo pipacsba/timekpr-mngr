@@ -21,10 +21,12 @@ def build_header():
     dark = ui.dark_mode()
     dark.enable()
     with ui.header().classes('items-center'):
+        ui.colors(brand='#424242')
         ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
         #ui.link('Home', '/').classes('font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
         ui.link('pty', '/pty').classes('font-bold text-brand')
+        ui.link('pty', '/browse_folders').classes('font-bold text-brand')
 
 
 # -------------------
@@ -131,3 +133,37 @@ def pty_page():
         os.close(pty_fd)
         os.kill(pty_pid, signal.SIGKILL)
         print('Terminal closed')
+
+@ui.page('/browse_folders')
+def browse_folders():
+    
+    def read_file_content(filename: str):
+        """Reads content from the selected file and updates the UI."""
+        try:
+            path = os.path.join(DATA_DIR, filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                content_display.set_content(f'```text\n{f.read()}\n```')
+        except Exception as e:
+            ui.notify(f'Error reading file: {e}', type='negative')
+    
+    # 2. Build the UI
+    with ui.row().classes('w-full h-screen no-wrap'):
+        # Sidebar: List of files
+        with ui.column().classes('w-1/4 bg-slate-100 p-4'):
+            ui.label('Files in /data').classes('text-lg font-bold')
+            
+            # Get list of files from local folder
+            files = [f for f in os.listdir(DATA_DIR) if os.path.isfile(os.path.join(DATA_DIR, f))]
+            
+            if not files:
+                ui.label('No files found').classes('italic text-gray-500')
+            else:
+                for name in files:
+                    ui.button(name, on_click=lambda n=name: read_file_content(n)) \
+                        .props('flat align=left').classes('w-full')
+    
+        # Main Area: Content display
+        with ui.column().classes('w-3/4 p-4'):
+            ui.label('File Content').classes('text-lg font-bold')
+            content_display = ui.markdown('Select a file to view its content...') \
+                .classes('w-full border p-4 bg-white min-h-[500px]')
