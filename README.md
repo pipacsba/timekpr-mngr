@@ -29,6 +29,27 @@ timekpr Manager Architecture
                   └───────────────────────────────────────────────────┘
   
 ```
+```
+main.py
+│
+├── ssh_sync.py          ← background / sync logic
+│   ├── servers.py
+│   │   └── storage.py
+│   └── storage.py
+│
+└── ui/navigation.py     ← NiceGUI app entry
+    │
+    ├── ui/servers_page.py
+    │   ├── servers.py
+    │   └── storage.py
+    │
+    ├── ui/stats_dashboard.py
+    │   └── storage.py
+    │
+    └── ui/config_editor.py
+        └── storage.py
+
+```
 
 ## Data Flow
 
