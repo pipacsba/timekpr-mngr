@@ -47,7 +47,7 @@ class VariableWatcher:
         self.notify(new_value)
 
     def get_value(self):
-        return self._value = new_value
+        return self._value
 
     def add_observer(self, observer):
         self.observers.append(observer)
