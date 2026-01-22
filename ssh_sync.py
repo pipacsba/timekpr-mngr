@@ -54,7 +54,7 @@ class VariableWatcher:
 
     def notify(self, new_value):
         for observer in self.observers:
-            observer(new_value)
+            observer()
         
 change_upload_is_pending = VariableWatcher()
 
