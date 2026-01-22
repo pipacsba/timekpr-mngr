@@ -239,9 +239,9 @@ def servers_page():
                         with ui.link(target=f'/server/{server_name}/user/{username}'):
                                 ui.label(username.capitalize())
                         ui.space()
-                        ui.chip(icon='lso', color='warning',
+                        ui.chip(icon='lso', color='green',
                             on_click=lambda s=server_name, u=username: _adjust_user_dialog(s, u),
-                        ).props('color=negative')
+                        )
                         with ui.link(target=f'/server/{server_name}/stats/{username}'):
                                 ui.chip(icon='bar_chart')
                         ui.space()
