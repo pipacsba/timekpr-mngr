@@ -225,19 +225,19 @@ def upload_pending(server_name: str, server: Dict) -> None:
 def get_pending_status():
     return change_upload_is_pending
 
+def trigger_ssh_sync():
+    logger.info("Manual SSH sync triggered")
+    trigger_event.set()
+
 # -------------------------------------------------------------------
 # Periodic runner
 # -------------------------------------------------------------------
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
-    """
-    Stop-aware wrapper for Home Assistant / NiceGUI.
-    """
     global change_upload_is_pending
     logger.info("SSH sync loop started")
-    
+
     while not stop_event.is_set():
         servers = load_servers()
-
         change_upload_is_pending = _tree_has_any_file(PENDING_DIR)
 
         for name, server in servers.items():
@@ -245,4 +245,11 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
             if reachable:
                 upload_pending(name, server)
 
-        stop_event.wait(interval_seconds)
+        # clear trigger before waiting
+        trigger_event.clear()
+
+        # wait until either:
+        # - interval expires
+        # - trigger_event is set
+        # - stop_event is set
+        triggered = trigger_event.wait(interval_seconds)
