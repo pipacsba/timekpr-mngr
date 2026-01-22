@@ -194,7 +194,7 @@ def render_config_editor(
 # Add extra time
 # -------------------------------------------------------------------
 
-def render_config_editor(
+def add_user_extra_time(
     *,
     server_name: str,
     username: str,
@@ -210,11 +210,10 @@ def render_config_editor(
     source = stats_cache_dir(server_name) / f'{username}.stats'
     target = pending_stats_dir(server_name) / f'{username}.stats'
 
-    ################## inten folytatni!
     lines = _load_config(source)
 
     if not lines:
-        ui.label('No server found').classes('text-red text-lg')
+        ui.label('No config found for user. Maybe later?').classes('text-red text-lg')
         return
 
     # Current values
@@ -224,39 +223,19 @@ def render_config_editor(
         if isinstance(line, Entry)
     }
 
-    with ui.column().classes('w-full max-w-3xl'):
-        ui.label(source.name).classes('text-xl font-bold mb-2')
-
-        for line in lines:
-            if isinstance(line, Header):
-                ui.separator()
-                ui.label(line.name).classes('text-lg font-semibold')
-
-            elif isinstance(line, Comment):
-                ui.label(line.raw.lstrip('#')).classes(
-                    'text-sm text-gray-200'
-                )
-
-            elif isinstance(line, Entry):
-                values[line.key] = ui.input(
-                    label=line.key,
-                    value=line.value,
-                ).classes('w-full')
-
-        def save():
-            resolved = {
-                key: widget.value
-                if hasattr(widget, 'value')
-                else widget
-                for key, widget in values.items()
-            }
-            target.write_text(
-                serialize_config(lines, resolved)
-            )
-            ui.notify(
-                'Saved locally (pending upload)',
-                type='positive',
-            )
-            trigger_ssh_sync()
-
-        ui.button('Save', on_click=save).classes('mt-4')
+    for i, n in enumerate(values):
+        if n.key == 'TIME_SPENT_BALANCE':
+           n.value = str(int(n.value) + time_to_add)
+        elif n.key == 'PLAYTIME_SPENT_BALANCE':
+           n.value = str(int(n.value) + playtime_to_add)
+        values[i] = n
+            
+    def save():
+        target.write_text(
+            serialize_config(lines, values)
+        )
+        ui.notify(
+            'Saved locally (pending upload)',
+            type='positive',
+        )
+        trigger_ssh_sync()
