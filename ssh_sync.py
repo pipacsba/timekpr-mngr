@@ -121,8 +121,14 @@ def _scp_get_if_changed(sftp, remote: str, local: Path) -> bool:
     return True
 
 
-def _scp_put(sftp, local: Path, remote: str) -> None:
-    sftp.put(str(local), remote)
+def _scp_put(sftp, local: Path, remote: str) -> bool:
+    result = False
+    try:
+        sftp.put(str(local), remote)
+        result = True
+    except:
+        result = False
+    return result
 
 
 # -------------------------------------------------------------------
@@ -182,11 +188,12 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
 # Upload logic
 # -------------------------------------------------------------------
 
-def upload_pending(server_name: str, server: Dict) -> None:
+def upload_pending(server_name: str, server: Dict) -> bool:
     """
     Upload pending changes if server is reachable.
     """
     client = _connect(server)
+    success = True
     if not client:
         return
 
@@ -197,32 +204,39 @@ def upload_pending(server_name: str, server: Dict) -> None:
         # --- server config ---
         server_file = pending_dir(server_name) / "server.conf"
         if server_file.exists():
-            _scp_put(sftp, server_file, paths["server"])
-            server_file.unlink()
-            logger.info(f"[{server_name}] uploaded server.conf")
+            if _scp_put(sftp, server_file, paths["server"]):
+                server_file.unlink()
+                logger.info(f"[{server_name}] uploaded server.conf")
+            else:
+                success = False
 
         # --- user configs ---
         for file in pending_user_dir(server_name).glob("*.conf"):
             username = file.stem
             remote = paths.get("users", {}).get(username)
             if remote:
-                logger.info(f"Trying to upload user config file {file} to server side {remote}")
-                _scp_put(sftp, file, remote)
-                file.unlink()
-                logger.info(f"[{server_name}] uploaded user {username}")
+                if _scp_put(sftp, file, remote):
+                    file.unlink()
+                    logger.info(f"[{server_name}] uploaded user {username}")
+                else:
+                    success = False
 
         # --- stats ---
         for file in pending_stats_dir(server_name).glob("*.stats"):
             username = file.stem
             remote = paths.get("stats", {}).get(username)
             if remote:
-                logger.info(f"Trying to upload user time file {file} to server side {remote}")
-                _scp_put(sftp, file, remote)
-                file.unlink()
-                logger.info(f"[{server_name}] uploaded stats for {username}")
+                if _scp_put(sftp, file, remote):
+                    file.unlink()
+                    logger.info(f"[{server_name}] uploaded stats for {username}")
+                else:
+                    success = False
+    except:
+        success = False
 
     finally:
         client.close()
+        return success
 
 
 def get_pending_status():
@@ -238,16 +252,17 @@ def trigger_ssh_sync():
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     logger.info("SSH sync loop started")
+    success = True
 
     while not stop_event.is_set():
         servers = load_servers()
-        change_upload_is_pending = _tree_has_any_file(PENDING_DIR)
 
         for name, server in servers.items():
             reachable = sync_from_server(name, server)
             if reachable:
                 upload_pending(name, server)
 
+        change_upload_is_pending = _tree_has_any_file(PENDING_DIR)
         # clear trigger before waiting
         trigger_event.clear()
 
