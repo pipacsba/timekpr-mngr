@@ -163,7 +163,7 @@ def render_config_editor(
 
             elif isinstance(line, Comment):
                 ui.label(line.raw.lstrip('#')).classes(
-                    'text-sm text-gray-500'
+                    'text-sm text-gray-200'
                 )
 
             elif isinstance(line, Entry):
