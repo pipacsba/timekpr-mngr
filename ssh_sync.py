@@ -29,13 +29,15 @@ from storage import (
     pending_stats_dir,
 )
 
+import threading
+trigger_event = threading.Event()
+
 import logging
 logger = logging.getLogger(__name__)
 logger.info("ssh_sync module loaded")
 
 #internal variables
 change_upload_is_pending = False
-trigger_event = threading.Event()
 
 # -------------------------------------------------------------------
 # Helpers
