@@ -171,6 +171,24 @@ def _add_user_dialog(server_name: str):
 
     dialog.open()
 
+# -------------------------------------------------------------------
+# User creation dialog
+# -------------------------------------------------------------------
+
+def _adjust_user_dialog(server_name: str, username: str):
+    #HERE Comes a logic!!!!
+    #HERE Comes a logic!!!!
+    #HERE Comes a logic!!!!
+    #HERE Comes a logic!!!!
+    #HERE Comes a logic!!!!
+    #HERE Comes a logic!!!!
+    add_user_extra_time(
+        server_name="server_name",
+        username="username",
+        time_to_add=60,
+        playtime_to_add=120,
+    )
+
 
 # -------------------------------------------------------------------
 # Main page
@@ -221,20 +239,10 @@ def servers_page():
                         with ui.link(target=f'/server/{server_name}/user/{username}'):
                                 ui.label(username.capitalize())
                         ui.space()
-                        with ui.link(target=f'/server/{server_name}/stats/{username}'):
-                                ui.chip(icon='bar_chart')
-                        ui.space()
-                        ui.chip(icon='delete', color='warning',
-                            on_click=lambda  s=server_name, u=username: (
-                                delete_user(s, u),
-                                _refresh()
+                        ui.chip(icon='lso', color='warning',
+                            on_click=lambda s=server_name, u=username: _adjust_user_dialog(s, u)
                             ),           
                         ).props('color=negative')
-                    with ui.row().classes('w-full'):
-                        #ui.label(username)
-                        with ui.link(target=f'/server/{server_name}/user/{username}'):
-                                ui.label(username.capitalize())
-                        ui.space()
                         with ui.link(target=f'/server/{server_name}/stats/{username}'):
                                 ui.chip(icon='bar_chart')
                         ui.space()
