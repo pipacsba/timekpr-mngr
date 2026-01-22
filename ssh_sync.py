@@ -1,4 +1,4 @@
-# app/ssh_sync.py
+# ssh_sync.py
 """
 SSH synchronization engine.
 
@@ -28,7 +28,6 @@ from storage import (
     pending_user_dir,
     pending_stats_dir,
 )
-from ui.navigation import pending_ui_refresh
 
 import threading
 trigger_event = threading.Event()
@@ -243,10 +242,10 @@ def upload_pending(server_name: str, server: Dict) -> bool:
 def get_pending_status():
     return change_upload_is_pending
 
-def get_pending_status(a_status: bool):
+def set_pending_status(a_status: bool):
     global change_upload_is_pending
     change_upload_is_pending = a_stauts
-    pending_ui_refresh()
+    #pending_ui_refresh()
 
 def trigger_ssh_sync():
     logger.info("Manual SSH sync triggered")
@@ -268,7 +267,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
             if reachable:
                 upload_pending(name, server)
 
-        change_upload_is_pending = _tree_has_any_file(PENDING_DIR)
+        set_pending_status(_tree_has_any_file(PENDING_DIR))
         # clear trigger before waiting
         trigger_event.clear()
 
