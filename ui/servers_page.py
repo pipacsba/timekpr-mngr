@@ -19,6 +19,7 @@ from servers import (
     delete_user,
 )
 from storage import KEYS_DIR
+from ui.config_editor import add_user_extra_time
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -215,6 +216,20 @@ def servers_page():
                 ui.label('No users').classes('text-gray-500')
             else:
                 for username in users:
+                    with ui.row().classes('w-full'):
+                        #ui.label(username)
+                        with ui.link(target=f'/server/{server_name}/user/{username}'):
+                                ui.label(username.capitalize())
+                        ui.space()
+                        with ui.link(target=f'/server/{server_name}/stats/{username}'):
+                                ui.chip(icon='bar_chart')
+                        ui.space()
+                        ui.chip(icon='delete', color='warning',
+                            on_click=lambda  s=server_name, u=username: (
+                                delete_user(s, u),
+                                _refresh()
+                            ),           
+                        ).props('color=negative')
                     with ui.row().classes('w-full'):
                         #ui.label(username)
                         with ui.link(target=f'/server/{server_name}/user/{username}'):
