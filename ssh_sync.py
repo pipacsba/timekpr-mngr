@@ -244,7 +244,7 @@ def get_pending_status():
 
 def set_pending_status(a_status: bool):
     global change_upload_is_pending
-    change_upload_is_pending = a_stauts
+    change_upload_is_pending = a_status
     #pending_ui_refresh()
 
 def trigger_ssh_sync():
