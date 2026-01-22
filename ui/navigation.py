@@ -34,7 +34,8 @@ def pending_ui():
         with ui.icon('circle', color=f'{a_color}').classes('text-5xl'):
                 ui.tooltip(f'{b_text}').classes(f'{b_color}')
 
-
+def pending_ui_refresh():
+  pending_ui.refresh()
 
 # -------------------
 # Header (called inside each page)
