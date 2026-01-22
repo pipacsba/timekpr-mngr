@@ -37,7 +37,26 @@ logger = logging.getLogger(__name__)
 logger.info("ssh_sync module loaded")
 
 #internal variables
-change_upload_is_pending = False
+class VariableWatcher:
+    def __init__(self):
+        self._value = True
+        self.observers = []
+
+    def set_value(self, new_value : bool):
+        self._value = new_value
+        self.notify(new_value)
+
+    def get_value(self):
+        return self._value = new_value
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def notify(self, new_value):
+        for observer in self.observers:
+            observer(new_value)
+        
+change_upload_is_pending = VariableWatcher()
 
 # -------------------------------------------------------------------
 # Helpers
@@ -239,13 +258,6 @@ def upload_pending(server_name: str, server: Dict) -> bool:
         return success
 
 
-def get_pending_status():
-    return change_upload_is_pending
-
-def set_pending_status(a_status: bool):
-    global change_upload_is_pending
-    change_upload_is_pending = a_status
-    #pending_ui_refresh()
 
 def trigger_ssh_sync():
     logger.info("Manual SSH sync triggered")
@@ -267,7 +279,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
             if reachable:
                 upload_pending(name, server)
 
-        set_pending_status(_tree_has_any_file(PENDING_DIR))
+        change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
         # clear trigger before waiting
         trigger_event.clear()
 
