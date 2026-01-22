@@ -7,8 +7,9 @@ from nicegui import ui
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-import ui.navigation as navigation
 from ssh_sync import run_sync_loop_with_stop
+import ui.navigation as navigation
+
 
 import logging
 import sys
