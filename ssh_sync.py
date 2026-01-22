@@ -41,6 +41,7 @@ change_upload_is_pending = False
 # -------------------------------------------------------------------
 
 def _tree_has_any_file(directory):
+    logger.info(f"Finding files in folder: {directory}")
     for _, _, files in os.walk(directory):
         if files:
             return True
@@ -201,6 +202,7 @@ def upload_pending(server_name: str, server: Dict) -> None:
             username = file.stem
             remote = paths.get("users", {}).get(username)
             if remote:
+                logger.info(f"Trying to upload user config file {file} to server side {remote}")
                 _scp_put(sftp, file, remote)
                 file.unlink()
                 logger.info(f"[{server_name}] uploaded user {username}")
@@ -210,6 +212,7 @@ def upload_pending(server_name: str, server: Dict) -> None:
             username = file.stem
             remote = paths.get("stats", {}).get(username)
             if remote:
+                logger.info(f"Trying to upload user time file {file} to server side {remote}")
                 _scp_put(sftp, file, remote)
                 file.unlink()
                 logger.info(f"[{server_name}] uploaded stats for {username}")
