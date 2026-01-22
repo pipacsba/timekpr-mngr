@@ -35,6 +35,7 @@ logger.info("ssh_sync module loaded")
 
 #internal variables
 change_upload_is_pending = False
+trigger_event = threading.Event()
 
 # -------------------------------------------------------------------
 # Helpers
