@@ -22,7 +22,7 @@ from storage import (
     pending_user_dir,
     pending_stats_dir,
 )
-
+from sshy_sync import trigger_ssh_sync
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -186,5 +186,6 @@ def render_config_editor(
                 'Saved locally (pending upload)',
                 type='positive',
             )
+            trigger_ssh_sync()
 
         ui.button('Save', on_click=save).classes('mt-4')
