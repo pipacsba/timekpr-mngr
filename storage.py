@@ -1,4 +1,4 @@
-#storage.py
+# storage.py
 """
 Filesystem layout and persistence helpers.
 
