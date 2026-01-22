@@ -41,11 +41,12 @@ change_upload_is_pending = False
 # -------------------------------------------------------------------
 
 def _tree_has_any_file(directory):
-    logger.info(f"Finding files in folder: {directory}")
+    found = False
     for _, _, files in os.walk(directory):
         if files:
-            return True
-    return False
+            found = True
+    logger.info(f"Finding files in folder: {directory} with result: {found}")
+    return found
 
 def _file_hash(path: Path) -> str:
     h = hashlib.sha256()
@@ -231,6 +232,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     """
     Stop-aware wrapper for Home Assistant / NiceGUI.
     """
+    global change_upload_is_pending
     logger.info("SSH sync loop started")
     
     while not stop_event.is_set():
