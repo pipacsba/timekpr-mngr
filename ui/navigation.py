@@ -33,7 +33,7 @@ def build_header():
         a_color = 'green'
         if get_pending_status():
           a_color = 'red'
-        with ui.icon('circle', color=f'{a_color)'.classes('text-5xl'):
+        with ui.icon('circle', color=f'{a_color}').classes('text-5xl'):
             if a_color == 'green':
                 ui.tooltip('No upload is pending').classes('bg-green')
             else
