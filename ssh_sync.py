@@ -41,8 +41,10 @@ change_upload_is_pending = False
 # -------------------------------------------------------------------
 
 def _tree_has_any_file(directory):
-    # rglob("*") yields everything; we find the first entry where is_file() is True
-    return any(p.is_file() for p in Path(directory).rglob("*"))
+    for _, _, files in os.walk(directory):
+        if files:
+            return True
+    return False
 
 def _file_hash(path: Path) -> str:
     h = hashlib.sha256()
