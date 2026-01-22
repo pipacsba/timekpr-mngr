@@ -17,6 +17,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 # -------------------
+# Refreshable items
+# -------------------
+
+@ui.refreshable
+def pending_ui():
+        a_color = 'green'
+        if get_pending_status():
+          a_color = 'red'
+          b_color = 'bg-red'
+          b_text = 'Upload is pending'
+        else:
+          a_color = 'green'
+          b_color = 'bg-green'
+          b_text = 'No upload is pending'
+        with ui.icon('circle', color=f'{a_color}').classes('text-5xl'):
+                ui.tooltip(f'{b_text}').classes(f'{b_color}')
+
+
+
+# -------------------
 # Header (called inside each page)
 # -------------------
 def build_header():
@@ -25,19 +45,11 @@ def build_header():
     with ui.header().classes('items-center'):
         ui.colors(brand='#424242')
         ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
-        #ui.link('Home', '/').classes('font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        a_color = 'green'
-        if get_pending_status():
-          a_color = 'red'
-        with ui.icon('circle', color=f'{a_color}').classes('text-5xl'):
-            if a_color == 'green':
-                ui.tooltip('No upload is pending').classes('bg-green')
-            else:
-                ui.tooltip('Upload is pending').classes('bg-red')
+        pending_ui()
 
 # -------------------
 # Pages
