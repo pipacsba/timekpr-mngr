@@ -1,7 +1,7 @@
 # ui/navigation.py
 from nicegui import ui
 from servers import load_servers, list_users
-from ssh_sync import get_pending_status
+from ssh_sync import change_upload_is_pending
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 @ui.refreshable
 def pending_ui():
         a_color = 'green'
-        if get_pending_status():
+        if change_upload_is_pending.get_value():
           a_color = 'red'
           b_color = 'bg-red'
           b_text = 'Upload is pending'
@@ -36,6 +36,8 @@ def pending_ui():
 
 def pending_ui_refresh():
   pending_ui.refresh()
+        
+change_upload_is_pending.add_observer(pending_ui_refresh)
 
 # -------------------
 # Header (called inside each page)
