@@ -1,4 +1,4 @@
-# app/servers.py
+# servers.py
 """
 Server model and CRUD helpers.
 
