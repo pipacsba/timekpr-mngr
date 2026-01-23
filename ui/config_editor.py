@@ -224,20 +224,22 @@ def add_user_extra_time(
         if isinstance(line, Entry)
     }
 
-    for i, n as Dict in enumerate(values):
-        print(n)
-        if n[0] == 'TIME_SPENT_BALANCE':
-           n.value = str(int(n.value) + time_to_add)
-        elif n.key == 'PLAYTIME_SPENT_BALANCE':
-           n.value = str(int(n.value) + playtime_to_add)
-        values[i] = n
-            
-    def save():
-        target.write_text(
-            serialize_config(lines, values)
-        )
-        ui.notify(
-            'Saved locally (pending upload)',
-            type='positive',
-        )
-        trigger_ssh_sync()
+    if "TIME_SPENT_BALANCE" in values:
+        values['TIME_SPENT_BALANCE'] += time_to_add
+    else:
+        ui.notify('TIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
+        return
+    if "PLAYTIME_SPENT_BALANCE" in values:
+        values['PLAYTIME_SPENT_BALANCE'] += playtime_to_add
+    else:
+        ui.notify('PLAYTIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
+        return
+
+    target.write_text(
+        serialize_config(lines, values)
+    )
+    ui.notify(
+        'Saved locally (pending upload)',
+        type='positive',
+    )
+    trigger_ssh_sync()
