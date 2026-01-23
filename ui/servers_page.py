@@ -183,8 +183,12 @@ def _adjust_user_dialog(server: str, user: str):
         ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
         @ui.refreshable
-        def adjusted_time_ui(change_minutes: int):
-            global time_adjustment = time_adjustment + change minutes
+        def adjusted_time_ui(change_minutes: int, reset: Optional[bool] = False):
+            global time_adjustment 
+            if reset:
+                time_adjustment = 0
+            else:
+                time_adjustment = time_adjustment + change minutes
             hours, m = divmod(abs(time_adjustment), 60)
             if time_adjustment < 0:
                 hours = 0 - hours 
@@ -199,8 +203,7 @@ def _adjust_user_dialog(server: str, user: str):
 
         with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("reset", 
-                    on_click = ( global time_adjustment = 0,
-                                adjusted_time_ui(0)),                
+                    on_click = adjusted_time_ui(0, True),                   
                 ).props('color=negative')
         
         with ui.row().classes('justify-end gap-2').classes('w-full'):
@@ -211,8 +214,12 @@ def _adjust_user_dialog(server: str, user: str):
         ui.separator()
 
         @ui.refreshable
-        def adjusted_playtime_ui(change_minutes: int):
-            global playtime_adjustment = playtime_adjustment + change minutes
+        def adjusted_playtime_ui(change_minutes: int, reset: Optional[bool] = False):
+            global playtime_adjustment
+            if reset:
+                playtime_adjustment = 0
+            else:
+                playtime_adjustment= playtime_adjustment + change minutes
             hours, m = divmod(abs(playtime_adjustment), 60)
             if playtime_adjustment < 0:
                 hours = 0 - hours 
@@ -227,8 +234,7 @@ def _adjust_user_dialog(server: str, user: str):
 
         with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("reset", 
-                    on_click = ( global playtime_adjustment = 0,
-                                adjusted_playtime_ui(0)),                
+                    on_click = adjusted_playtime_ui(0, True),              
                 ).props('color=negative')
         
         with ui.row().classes('justify-end gap-2').classes('w-full'):
