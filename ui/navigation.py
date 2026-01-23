@@ -220,3 +220,21 @@ def browse_folders():
             ui.label('File Content').classes('text-lg font-bold mb-2')
             content_display = ui.markdown('Select a file from the tree to view...') \
                 .classes('w-full border p-4 bg-gray-500 min-h-[500px] overflow-auto')
+
+
+
+# =========================================================
+# NiceGUI live log viewer (admin/debug UI)
+# =========================================================
+@ui.page('/logs')
+def logs():
+
+        with ui.expansion('Logs', icon='article').classes('w-full'):
+            log_label = ui.label().classes(
+                'font-mono text-xs whitespace-pre-wrap max-h-96 overflow-auto'
+            )
+        
+        def refresh_logs():
+            log_label.text = '\n'.join(log_buffer)
+        
+        ui.timer(1.0, refresh_logs)
