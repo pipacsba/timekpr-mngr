@@ -224,7 +224,7 @@ def add_user_extra_time(
         if isinstance(line, Entry)
     }
 
-    for i, n in enumerate(values):
+    for i, n as Dict in enumerate(values):
         print(n)
         if n[0] == 'TIME_SPENT_BALANCE':
            n.value = str(int(n.value) + time_to_add)
