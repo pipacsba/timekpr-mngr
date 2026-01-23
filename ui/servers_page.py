@@ -172,10 +172,10 @@ def _add_user_dialog(server_name: str):
     dialog.open()
 
 # -------------------------------------------------------------------
-# User creation dialog
+# Adjust user time dialog
 # -------------------------------------------------------------------
 
-def _adjust_user_dialog(server_name: str, username: str):
+def _adjust_user_dialog(server: str, user: str):
     #HERE Comes a logic!!!!
     #HERE Comes a logic!!!!
     #HERE Comes a logic!!!!
@@ -183,8 +183,8 @@ def _adjust_user_dialog(server_name: str, username: str):
     #HERE Comes a logic!!!!
     #HERE Comes a logic!!!!
     add_user_extra_time(
-        server_name=server_name,
-        username=username,
+        server_name=server,
+        username=user,
         time_to_add=60,
         playtime_to_add=120,
     )
