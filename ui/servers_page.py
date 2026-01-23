@@ -247,7 +247,7 @@ def _adjust_user_dialog(server: str, user: str):
             add_user_extra_time(
                 server_name=server,
                 username=user,
-                time_to_add=int(time_adjustment*60,)
+                time_to_add=int(time_adjustment*60),
                 playtime_to_add=int(playtime_adjustment*60),
             )
             dialog.close()
