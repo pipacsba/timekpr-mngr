@@ -12,52 +12,19 @@ from ssh_sync import run_sync_loop_with_stop
 
 import logging
 import sys
-import threading  # for ssh
-from contextlib import asynccontextmanager  # for ssh
-from collections import deque
+import threading #for ssh
+from contextlib import asynccontextmanager # for ssh
 
 
-# =========================================================
-# Logging setup (EARLY)
-# =========================================================
-
-log_buffer = deque(maxlen=500)
-
-class UILogHandler(logging.Handler):
-    def emit(self, record):
-        try:
-            log_buffer.append(self.format(record))
-        except Exception:
-            pass  # never let logging crash the app
-
-ui_handler = UILogHandler()
-ui_handler.setFormatter(logging.Formatter(
-    '%(asctime)s [%(levelname)s] %(threadName)s %(name)s: %(message)s'
-))
-
+# -------------------
+# Logging setup
+# -------------------
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        ui_handler,
-    ],
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
-
-# Attach to NiceGUI + Uvicorn loggers
-for name in (
-    'nicegui',
-    'uvicorn',
-    'uvicorn.error',
-    'uvicorn.access',
-):
-    logger_ = logging.getLogger(name)
-    logger_.setLevel(logging.INFO)
-    if not any(isinstance(h, UILogHandler) for h in logger_.handlers):
-        logger_.addHandler(ui_handler)
-
 logger = logging.getLogger(__name__)
-
 
 # -------------------
 # MIME types (for HA Ingress static files)
@@ -74,7 +41,6 @@ mimetypes.add_type("font/ttf", ".ttf")
 # =========================================================
 stop_event = threading.Event()
 ssh_thread: threading.Thread | None = None
-
 
 # =========================================================
 # FastAPI lifespan (MODERN + SAFE)
@@ -103,7 +69,6 @@ async def lifespan(app: FastAPI):
 # -------------------
 app = FastAPI(lifespan=lifespan)
 
-
 # -------------------
 # Ingress middleware (HTTP only)
 # -------------------
@@ -115,7 +80,6 @@ class IngressMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app.add_middleware(IngressMiddleware)
-
 
 # -------------------
 # Manual static serving for NiceGUI assets
@@ -136,12 +100,10 @@ async def nicegui_static(file_path: str):
     with open(full_path, "rb") as f:
         return Response(f.read(), media_type=media_type)
 
-
 # -------------------
 # Attach NiceGUI to FastAPI
 # -------------------
 ui.run_with(app, storage_secret="timekpr-secret")
-
 
 # -------------------
 # Uvicorn entrypoint
