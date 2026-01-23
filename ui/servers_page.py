@@ -188,7 +188,7 @@ def _adjust_user_dialog(server: str, user: str):
             if reset:
                 time_adjustment = 0
             else:
-                time_adjustment = time_adjustment + change minutes
+                time_adjustment = time_adjustment + change_minutes
             hours, m = divmod(abs(time_adjustment), 60)
             if time_adjustment < 0:
                 hours = 0 - hours 
@@ -219,7 +219,7 @@ def _adjust_user_dialog(server: str, user: str):
             if reset:
                 playtime_adjustment = 0
             else:
-                playtime_adjustment= playtime_adjustment + change minutes
+                playtime_adjustment= playtime_adjustment + change_minutes
             hours, m = divmod(abs(playtime_adjustment), 60)
             if playtime_adjustment < 0:
                 hours = 0 - hours 
