@@ -39,7 +39,7 @@ def _refresh():
 
 def _add_server_dialog():
     with ui.dialog() as dialog, ui.card().classes('w-lvw'):
-        ui.label('Add Server').classes('text-lg font-bold').classes('w-full')
+        ui.label('Add Server').classes('text-lg font-bold w-full')
 
         # -----------------------------
         # Basic server fields
@@ -77,7 +77,7 @@ def _add_server_dialog():
         # Disable dropdown if no keys exist
         selected_key.disable() if not keys else None
 
-        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600').classes('w-full')
+        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-200').classes('w-full')
 
         def upload_key(e):
             target = KEYS_DIR / e.name
@@ -135,18 +135,18 @@ def _add_server_dialog():
 # -------------------------------------------------------------------
 
 def _add_user_dialog(server_name: str):
-    with ui.dialog().classes('w-lvw') as dialog, ui.card():
-        ui.label(f'Add User to {server_name}').classes('text-lg font-bold')
+    with ui.dialog().classes('w-lvw') as dialog, ui.card().classes('w-lvw'):
+        ui.label(f'Add User to {server_name}').classes('text-lg font-bold w-full')
 
-        username = ui.input('Username')
+        username = ui.input('Username').classes('w-full')
         user_conf = ui.input(
             'User config path',
             value='/var/lib/timekpr/config/timekpr.USER.conf'
-        )
+        ).classes('w-full')
         stats_conf = ui.input(
             'Stats path',
             value='/var/lib/timekpr/work/USER.time'
-        )
+        ).classes('w-full')
 
         def save():
             if not username.value:
@@ -166,8 +166,9 @@ def _add_user_dialog(server_name: str):
             dialog.close()
             _refresh()
 
-        ui.button('Add', on_click=save)
-        ui.button('Cancel', on_click=dialog.close)
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+            ui.button('Add', on_click=save)
+            ui.button('Cancel', on_click=dialog.close)
 
     dialog.open()
 
