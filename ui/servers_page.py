@@ -177,10 +177,41 @@ def _add_user_dialog(server_name: str):
 
 def _adjust_user_dialog(server: str, user: str):
     #HERE Comes a logic!!!!
-    #HERE Comes a logic!!!!
-    #HERE Comes a logic!!!!
-    #HERE Comes a logic!!!!
-    #HERE Comes a logic!!!!
+    with ui.dialog().classes('w-lvw') as dialog, ui.card():
+        ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold')
+
+        username = ui.input('Username')
+        user_conf = ui.input(
+            'User config path',
+            value='/var/lib/timekpr/config/timekpr.USER.conf'
+        )
+        stats_conf = ui.input(
+            'Stats path',
+            value='/var/lib/timekpr/work/USER.time'
+        )
+
+        def save():
+            if not username.value:
+                ui.notify('Username required', type='negative')
+                return
+
+            add_user(
+                server_name=server_name,
+                username=username.value,
+                user_config_path=user_conf.value.replace(
+                    'username', username.value
+                ),
+                stats_path=stats_conf.value.replace(
+                    'username', username.value
+                ),
+            )
+            dialog.close()
+            _refresh()
+
+        ui.button('Add', on_click=save)
+        ui.button('Cancel', on_click=dialog.close)
+
+    dialog.open()
     #HERE Comes a logic!!!!
     add_user_extra_time(
         server_name=server,
