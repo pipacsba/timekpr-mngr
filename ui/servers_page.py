@@ -51,14 +51,14 @@ def _add_server_dialog():
         server_conf = ui.input(
             'Server config path',
             value='/etc/timekpr/timekpr.conf'
-        ).classes('w-lvw')
+        )
 
-        ui.separator().classes('w-lvw')
+        ui.separator()
 
         # -----------------------------
         # SSH key handling
         # -----------------------------
-        ui.label('SSH Key').classes('font-semibold').classes('w-lvw')
+        ui.label('SSH Key').classes('font-semibold')
 
         def list_keys() -> list[str]:
             return sorted(
@@ -72,12 +72,12 @@ def _add_server_dialog():
             options=keys,
             label='Select existing SSH key',
             value=keys[0] if keys else None,
-        ).classes('w-lvw')
+        )
 
         # Disable dropdown if no keys exist
         selected_key.disable() if not keys else None
 
-        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600').classes('w-lvw')
+        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600')
 
         def upload_key(e):
             target = KEYS_DIR / e.name
@@ -94,9 +94,9 @@ def _add_server_dialog():
             label='Upload SSH private key',
             auto_upload=True,
             on_upload=upload_key,
-        ).classes('w-lvw')
+        )
 
-        ui.separator().classes('w-lvw')
+        ui.separator()
 
         # -----------------------------
         # Actions
