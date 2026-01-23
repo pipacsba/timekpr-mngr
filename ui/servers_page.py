@@ -201,12 +201,10 @@ def _adjust_user_dialog(server: str, user: str):
                     on_click = adjusted_time_ui(-15),                
                 ).props('color=negative')
 
-        with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("reset", 
                     on_click = adjusted_time_ui(0, True),                   
                 ).props('color=negative')
         
-        with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("+15 min", 
                     on_click = adjusted_time_ui(15),                
                 ).props('color=negative')
@@ -232,12 +230,10 @@ def _adjust_user_dialog(server: str, user: str):
                     on_click = adjusted_playtime_ui(-15),                
                 ).props('color=negative')
 
-        with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("reset", 
                     on_click = adjusted_playtime_ui(0, True),              
                 ).props('color=negative')
         
-        with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("+15 min", 
                     on_click = adjusted_playtime_ui(15),                
                 ).props('color=negative')
