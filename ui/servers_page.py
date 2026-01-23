@@ -192,7 +192,7 @@ def _adjust_user_dialog(server: str, user: str):
             hours, m = divmod(abs(time_adjustment), 60)
             if time_adjustment < 0:
                 hours = 0 - hours 
-            ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full'):
+            ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full')
         
         adjusted_time_ui()
         
@@ -223,7 +223,7 @@ def _adjust_user_dialog(server: str, user: str):
             hours, m = divmod(abs(playtime_adjustment), 60)
             if playtime_adjustment < 0:
                 hours = 0 - hours 
-            ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full'):
+            ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full')
         
         adjusted_playtime_ui()
         
