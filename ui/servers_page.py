@@ -38,27 +38,27 @@ def _refresh():
 # -------------------------------------------------------------------
 
 def _add_server_dialog():
-    with ui.dialog() as dialog, ui.card().classes('w-lvw').style('max-width: none'):
+    with ui.dialog() as dialog, ui.card().classes('w-lvw'):
         ui.label('Add Server').classes('text-lg font-bold' 'w-lvw')
 
         # -----------------------------
         # Basic server fields
         # -----------------------------
-        name = ui.input('Server name')
-        host = ui.input('Host')
-        port = ui.input('Port', value='22')
-        user = ui.input('SSH user')
+        name = ui.input('Server name').classes('w-lvw')
+        host = ui.input('Host').classes('w-lvw')
+        port = ui.input('Port', value='22').classes('w-lvw')
+        user = ui.input('SSH user').classes('w-lvw')
         server_conf = ui.input(
             'Server config path',
             value='/etc/timekpr/timekpr.conf'
-        )
+        ).classes('w-lvw')
 
-        ui.separator()
+        ui.separator().classes('w-lvw')
 
         # -----------------------------
         # SSH key handling
         # -----------------------------
-        ui.label('SSH Key').classes('font-semibold')
+        ui.label('SSH Key').classes('font-semibold').classes('w-lvw')
 
         def list_keys() -> list[str]:
             return sorted(
@@ -72,12 +72,12 @@ def _add_server_dialog():
             options=keys,
             label='Select existing SSH key',
             value=keys[0] if keys else None,
-        )
+        ).classes('w-lvw')
 
         # Disable dropdown if no keys exist
         selected_key.disable() if not keys else None
 
-        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600')
+        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600').classes('w-lvw')
 
         def upload_key(e):
             target = KEYS_DIR / e.name
@@ -94,9 +94,9 @@ def _add_server_dialog():
             label='Upload SSH private key',
             auto_upload=True,
             on_upload=upload_key,
-        )
+        ).classes('w-lvw')
 
-        ui.separator()
+        ui.separator().classes('w-lvw')
 
         # -----------------------------
         # Actions
