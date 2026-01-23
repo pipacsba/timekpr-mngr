@@ -194,7 +194,7 @@ def _adjust_user_dialog(server: str, user: str):
                 hours = 0 - hours 
             ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full')
         
-        adjusted_time_ui()
+        adjusted_time_ui(0,True)
         
         with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("-15 min", 
@@ -225,7 +225,7 @@ def _adjust_user_dialog(server: str, user: str):
                 hours = 0 - hours 
             ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full')
         
-        adjusted_playtime_ui()
+        adjusted_playtime_ui(0, True)
         
         with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("-15 min", 
