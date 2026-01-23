@@ -39,7 +39,7 @@ def _refresh():
 
 def _add_server_dialog():
     with ui.dialog() as dialog, ui.card().classes('w-lvw'):
-        ui.label('Add Server').classes('text-lg font-bold')
+        ui.label('Add Server').classes('text-lg font-bold' 'w-lvw')
 
         # -----------------------------
         # Basic server fields
