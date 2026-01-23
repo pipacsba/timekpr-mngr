@@ -177,8 +177,10 @@ def _add_user_dialog(server_name: str):
 # -------------------------------------------------------------------
 
 def _adjust_user_dialog(server: str, user: str):
-    global time_adjustment = 0
-    global playtime_adjustment = 0
+    global time_adjustment
+    global playtime_adjustment
+    time_adjustment = 0
+    playtime_adjustment = 0
     with ui.dialog().classes('w-lvw') as dialog, ui.card().classes('w-lvw'):
         ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
