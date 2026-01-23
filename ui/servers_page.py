@@ -39,15 +39,15 @@ def _refresh():
 
 def _add_server_dialog():
     with ui.dialog() as dialog, ui.card().classes('w-lvw'):
-        ui.label('Add Server').classes('text-lg font-bold' 'w-lvw')
+        ui.label('Add Server').classes('text-lg font-bold')
 
         # -----------------------------
         # Basic server fields
         # -----------------------------
-        name = ui.input('Server name').classes('w-lvw')
-        host = ui.input('Host').classes('w-lvw')
-        port = ui.input('Port', value='22').classes('w-lvw')
-        user = ui.input('SSH user').classes('w-lvw')
+        name = ui.input('Server name').style('width: "auto"')
+        host = ui.input('Host')
+        port = ui.input('Port', value='22')
+        user = ui.input('SSH user')
         server_conf = ui.input(
             'Server config path',
             value='/etc/timekpr/timekpr.conf'
