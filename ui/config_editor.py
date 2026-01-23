@@ -230,7 +230,7 @@ def add_user_extra_time(
         ui.notify('TIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
         return
     if "PLAYTIME_SPENT_BALANCE" in values:
-        values['PLAYTIME_SPENT_BALANCE'] += str(int(values['PLAYTIME_SPENT_BALANCE']) +playtime_to_add)
+        values['PLAYTIME_SPENT_BALANCE'] = str(int(values['PLAYTIME_SPENT_BALANCE']) + playtime_to_add)
     else:
         ui.notify('PLAYTIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
         return
