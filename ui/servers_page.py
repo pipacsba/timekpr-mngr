@@ -39,12 +39,12 @@ def _refresh():
 
 def _add_server_dialog():
     with ui.dialog() as dialog, ui.card().classes('w-lvw'):
-        ui.label('Add Server').classes('text-lg font-bold')
+        ui.label('Add Server').classes('text-lg font-bold').classes('w-full')
 
         # -----------------------------
         # Basic server fields
         # -----------------------------
-        name = ui.input('Server name').style('width: "auto"')
+        name = ui.input('Server name').classes('w-full')
         host = ui.input('Host')
         port = ui.input('Port', value='22')
         user = ui.input('SSH user')
