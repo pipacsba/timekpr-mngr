@@ -143,21 +143,6 @@ async def nicegui_static(file_path: str):
 ui.run_with(app, storage_secret="timekpr-secret")
 
 
-# =========================================================
-# 🔥 Live Log Viewer UI
-# =========================================================
-
-with ui.expansion('System Logs', icon='article').classes('w-full'):
-    log_label = ui.label().classes(
-        'font-mono text-xs whitespace-pre-wrap max-h-96 overflow-auto w-full'
-    )
-
-def refresh_logs():
-    log_label.text = '\n'.join(log_buffer)
-
-ui.timer(1.0, refresh_logs)
-
-
 # -------------------
 # Uvicorn entrypoint
 # -------------------
