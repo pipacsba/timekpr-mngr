@@ -225,7 +225,8 @@ def add_user_extra_time(
     }
 
     for i, n in enumerate(values):
-        if n.key == 'TIME_SPENT_BALANCE':
+        print(n)
+        if n[0] == 'TIME_SPENT_BALANCE':
            n.value = str(int(n.value) + time_to_add)
         elif n.key == 'PLAYTIME_SPENT_BALANCE':
            n.value = str(int(n.value) + playtime_to_add)
