@@ -183,30 +183,36 @@ def _adjust_user_dialog(server: str, user: str):
         ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
         @ui.refreshable
-        def adjusted_time_ui(change_minutes: int, reset = False):
+        def adjusted_time_ui():
+            global time_adjustment 
+            hours, m = divmod(abs(time_adjustment), 60)
+            if time_adjustment < 0 and hours > 0:
+                hours = 0 - hours 
+            elif time_adjustment < 0:
+                m = 0 - m
+            ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full')
+
+        def _adjust_time(change_minutes: int, reset = False):
             global time_adjustment 
             if reset:
                 time_adjustment = 0
             else:
                 time_adjustment = time_adjustment + change_minutes
-            hours, m = divmod(abs(time_adjustment), 60)
-            if time_adjustment < 0:
-                hours = 0 - hours 
-            ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full')
+            adjusted_time_ui.refresh()
         
-        adjusted_time_ui(0,True)
+        adjusted_time_ui()
         
         with ui.row().classes('w-full'):
                 ui.chip("-15 min", 
-                    on_click = adjusted_time_ui(-15),                
+                    on_click=lambda:(_adjust_time(-15)),
                 )
 
                 ui.chip("reset", 
-                    on_click = adjusted_time_ui(0, True),                   
+                    on_click=lambda:( _adjust_time(0, True)),
                 )
         
                 ui.chip("+15 min", 
-                    on_click = adjusted_time_ui(15),                
+                    on_click=lambda:( _adjust_time(15)),
                 )
 
         ui.separator()
@@ -214,28 +220,34 @@ def _adjust_user_dialog(server: str, user: str):
         @ui.refreshable
         def adjusted_playtime_ui(change_minutes: int, reset = False):
             global playtime_adjustment
-            if reset:
-                playtime_adjustment = 0
-            else:
-                playtime_adjustment= playtime_adjustment + change_minutes
             hours, m = divmod(abs(playtime_adjustment), 60)
-            if playtime_adjustment < 0:
+            if playtime_adjustment < 0 and hours > 0:
                 hours = 0 - hours 
+            elif playtime_adjustment < 0:
+                m = 0 - m
             ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full')
+
+        def _adjust_playtimetime(change_minutes: int, reset = False):
+            global time_adjustment 
+            if reset:
+                time_adjustment = 0
+            else:
+                time_adjustment = time_adjustment + change_minutes
+            adjusted_playtime_ui.refresh()
         
         adjusted_playtime_ui(0, True)
         
         with ui.row().classes('justify-end gap-2').classes('w-full'):
                 ui.chip("-15 min", 
-                    on_click = adjusted_playtime_ui(-15),                
+                    on_click=lambda:(_adjust_playtimetime(-15)),
                 ).props('color=negative')
 
                 ui.chip("reset", 
-                    on_click = adjusted_playtime_ui(0, True),              
+                    on_click=lambda:( _adjust_playtimetime(0, True)),
                 ).props('color=negative')
         
                 ui.chip("+15 min", 
-                    on_click = adjusted_playtime_ui(15),                
+                    on_click=lambda:( _adjust_playtimetime(15)),
                 ).props('color=negative')
 
         
