@@ -38,7 +38,7 @@ def _refresh():
 # -------------------------------------------------------------------
 
 def _add_server_dialog():
-    with ui.dialog().classes('w-lvw') as dialog, ui.card().classes('w-lvw'):
+    with ui.dialog() as dialog, ui.card().classes('w-lvw').style('max-width: none'):
         ui.label('Add Server').classes('text-lg font-bold' 'w-lvw')
 
         # -----------------------------
