@@ -143,7 +143,7 @@ def render_config_editor(
     lines = _load_config(source)
 
     if not lines:
-        ui.label('No server found').classes('text-red text-lg')
+        ui.notify(f'No {config_type} found Maybe later?', close_button='OK')
         return
 
     # Current values
@@ -213,7 +213,7 @@ def add_user_extra_time(
     lines = _load_config(source)
 
     if not lines:
-        ui.label('No config found for user. Maybe later?').classes('text-red text-lg')
+        ui.notify('No config found for user. Maybe later?', close_button='OK')
         return
 
     # Current values
