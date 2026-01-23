@@ -45,20 +45,20 @@ def _add_server_dialog():
         # Basic server fields
         # -----------------------------
         name = ui.input('Server name').classes('w-full')
-        host = ui.input('Host')
-        port = ui.input('Port', value='22')
-        user = ui.input('SSH user')
+        host = ui.input('Host').classes('w-full')
+        port = ui.input('Port', value='22').classes('w-full')
+        user = ui.input('SSH user').classes('w-full')
         server_conf = ui.input(
             'Server config path',
             value='/etc/timekpr/timekpr.conf'
-        )
+        ).classes('w-full')
 
         ui.separator()
 
         # -----------------------------
         # SSH key handling
         # -----------------------------
-        ui.label('SSH Key').classes('font-semibold')
+        ui.label('SSH Key').classes('font-semibold' 'w-full')
 
         def list_keys() -> list[str]:
             return sorted(
@@ -72,12 +72,12 @@ def _add_server_dialog():
             options=keys,
             label='Select existing SSH key',
             value=keys[0] if keys else None,
-        )
+        ).classes('w-full')
 
         # Disable dropdown if no keys exist
         selected_key.disable() if not keys else None
 
-        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600')
+        ui.label('Or upload a new SSH private key').classes('text-sm text-gray-600').classes('w-full')
 
         def upload_key(e):
             target = KEYS_DIR / e.name
@@ -94,9 +94,9 @@ def _add_server_dialog():
             label='Upload SSH private key',
             auto_upload=True,
             on_upload=upload_key,
-        )
+        ).classes('w-full')
 
-        ui.separator()
+        ui.separator().classes('w-full')
 
         # -----------------------------
         # Actions
@@ -123,7 +123,7 @@ def _add_server_dialog():
             dialog.close()
             _refresh()
 
-        with ui.row().classes('justify-end gap-2'):
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
             ui.button('Cancel', on_click=dialog.close)
             ui.button('Create', on_click=save)
 
