@@ -177,50 +177,81 @@ def _add_user_dialog(server_name: str):
 # -------------------------------------------------------------------
 
 def _adjust_user_dialog(server: str, user: str):
-    #HERE Comes a logic!!!!
-    with ui.dialog().classes('w-lvw') as dialog, ui.card():
-        ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold')
+    time_adjustment = 0
+    playtime_adjustment
+    with ui.dialog().classes('w-lvw') as dialog, ui.card().classes('w-lvw'):
+        ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
-        username = ui.input('Username')
-        user_conf = ui.input(
-            'User config path',
-            value='/var/lib/timekpr/config/timekpr.USER.conf'
-        )
-        stats_conf = ui.input(
-            'Stats path',
-            value='/var/lib/timekpr/work/USER.time'
-        )
+        @ui.refreshable
+        def adjusted_time_ui(change_minutes: int):
+            global time_adjustment = time_adjustment + change minutes
+            hours, m = divmod(abs(time_adjustment), 60)
+            if time_adjustment < 0:
+                hours = 0 - hours 
+            ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full'):
+        
+        adjusted_time_ui()
+        
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("-15 min", 
+                    on_click = adjusted_time_ui(-15)),                
+                ).props('color=negative')
 
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("reset", 
+                    on_click = ( global time_adjustment = 0,
+                                adjusted_time_ui(0)),                
+                ).props('color=negative')
+        
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("+15 min", 
+                    on_click = adjusted_time_ui(15)),                
+                ).props('color=negative')
+
+        ui.separator()
+
+        @ui.refreshable
+        def adjusted_playtime_ui(change_minutes: int):
+            global playtime_adjustment = playtime_adjustment + change minutes
+            hours, m = divmod(abs(playtime_adjustment), 60)
+            if playtime_adjustment < 0:
+                hours = 0 - hours 
+            ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full'):
+        
+        adjusted_playtime_ui()
+        
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("-15 min", 
+                    on_click = adjusted_playtime_ui(-15)),                
+                ).props('color=negative')
+
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("reset", 
+                    on_click = ( global playtime_adjustment = 0,
+                                adjusted_playtime_ui(0)),                
+                ).props('color=negative')
+        
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+                ui.chip("+15 min", 
+                    on_click = adjusted_playtime_ui(15)),                
+                ).props('color=negative')
+
+        
         def save():
-            if not username.value:
-                ui.notify('Username required', type='negative')
-                return
-
-            add_user(
-                server_name=server_name,
-                username=username.value,
-                user_config_path=user_conf.value.replace(
-                    'username', username.value
-                ),
-                stats_path=stats_conf.value.replace(
-                    'username', username.value
-                ),
+            add_user_extra_time(
+                server_name=server,
+                username=user,
+                time_to_add=int(time_adjustment*60,)
+                playtime_to_add=int(playtime_adjustment*60),
             )
             dialog.close()
             _refresh()
 
-        ui.button('Add', on_click=save)
-        ui.button('Cancel', on_click=dialog.close)
+        with ui.row().classes('justify-end gap-2').classes('w-full'):
+            ui.button('Perform', on_click=save)
+            ui.button('Cancel', on_click=dialog.close)
 
     dialog.open()
-    #HERE Comes a logic!!!!
-    add_user_extra_time(
-        server_name=server,
-        username=user,
-        time_to_add=60,
-        playtime_to_add=120,
-    )
-
 
 # -------------------------------------------------------------------
 # Main page
