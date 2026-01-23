@@ -196,18 +196,18 @@ def _adjust_user_dialog(server: str, user: str):
         
         adjusted_time_ui(0,True)
         
-        with ui.row().classes('justify-end gap-2').classes('w-full'):
+        with ui.row().classes('w-full'):
                 ui.chip("-15 min", 
                     on_click = adjusted_time_ui(-15),                
-                ).props('color=negative')
+                )
 
                 ui.chip("reset", 
                     on_click = adjusted_time_ui(0, True),                   
-                ).props('color=negative')
+                )
         
                 ui.chip("+15 min", 
                     on_click = adjusted_time_ui(15),                
-                ).props('color=negative')
+                )
 
         ui.separator()
 
