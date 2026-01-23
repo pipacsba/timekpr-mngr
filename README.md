@@ -1,3 +1,5 @@
+#this is heavy under construction as of now yet
+
 # timekpr-mngr
 
 timekpr Manager Architecture  
