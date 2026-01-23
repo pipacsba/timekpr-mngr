@@ -183,7 +183,7 @@ def _adjust_user_dialog(server: str, user: str):
         ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
         @ui.refreshable
-        def adjusted_time_ui(change_minutes: int, reset: Optional[bool] = False):
+        def adjusted_time_ui(change_minutes: int, reset = False):
             global time_adjustment 
             if reset:
                 time_adjustment = 0
@@ -214,7 +214,7 @@ def _adjust_user_dialog(server: str, user: str):
         ui.separator()
 
         @ui.refreshable
-        def adjusted_playtime_ui(change_minutes: int, reset: Optional[bool] = False):
+        def adjusted_playtime_ui(change_minutes: int, reset = False):
             global playtime_adjustment
             if reset:
                 playtime_adjustment = 0
