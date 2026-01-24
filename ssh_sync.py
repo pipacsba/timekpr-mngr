@@ -149,18 +149,21 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
-#ToDo ezzel még dolog van
 def _ssh_update_allowance(a_client, local: Path) -> bool:
-    result = False
+    result = True
     try:
         #sftp.put(str(local), remote)
-        command = "ls /home/user/images/cappi/03000/" + y + "/" + m + "/" + d
-        stdin, stdout, stderr = s.exec_command(command)
-        result = stdout.channel.recv_exit_status()
+        text local.read_text()
+        for raw in text.splitlines():
+            command = raw
+            stdin, stdout, stderr = a_client.exec_command(command)
+            if (stdout.channel.recv_exit_status() == 0):
+                result = (result and True)
+            else:
+                result = False
     except:
         result = False
     return result
-#ezzel még dolog van
 
 
 # -------------------------------------------------------------------
@@ -256,11 +259,11 @@ def upload_pending(server_name: str, server: Dict) -> bool:
         # --- stats ---
         for file in pending_stats_dir(server_name).glob("*.stats"):
             username = file.stem
-            remote = paths.get("stats", {}).get(username)
+            #remote = paths.get("stats", {}).get(username)
             if remote:
-                if _scp_put(sftp, file, remote):
+                if _ssh_update_allowance(client, file):
                     file.unlink()
-                    logger.info(f"[{server_name}] uploaded stats for {username}")
+                    logger.info(f"[{server_name}] updated allowance for {username}")
                 else:
                     success = False
     except:
