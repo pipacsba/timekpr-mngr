@@ -153,15 +153,21 @@ def _ssh_update_allowance(a_client, local: Path) -> bool:
     result = True
     try:
         #sftp.put(str(local), remote)
+        logger.info("ssh command execution started")
         text = local.read_text()
+        logger.info("ssh command execution started, file is read")
         for raw in text.splitlines():
             command = raw
+            logger.info(f"ssh command identified:  {command}")
             stdin, stdout, stderr = a_client.exec_command(command)
+            logger.info(f"ssh command returned")
             if (stdout.channel.recv_exit_status() == 0):
+                logger.info(f"ssh command returned with not 0 exit code")
                 result = (result and True)
             else:
                 result = False
     except:
+        logger.info("ssh command execution failed, caught by exception handler")
         result = False
     return result
 
