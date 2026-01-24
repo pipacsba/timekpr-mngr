@@ -214,15 +214,18 @@ def add_user_extra_time(
     lines = []
     a_sign = "+"
     if time_to_add < 0:
-        a_sign = ""-""
+        a_sign = "-"
     logger.info(f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add)}"')
-    lines.append({ "raw" : f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add)}"'})
-    b_sign = ""+""
+    lines.append(Entry(
+            raw = f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add)}"')
+                )
+    b_sign = "+"
     if playtime_to_add < 0:
-        b_sign = ""-""
+        b_sign = "-"
     logger.info(f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"')
-    lines.append({ "raw" : f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"'})
-
+    lines.append(Entry(
+            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"'})
+                )
     
     target.write_text(
         serialize_config(lines, {})
