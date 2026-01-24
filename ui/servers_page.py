@@ -177,29 +177,29 @@ def _add_user_dialog(server_name: str):
 # -------------------------------------------------------------------
 
 def _adjust_user_dialog(server: str, user: str):
-    global time_adjustment
-    global playtime_adjustment
-    time_adjustment = 0
-    playtime_adjustment = 0
+    global time_adjustment_min_min
+    global playtime_adjustment_min
+    time_adjustment_min_min = 0
+    playtime_adjustment_min = 0
     with ui.dialog().classes('w-lvw') as dialog, ui.card().classes('w-lvw'):
         ui.label(f'Adjust allowed time for {user.capitalize()} on {server}').classes('text-lg font-bold w-full')
 
         @ui.refreshable
         def adjusted_time_ui():
-            global time_adjustment 
-            hours, m = divmod(abs(time_adjustment), 60)
-            if time_adjustment < 0 and hours > 0:
+            global time_adjustment_min 
+            hours, m = divmod(abs(time_adjustment_min), 60)
+            if time_adjustment_min < 0 and hours > 0:
                 hours = 0 - hours 
-            elif time_adjustment < 0:
+            elif time_adjustment_min < 0:
                 m = 0 - m
             ui.markdown(f'Change user time by **{hours}h {m} m**.').classes('w-full')
 
         def _adjust_time(change_minutes: int, reset = False):
-            global time_adjustment 
+            global time_adjustment_min 
             if reset:
-                time_adjustment = 0
+                time_adjustment_min = 0
             else:
-                time_adjustment = time_adjustment + change_minutes
+                time_adjustment_min = time_adjustment_min + change_minutes
             adjusted_time_ui.refresh()
         
         adjusted_time_ui()
@@ -221,20 +221,20 @@ def _adjust_user_dialog(server: str, user: str):
 
         @ui.refreshable
         def adjusted_playtime_ui(change_minutes: int, reset = False):
-            global playtime_adjustment
-            hours, m = divmod(abs(playtime_adjustment), 60)
-            if playtime_adjustment < 0 and hours > 0:
+            global playtime_adjustment_min
+            hours, m = divmod(abs(playtime_adjustment_min), 60)
+            if playtime_adjustment_min < 0 and hours > 0:
                 hours = 0 - hours 
-            elif playtime_adjustment < 0:
+            elif playtime_adjustment_min < 0:
                 m = 0 - m
             ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full')
 
         def _adjust_playtimetime(change_minutes: int, reset = False):
-            global time_adjustment 
+            global playtime_adjustment_min 
             if reset:
-                time_adjustment = 0
+                playtime_adjustment_min = 0
             else:
-                time_adjustment = time_adjustment + change_minutes
+                playtime_adjustment_min = playtime_adjustment_min + change_minutes
             adjusted_playtime_ui.refresh()
         
         adjusted_playtime_ui(0, True)
@@ -257,8 +257,8 @@ def _adjust_user_dialog(server: str, user: str):
             add_user_extra_time(
                 server_name=server,
                 username=user,
-                time_to_add=int(time_adjustment*60),
-                playtime_to_add=int(playtime_adjustment*60),
+                time_to_add_sec=int(time_adjustment_min * 60),
+                playtime_to_add_sec=int(playtime_adjustment_min_min * 60),
             )
             dialog.close()
             _refresh()
