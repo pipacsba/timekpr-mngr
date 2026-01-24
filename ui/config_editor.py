@@ -212,7 +212,7 @@ def add_user_extra_time(
     target = pending_stats_dir(server_name) / f'{username}.stats'
 
     lines = []
-    lines.append(f"timekpra --settimeleft '{username}' '{time_to_add > 0 ? "+" : "-"}' '{abs(time_to_add)}'")
+    lines.append(f"timekpra --settimeleft '{username}' '{time_to_add > 0 ? ""+"" : ""-""}' '{abs(time_to_add)}'")
     lines.append(f"timekpra --setplaytimeleft '{username}' '{playtime_to_add > 0 ? "+" : "-"}' '{abs(playtime_to_add)}'")
 
     
