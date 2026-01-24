@@ -149,6 +149,17 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
+#ezzel még dolog van
+def _ssh_update_allowance(a_client, local: Path, remote: str) -> bool:
+    result = False
+    try:
+        sftp.put(str(local), remote)
+        result = True
+    except:
+        result = False
+    return result
+#ezzel még dolog van
+
 
 # -------------------------------------------------------------------
 # Download logic
