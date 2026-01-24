@@ -149,12 +149,14 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
-#ezzel még dolog van
-def _ssh_update_allowance(a_client, local: Path, remote: str) -> bool:
+#ToDo ezzel még dolog van
+def _ssh_update_allowance(a_client, local: Path) -> bool:
     result = False
     try:
-        sftp.put(str(local), remote)
-        result = True
+        #sftp.put(str(local), remote)
+        command = "ls /home/user/images/cappi/03000/" + y + "/" + m + "/" + d
+        stdin, stdout, stderr = s.exec_command(command)
+        result = stdout.channel.recv_exit_status()
     except:
         result = False
     return result
@@ -225,7 +227,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
     client = _connect(server)
     success = True
     if not client:
-        return
+        return False
 
     try:
         sftp = client.open_sftp()
@@ -269,10 +271,10 @@ def upload_pending(server_name: str, server: Dict) -> bool:
         return success
 
 
-
 def trigger_ssh_sync():
     logger.info("Manual SSH sync triggered")
     trigger_event.set()
+
 
 # -------------------------------------------------------------------
 # Periodic runner
@@ -286,9 +288,10 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         servers = load_servers()
 
         for name, server in servers.items():
-            reachable = sync_from_server(name, server)
+            reachable = upload_pending(name, server)
             if reachable:
-                upload_pending(name, server)
+                sync_from_server(name, server)
+
 
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
         # clear trigger before waiting
