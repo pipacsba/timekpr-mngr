@@ -153,7 +153,7 @@ def _ssh_update_allowance(a_client, local: Path) -> bool:
     result = True
     try:
         #sftp.put(str(local), remote)
-        text local.read_text()
+        text = local.read_text()
         for raw in text.splitlines():
             command = raw
             stdin, stdout, stderr = a_client.exec_command(command)
