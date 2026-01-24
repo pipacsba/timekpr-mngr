@@ -203,6 +203,37 @@ def add_user_extra_time(
     playtime_to_add: int
 ):
     """
+    timekpra --setplaytimeleft 'testuser' '+' '3600'
+    timekpra --settimeleft 'testuser' '+' '3600'
+    """
+  
+    logger.info(f"Additional time granting is started.")
+
+    target = pending_stats_dir(server_name) / f'{username}.stats'
+
+    lines = []
+    lines.append(f"timekpra --settimeleft '{username}' '{time_to_add > 0 ? "+" : "-"}' '{abs(time_to_add)}'")
+    lines.append(f"timekpra --setplaytimeleft '{username}' '{playtime_to_add > 0 ? "+" : "-"}' '{abs(playtime_to_add)}'")
+
+    
+    target.write_text(
+        serialize_config(lines, {})
+    )
+    ui.notify(
+        'Saved locally (pending upload)',
+        type='positive',
+    )
+    trigger_ssh_sync()
+
+
+def add_user_extra_time_via_config_file_but_it_is_not_used_as_aconfig_file_can_be_from_days_before(
+    *,
+    server_name: str,
+    username: str,
+    time_to_add: int,
+    playtime_to_add: int
+):
+    """
     config_type: 'server' | 'user' | 'stats'
     """
   
