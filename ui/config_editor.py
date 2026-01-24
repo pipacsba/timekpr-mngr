@@ -224,7 +224,7 @@ def add_user_extra_time(
         b_sign = "-"
     logger.info(f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"')
     lines.append(Entry(
-            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"'})
+            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"')
                 )
     
     target.write_text(
