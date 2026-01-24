@@ -1,4 +1,4 @@
-#this is heavy under construction as of now yet
+#this is under construction as of now yet
 
 # timekpr-mngr
 
