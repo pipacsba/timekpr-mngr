@@ -199,8 +199,8 @@ def add_user_extra_time(
     *,
     server_name: str,
     username: str,
-    time_to_add: int,
-    playtime_to_add: int
+    time_to_add_sec: int,
+    playtime_to_add_sec: int
 ):
     """
     timekpra --setplaytimeleft 'testuser' '+' '3600'
@@ -213,18 +213,18 @@ def add_user_extra_time(
 
     lines = []
     a_sign = "+"
-    if time_to_add < 0:
+    if time_to_add_sec < 0:
         a_sign = "-"
-    logger.info(f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add)}"')
+    logger.info(f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
     lines.append(Line(
-            raw = f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add)}"')
+            raw = f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
                 )
     b_sign = "+"
-    if playtime_to_add < 0:
+    if playtime_to_add_sec < 0:
         b_sign = "-"
-    logger.info(f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"')
+    logger.info(f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
     lines.append(Line(
-            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add)}"')
+            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
                 )
     
     target.write_text(
