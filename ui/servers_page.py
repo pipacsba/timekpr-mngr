@@ -350,10 +350,7 @@ def servers_page():
             ).classes('mb-2')
 
     def on_servers_changed():
-        if not client.connected:
-            return
-        for r in refreshables:
-            client.run(r.refresh)
+        ui.run(lambda: [r.refresh() for r in refreshables])
     
     # register observer
     servers_online.add_observer(on_servers_changed)
