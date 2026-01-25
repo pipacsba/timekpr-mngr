@@ -348,7 +348,12 @@ def servers_page():
             ).classes('mb-2')
 
     def on_servers_changed(_):
-    for r in refreshables:
-        ui.run(r.refresh)
-    
+        if not ui.context.client.connected:
+            return
+        for r in refreshables:
+            ui.run(r.refresh)
+
     observer = servers_online.add_observer(on_servers_changed)
+    
+    client = ui.context.client
+    client.on_disconnect(lambda: servers_online.remove_observer(observer))
