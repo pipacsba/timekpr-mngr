@@ -39,6 +39,10 @@ def pending_ui_refresh():
         
 change_upload_is_pending.add_observer(pending_ui_refresh)
 
+def refresh_ssh_sync()
+    ui.notify("SSH syncronziation is triggered')
+    trigger_ssh_sync()
+
 # -------------------
 # Header (called inside each page)
 # -------------------
@@ -52,7 +56,7 @@ def build_header():
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        with ui.icon('refresh', color=f'green').on('click', trigger_ssh_sync).classes('text-5xl cursor-pointer'):
+        with ui.icon('refresh', color=f'green').on('click', refresh_ssh_sync).classes('text-5xl cursor-pointer'):
              ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
 
