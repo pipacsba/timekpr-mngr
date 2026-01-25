@@ -74,6 +74,9 @@ class ServersWatcher:
     def notify(self, new_value):
         for observer in self.observers:
             observer()
+
+    def is_online(self, server_name: str) -> bool:
+        return server_name in self._value
         
 change_upload_is_pending = VariableWatcher()
 servers_online = ServersWatcher()
@@ -325,7 +328,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         for name, server in servers.items():
             reachable = upload_pending(name, server)
             if reachable:
-                online_servers.append(server)
+                online_servers.append(name)
                 sync_from_server(name, server)
 
         servers_online.set_value(online_servers)
