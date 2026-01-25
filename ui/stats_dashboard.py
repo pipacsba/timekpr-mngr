@@ -69,8 +69,12 @@ def _load_stats(server_name: str, username: str) -> Dict[str, float]:
 
 def _seconds_to_human(seconds: float) -> str:
     seconds = int(seconds)
-    minutes, s = divmod(seconds, 60)
+    minutes, s = divmod(abs(seconds), 60)
     hours, m = divmod(minutes, 60)
+    if seconds < 0 and hours > 0:
+        hours = 0 - hours
+    elif seconds < 0:
+        m = 0 - m
     return f'{hours}h {m}m'
 
 
