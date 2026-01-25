@@ -20,6 +20,7 @@ from servers import (
 )
 from storage import KEYS_DIR
 from ui.config_editor import add_user_extra_time
+from ssh_sync import servers_online
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -280,7 +281,8 @@ def servers_page():
     ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
 
     servers = load_servers()
-
+    refreshables = []
+    
     if not servers:
         ui.label('No servers configured').classes('text-red')
         return
@@ -294,6 +296,15 @@ def servers_page():
                     ui.label(server_name).classes('text-lg font-bold')
                 
                 ui.space()
+                @ui.refreshable
+                def server_status(name=server_name):
+                    if servers_online.is_online(name):
+                        ui.chip('ONLINE', color='green')
+                    else:
+                        ui.chip('OFFLINE', color='gray')
+                server_status()
+                refreshables.append(server_status)
+                
                 ui.chip(icon='delete', color='warning',
                     on_click=lambda s=server_name: (
                         delete_server(s),
@@ -335,3 +346,9 @@ def servers_page():
                 'Add user',
                 on_click=lambda s=server_name: _add_user_dialog(s),
             ).classes('mb-2')
+
+    def on_servers_changed(_):
+    for r in refreshables:
+        ui.run(r.refresh)
+    
+    observer = servers_online.add_observer(on_servers_changed)
