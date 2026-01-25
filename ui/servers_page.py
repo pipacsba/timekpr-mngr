@@ -158,10 +158,10 @@ def _add_user_dialog(server_name: str):
                 server_name=server_name,
                 username=username.value,
                 user_config_path=user_conf.value.replace(
-                    'username', username.value
+                    'USER', username.value
                 ),
                 stats_path=stats_conf.value.replace(
-                    'username', username.value
+                    'USER', username.value
                 ),
             )
             dialog.close()
@@ -230,7 +230,7 @@ def _adjust_user_dialog(server: str, user: str):
                 m = 0 - m
             ui.markdown(f'Change user PLAY time by **{hours}h {m} m**.').classes('w-full')
 
-        def _adjust_playtimetime(change_minutes: int, reset = False):
+        def _adjust_playtime(change_minutes: int, reset = False):
             global playtime_adjustment_min 
             if reset:
                 playtime_adjustment_min = 0
@@ -242,15 +242,15 @@ def _adjust_user_dialog(server: str, user: str):
         
         with ui.row().classes('w-full'):
                 ui.chip("-15 min", 
-                    on_click=lambda:(_adjust_playtimetime(-15)),
+                    on_click=lambda:(_adjust_playtime(-15)),
                 )
 
                 ui.chip("reset", 
-                    on_click=lambda:( _adjust_playtimetime(0, True)),
+                    on_click=lambda:( _adjust_playtime(0, True)),
                 )
         
                 ui.chip("+15 min", 
-                    on_click=lambda:( _adjust_playtimetime(15)),
+                    on_click=lambda:( _adjust_playtime(15)),
                 )
 
         
