@@ -59,7 +59,7 @@ def _add_server_dialog():
         # -----------------------------
         # SSH key handling
         # -----------------------------
-        ui.label('SSH Key').classes('font-semibold' 'w-full')
+        ui.label('SSH Key').classes('font-semibold w-full')
 
         def list_keys() -> list[str]:
             return sorted(
