@@ -1,7 +1,7 @@
 # ui/navigation.py
 from nicegui import ui
 from servers import load_servers, list_users
-from ssh_sync import change_upload_is_pending
+from ssh_sync import change_upload_is_pending trigger_ssh_sync
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
@@ -52,6 +52,9 @@ def build_header():
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
+        with ui.link(target=trigger_ssh_sync):
+                with ui.icon('refresh', color=f'green').classes('text-5xl'):
+                        ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
 
 # -------------------
