@@ -36,6 +36,14 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info("ssh_sync module loaded")
 
+# only allow modern ciphers (AES and CHACHA20)
+paramiko.Transport._preferred_ciphers = (
+    'aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'chacha20-poly1305@openssh.com'
+)
+paramiko.Transport._preferred_keys = (
+    'ssh-ed25519', 'rsa-sha2-512', 'rsa-sha2-256'
+)
+
 #internal variables
 class VariableWatcher:
     def __init__(self):
