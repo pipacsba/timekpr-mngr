@@ -52,9 +52,8 @@ def build_header():
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        with ui.link(target=trigger_ssh_sync):
-                with ui.icon('refresh', color=f'green').classes('text-5xl'):
-                        ui.tooltip(f'Reload server info').classes(f'green')
+        with ui.icon('refresh', color=f'green').on('click', my_function).classes('text-5xl cursor-pointer'):
+             ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
 
 # -------------------
