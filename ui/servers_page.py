@@ -350,7 +350,8 @@ def servers_page():
             ).classes('mb-2')
 
     def on_servers_changed():
-        ui.run(lambda: [r.refresh() for r in refreshables])
+        return True
+        #ui.run(lambda: [r.refresh() for r in refreshables])
     
     # register observer
     servers_online.add_observer(on_servers_changed)
