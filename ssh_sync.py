@@ -55,8 +55,29 @@ class VariableWatcher:
     def notify(self, new_value):
         for observer in self.observers:
             observer()
+
+class ServersWatcher:
+    def __init__(self):
+        self._value = []
+        self.observers = []
+
+    def set_value(self, new_value):
+        self._value = new_value
+        self.notify(new_value)
+
+    def get_value(self):
+        return self._value
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def notify(self, new_value):
+        for observer in self.observers:
+            observer()
         
 change_upload_is_pending = VariableWatcher()
+servers_online = ServersWatcher()
+
 
 # -------------------------------------------------------------------
 # Helpers
@@ -293,8 +314,10 @@ def trigger_ssh_sync():
 # -------------------------------------------------------------------
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
+    global servers_online
     logger.info("SSH sync loop started")
     success = True
+    online_servers = []
 
     while not stop_event.is_set():
         servers = load_servers()
@@ -302,9 +325,10 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         for name, server in servers.items():
             reachable = upload_pending(name, server)
             if reachable:
+                online_servers.append(server)
                 sync_from_server(name, server)
 
-
+        servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
         # clear trigger before waiting
         trigger_event.clear()
