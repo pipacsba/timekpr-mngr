@@ -38,6 +38,7 @@ def pending_ui_refresh():
   pending_ui.refresh()
         
 change_upload_is_pending.add_observer(pending_ui_refresh)
+##  RuntimeError: Request is not set
 #client = ui.context.client
 #client.on_disconnect(lambda: change_upload_is_pending.remove_observer(pending_ui_refresh))
 
