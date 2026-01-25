@@ -233,6 +233,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
     """
     Upload pending changes if server is reachable.
     """
+    logger.info("ssh upload pending started")
     client = _connect(server)
     success = True
     if not client:
@@ -263,15 +264,17 @@ def upload_pending(server_name: str, server: Dict) -> bool:
                     success = False
 
         # --- stats ---
+        logger.info("ssh upload check for stats file")
         for file in pending_stats_dir(server_name).glob("*.stats"):
+            logger.info("ssh upload check for stats file passed")
             username = file.stem
-            #remote = paths.get("stats", {}).get(username)
-            if remote:
-                if _ssh_update_allowance(client, file):
-                    file.unlink()
-                    logger.info(f"[{server_name}] updated allowance for {username}")
-                else:
-                    success = False
+            logger.info(f"ssh upload check for stats file fouind for {server_name} {user_name}")
+            if _ssh_update_allowance(client, file):
+                file.unlink()
+                logger.info(f"[{server_name}] updated allowance for {username}")
+            else:
+                logger.info("ssh upload tats file failed")
+                success = False
     except:
         success = False
 
