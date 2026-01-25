@@ -285,6 +285,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
 
 def trigger_ssh_sync():
     logger.info("Manual SSH sync triggered")
+    ui.notify("SSH syncronziation is triggered')
     trigger_event.set()
 
 
