@@ -352,11 +352,11 @@ def servers_page():
     def on_servers_changed(_):
         if not client.connected:
             return
-    
         for r in refreshables:
             client.run(r.refresh)
-
-    observer = servers_online.add_observer(on_servers_changed)
     
-    client = ui.context.client
-    client.on_disconnect(lambda: servers_online.remove_observer(observer))
+    # register observer
+    servers_online.add_observer(on_servers_changed)
+    
+    # remove on disconnect
+    client.on_disconnect(lambda: servers_online.remove_observer(on_servers_changed))
