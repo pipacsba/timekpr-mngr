@@ -38,8 +38,8 @@ def pending_ui_refresh():
   pending_ui.refresh()
         
 change_upload_is_pending.add_observer(pending_ui_refresh)
-client = ui.context.client
-client.on_disconnect(lambda: change_upload_is_pending.remove_observer(pending_ui_refresh))
+#client = ui.context.client
+#client.on_disconnect(lambda: change_upload_is_pending.remove_observer(pending_ui_refresh))
 
 def refresh_ssh_sync():
     ui.notify("SSH syncronziation is triggered")
