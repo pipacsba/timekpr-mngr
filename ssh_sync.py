@@ -58,7 +58,7 @@ class VariableWatcher:
 
 class ServersWatcher:
     def __init__(self):
-        self._value = []
+        self._value: list[str] = []
         self.observers = []
 
     def set_value(self, new_value):
