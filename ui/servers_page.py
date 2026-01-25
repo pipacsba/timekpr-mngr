@@ -349,7 +349,7 @@ def servers_page():
                 on_click=lambda s=server_name: _add_user_dialog(s),
             ).classes('mb-2')
 
-    def on_servers_changed(_):
+    def on_servers_changed():
         if not client.connected:
             return
         for r in refreshables:
