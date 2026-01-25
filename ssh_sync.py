@@ -190,9 +190,10 @@ def _ssh_update_allowance(a_client, local: Path) -> bool:
             stdin, stdout, stderr = a_client.exec_command(command)
             logger.info(f"ssh command returned")
             if (stdout.channel.recv_exit_status() == 0):
-                logger.info(f"ssh command returned with not 0 exit code")
+                logger.info(f"ssh command returned with 0 exit code")
                 result = (result and True)
             else:
+                logger.info(f"ssh command returned with non-zero exit code")
                 result = False
     except:
         logger.info("ssh command execution failed, caught by exception handler")
@@ -324,9 +325,9 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global servers_online
     logger.info("SSH sync loop started")
     success = True
-    online_servers = []
 
     while not stop_event.is_set():
+        online_servers = []
         servers = load_servers()
 
         for name, server in servers.items():
