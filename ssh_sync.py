@@ -266,9 +266,9 @@ def upload_pending(server_name: str, server: Dict) -> bool:
         # --- stats ---
         logger.info("ssh upload check for stats file")
         for file in pending_stats_dir(server_name).glob("*.stats"):
-            logger.info("ssh upload check for stats file passed")
+            logger.info(f"ssh upload check for stats file passed: {file}")
             username = file.stem
-            logger.info(f"ssh upload check for stats file fouind for {server_name} {user_name}")
+            logger.info(f"ssh upload check for stats file fouind for {server_name} {username}")
             if _ssh_update_allowance(client, file):
                 file.unlink()
                 logger.info(f"[{server_name}] updated allowance for {username}")
