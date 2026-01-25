@@ -282,6 +282,8 @@ def servers_page():
 
     servers = load_servers()
     refreshables = []
+
+    client = ui.context.client
     
     if not servers:
         ui.label('No servers configured').classes('text-red')
@@ -348,10 +350,11 @@ def servers_page():
             ).classes('mb-2')
 
     def on_servers_changed(_):
-        if not ui.context.client.connected:
+        if not client.connected:
             return
+    
         for r in refreshables:
-            ui.run(r.refresh)
+            client.run(r.refresh)
 
     observer = servers_online.add_observer(on_servers_changed)
     
