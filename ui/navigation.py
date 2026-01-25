@@ -1,7 +1,7 @@
 # ui/navigation.py
 from nicegui import ui
 from servers import load_servers, list_users
-from ssh_sync import change_upload_is_pending trigger_ssh_sync
+from ssh_sync import change_upload_is_pending, trigger_ssh_sync
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
