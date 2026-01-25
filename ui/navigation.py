@@ -39,7 +39,7 @@ def pending_ui_refresh():
         
 change_upload_is_pending.add_observer(pending_ui_refresh)
 
-def refresh_ssh_sync()
+def refresh_ssh_sync():
     ui.notify("SSH syncronziation is triggered")
     trigger_ssh_sync()
 
