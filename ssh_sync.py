@@ -75,6 +75,10 @@ class ServersWatcher:
         for observer in self.observers:
             observer()
 
+    def remove_observer(self, observer):
+        if observer in self.observers:
+            self.observers.remove(observer)
+
     def is_online(self, server_name: str) -> bool:
         return server_name in self._value
         
