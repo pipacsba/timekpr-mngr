@@ -68,7 +68,6 @@ def build_header():
 # -------------------
 @ui.page('/')
 def home_page():
-    logger.info("home_page called")
     ui.navigate.history.replace('/servers')
     servers_page_wrapper()
     #ui.navigate.to('/servers')
@@ -83,15 +82,6 @@ def home_page():
 #    if not servers:
 #        ui.navigate.to('/servers')
 
-
-@ui.page('/welcome')
-def welcome_page():
-    logger.info("welcome_page called")
-    build_header()
-    ui.label('Welcome').classes('text-3xl font-bold mb-4')
-    ui.label('Please add your first server.')
-
-
 @ui.page('/servers')
 def servers_page_wrapper():
     logger.info("servers_page called")
@@ -105,7 +95,6 @@ if not servers:
     # fallback if no servers exist
     @ui.page('/server')
     def no_server_page():
-        logger.info("no_server_page called")
         build_header()
         ui.label('No servers configured').classes('text-red-600')
         ui.button('Go to Servers', on_click=lambda: ui.navigate.to('/servers'))
@@ -138,6 +127,7 @@ else:
 
 @ui.page('/pty')
 def pty_page():
+    logger.info(f"pty is started")
     build_header()
     terminal = ui.xterm()
 
@@ -167,10 +157,11 @@ def pty_page():
     def kill_bash():
         os.close(pty_fd)
         os.kill(pty_pid, signal.SIGKILL)
-        print('Terminal closed')
+        logger.info(f"pty is closed")
 
 @ui.page('/browse_folders')
 def browse_folders():
+    logger.info(f"Folder browser is started")
     build_header()
     
     def get_tree_data(path):
