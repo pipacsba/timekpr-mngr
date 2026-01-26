@@ -34,7 +34,6 @@ trigger_event = threading.Event()
 
 import logging
 logger = logging.getLogger(__name__)
-logger.info("ssh_sync module loaded")
 
 # only allow modern ciphers (AES and CHACHA20)
 paramiko.Transport._preferred_ciphers = (
@@ -189,34 +188,34 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     result = True
     try:
         #sftp.put(str(local), remote)
-        logger.info("ssh command execution started")
+        logger.debug("ssh command execution started")
 
         #This extra command is required to update the server side file to the Today's one
         command = f'timekpra --getuserinfo {a_username}'
         stdin, stdout, stderr = a_client.exec_command(command)
         if (stdout.channel.recv_exit_status() == 0):
-            logger.info(f"ssh command returned with 0 exit code")
+            logger.debug(f"ssh command returned with 0 exit code")
             result = (result and True)
         else:
-            logger.info(f"ssh command returned with non-zero exit code")
+            logger.warning(f"ssh command '{command}' returned with non-zero exit code")
             result = False
         time.sleep(0.5)
         
         text = local.read_text()
-        logger.info("ssh command execution started, file is read")
+        logger.debug("ssh command execution started, file is read")
         for raw in text.splitlines():
             command = raw
-            logger.info(f"ssh command identified:  {command}")
+            logger.debug(f"ssh command identified:  {command}")
             stdin, stdout, stderr = a_client.exec_command(command)
-            logger.info(f"ssh command returned")
+            logger.debug(f"ssh command returned")
             if (stdout.channel.recv_exit_status() == 0):
                 logger.info(f"ssh command returned with 0 exit code")
                 result = (result and True)
             else:
-                logger.info(f"ssh command returned with non-zero exit code")
+                logger.warning(f"ssh command returned with non-zero exit code")
                 result = False
     except:
-        logger.info("ssh command execution failed, caught by exception handler")
+        logger.warning("ssh command execution failed, caught by exception handler")
         result = False
     return result
 
@@ -246,7 +245,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 server_cache_dir(server_name) / "server.conf",
             )
             if updated:
-                logger.info(f"[{server_name}] server.conf updated")
+                logger.debug(f"[{server_name}] server.conf updated")
 
         # --- user configs ---
         for user, remote_path in paths.get("users", {}).items():
@@ -256,7 +255,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 user_cache_dir(server_name) / f"{user}.conf",
             )
             if updated:
-                logger.info(f"[{server_name}] user {user} config updated")
+                logger.debug(f"[{server_name}] user {user} config updated")
 
         # --- stats ---
         for user, remote_path in paths.get("stats", {}).items():
@@ -266,7 +265,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 stats_cache_dir(server_name) / f"{user}.stats",
             )
             if updated:
-                logger.info(f"[{server_name}] stats for {user} updated")
+                logger.debug(f"[{server_name}] stats for {user} updated")
 
         return True
 
@@ -282,7 +281,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
     """
     Upload pending changes if server is reachable.
     """
-    logger.info("ssh upload pending started")
+    logger.debug("ssh upload pending started")
     client = _connect(server)
     success = True
     if not client:
@@ -297,7 +296,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
         if server_file.exists():
             if _scp_put(sftp, server_file, paths["server"]):
                 server_file.unlink()
-                logger.info(f"[{server_name}] uploaded server.conf")
+                logger.debug(f"[{server_name}] uploaded server.conf")
             else:
                 success = False
 
@@ -308,21 +307,21 @@ def upload_pending(server_name: str, server: Dict) -> bool:
             if remote:
                 if _scp_put(sftp, file, remote):
                     file.unlink()
-                    logger.info(f"[{server_name}] uploaded user {username}")
+                    logger.debug(f"[{server_name}] uploaded user {username}")
                 else:
                     success = False
 
         # --- stats ---
-        logger.info("ssh upload check for stats file")
+        logger.debug("ssh upload check for stats file")
         for file in pending_stats_dir(server_name).glob("*.stats"):
-            logger.info(f"ssh upload check for stats file passed: {file}")
+            logger.debug(f"ssh upload check for stats file passed: {file}")
             username = file.stem
-            logger.info(f"ssh upload check for stats file fouind for {server_name} {username}")
+            logger.debug(f"ssh upload check for stats file fouind for {server_name} {username}")
             if _ssh_update_allowance(client, file, username):
                 file.unlink()
-                logger.info(f"[{server_name}] updated allowance for {username}")
+                logger.debug(f"[{server_name}] updated allowance for {username}")
             else:
-                logger.info("ssh upload tats file failed")
+                logger.warning("ssh upload tats file failed")
                 success = False
     except:
         success = False
@@ -333,7 +332,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
 
 
 def trigger_ssh_sync():
-    logger.info("Manual SSH sync triggered")
+    logger.debug("Manual SSH sync triggered")
     trigger_event.set()
 
 
@@ -343,7 +342,7 @@ def trigger_ssh_sync():
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     global servers_online
-    logger.info("SSH sync loop started")
+    logger.debug("SSH sync loop started")
     success = True
 
     while not stop_event.is_set():
