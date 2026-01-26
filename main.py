@@ -19,11 +19,15 @@ from contextlib import asynccontextmanager # for ssh
 # -------------------
 # Logging setup
 # -------------------
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "info").upper()
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
     format='%(asctime)s [%(levelname)s] %(threadName)s: %(message)s',
     handlers=[logging.StreamHandler(sys.stdout)],
 )
+
 logger = logging.getLogger(__name__)
 
 # -------------------
