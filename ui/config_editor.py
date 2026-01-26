@@ -26,7 +26,6 @@ from ssh_sync import trigger_ssh_sync
 
 import logging 
 logger = logging.getLogger(__name__)
-logger.info(f"ui.config_editor.py is called at all")
 
 
 # -------------------------------------------------------------------
@@ -122,7 +121,7 @@ def render_config_editor(
     config_type: 'server' | 'user' | 'stats'
     """
   
-    logger.info(f"config_editor.py render:config_editor is started.")
+    logger.info(f"config_editor.py render_config_editor is started.")
 
     # Resolve paths
     if config_type == 'server':
@@ -207,22 +206,20 @@ def add_user_extra_time(
     timekpra --settimeleft 'testuser' '+' '3600'
     """
   
-    logger.info(f"Additional time granting is started.")
-
     target = pending_stats_dir(server_name) / f'{username}.stats'
 
     lines = []
     a_sign = "+"
     if time_to_add_sec < 0:
         a_sign = "-"
-    logger.info(f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
+    logger.debug(f'Command to write to the file is: timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
     lines.append(Line(
             raw = f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
                 )
     b_sign = "+"
     if playtime_to_add_sec < 0:
         b_sign = "-"
-    logger.info(f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
+    logger.debug(f'Command to write to the file is: timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
     lines.append(Line(
             raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
                 )
@@ -235,53 +232,4 @@ def add_user_extra_time(
         type='positive',
     )
     trigger_ssh_sync()
-
-
-def add_user_extra_time_via_config_file_but_it_is_not_used_as_aconfig_file_can_be_from_days_before(
-    *,
-    server_name: str,
-    username: str,
-    time_to_add: int,
-    playtime_to_add: int
-):
-    """
-    config_type: 'server' | 'user' | 'stats'
-    """
-  
-    logger.info(f"Additional time granting is started.")
-
-    source = stats_cache_dir(server_name) / f'{username}.stats'
-    target = pending_stats_dir(server_name) / f'{username}.stats'
-
-    lines = _load_config(source)
-
-    if not lines:
-        ui.notify('No config found for user. Maybe later?', type='warning', close_button='OK')
-        return
-
-    # Current values
-    values: Dict[str, any] = {
-        line.key: line.value
-        for line in lines
-        if isinstance(line, Entry)
-    }
-
-    if "TIME_SPENT_BALANCE" in values:
-        values['TIME_SPENT_BALANCE'] = str(int(values['TIME_SPENT_BALANCE']) + time_to_add)
-    else:
-        ui.notify('TIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
-        return
-    if "PLAYTIME_SPENT_BALANCE" in values:
-        values['PLAYTIME_SPENT_BALANCE'] = str(int(values['PLAYTIME_SPENT_BALANCE']) + playtime_to_add)
-    else:
-        ui.notify('PLAYTIME_SPENT_BALANCE is not in the config file!', type='warning', close_button='OK')
-        return
-
-    target.write_text(
-        serialize_config(lines, values)
-    )
-    ui.notify(
-        'Saved locally (pending upload)',
-        type='positive',
-    )
-    trigger_ssh_sync()
+    logger.info(f'Additional time is granted to {username}')
