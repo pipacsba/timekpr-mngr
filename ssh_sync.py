@@ -185,11 +185,23 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
-def _ssh_update_allowance(a_client, local: Path) -> bool:
+def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     result = True
     try:
         #sftp.put(str(local), remote)
         logger.info("ssh command execution started")
+
+        #This extra command is required to update the server side file to the Today's one
+        command = f'timekpra --getuserinfo {a_username}'
+        stdin, stdout, stderr = a_client.exec_command(command)
+        if (stdout.channel.recv_exit_status() == 0):
+            logger.info(f"ssh command returned with 0 exit code")
+            result = (result and True)
+        else:
+            logger.info(f"ssh command returned with non-zero exit code")
+            result = False
+        time.sleep(0.5)
+        
         text = local.read_text()
         logger.info("ssh command execution started, file is read")
         for raw in text.splitlines():
@@ -306,7 +318,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
             logger.info(f"ssh upload check for stats file passed: {file}")
             username = file.stem
             logger.info(f"ssh upload check for stats file fouind for {server_name} {username}")
-            if _ssh_update_allowance(client, file):
+            if _ssh_update_allowance(client, file, username):
                 file.unlink()
                 logger.info(f"[{server_name}] updated allowance for {username}")
             else:
