@@ -24,7 +24,6 @@ from ssh_sync import servers_online
 
 import logging 
 logger = logging.getLogger(__name__)
-logger.info(f"ui.servers.py is called at all")
 
 # -------------------------------------------------------------------
 # Helpers
