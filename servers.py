@@ -12,7 +12,6 @@ from storage import SERVERS_FILE, load_json, save_json
 
 import logging 
 logger = logging.getLogger(__name__)
-logger.info(f"servers.py is called at all")
 
 # -------------------------------------------------------------------
 # Public API
@@ -85,6 +84,7 @@ def add_user(
     server = servers.get(server_name)
 
     if not server:
+        logger.error(f'Server "{server_name}" not found')
         raise KeyError(f'Server "{server_name}" not found')
 
     server.setdefault('users', {})[username] = {
@@ -126,6 +126,7 @@ def get_remote_paths(server_name: str) -> Dict:
     """
     server = get_server(server_name)
     if not server:
+        logger.warning("No server is defined yet!")
         return {}
 
     return {
