@@ -29,9 +29,9 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-logging.getLogger("uvicorn").setLevel(log_level)
-logging.getLogger("uvicorn.error").setLevel(log_level)
-logging.getLogger("uvicorn.access").setLevel(log_level)
+logging.getLogger("uvicorn").setLevel(LOG_LEVEL)
+logging.getLogger("uvicorn.error").setLevel(LOG_LEVEL)
+logging.getLogger("uvicorn.access").setLevel(LOG_LEVEL)
 
 # -------------------
 # MIME types (for HA Ingress static files)
