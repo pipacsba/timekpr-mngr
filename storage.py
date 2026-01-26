@@ -11,7 +11,6 @@ from typing import Any
 
 import logging 
 logger = logging.getLogger(__name__)
-logger.info(f"storage.py is called at all")
 
 # -------------------------------------------------------------------
 # Root & directory layout (configurable)
@@ -40,10 +39,12 @@ _ensure_dirs()
 # -------------------------------------------------------------------
 def load_json(path: Path, default: Any):
     if not path.exists():
+        logger.warning("No JSON file found")
         return default
     try:
         return json.loads(path.read_text())
     except json.JSONDecodeError:
+        logger.warning("Load JSON file failed")
         return default
 
 def save_json(path: Path, data: Any) -> None:
