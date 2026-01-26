@@ -17,7 +17,6 @@ from storage import stats_cache_dir
 
 import logging 
 logger = logging.getLogger(__name__)
-logger.info(f"ui.stats_dashboard.py is called at all")
 
 
 # -------------------------------------------------------------------
