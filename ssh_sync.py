@@ -280,12 +280,12 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
             playtime_spent_day=playtime_spent_day,
         )
     
-    if not (f"{server_name}/{user}") in server_user_list:
-        register_user_sensors(server_name, user)
+    if not (f"{server}/{user}") in server_user_list:
+        register_user_sensors(server, user)
 
     # MQTT publish actual time usage / user
     publish(
-        f"stats/{server_name}/{user}",
+        f"stats/{server}/{user}",
         {
             "time_spent_day": time_spent_day,
             "playtime_spent_day": playtime_spent_day,
