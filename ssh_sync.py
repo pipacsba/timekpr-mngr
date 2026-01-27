@@ -16,8 +16,11 @@ import hashlib
 import paramiko
 from pathlib import Path
 from typing import Dict
+from datetime import date
 
 from stats_history import update_daily_usage
+from mqtt_client import publish
+
 
 from servers import load_servers, get_remote_paths
 from storage import (
@@ -251,6 +254,16 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
         playtime_spent_day=playtime_spent_day,
     )
 
+    # MQTT publish actual time usage / user
+    publish(
+        f"stats/{server}/{user}",
+        {
+            "date": date.today().isoformat(),
+            "time_spent_day": time_spent_day,
+            "playtime_spent_day": playtime_spent_day,
+        },
+    )
+
 # -------------------------------------------------------------------
 # Download logic
 # -------------------------------------------------------------------
@@ -390,6 +403,16 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
 
         servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
+
+        # MQTT publish online server list
+        publish(
+            "servers/online",
+            {
+                "date": date.today().isoformat(),
+                "servers": online_servers,
+            },
+        )
+        
         # clear trigger before waiting
         trigger_event.clear()
 
