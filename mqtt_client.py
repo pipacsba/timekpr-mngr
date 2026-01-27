@@ -26,14 +26,15 @@ def get_client() -> mqtt.Client:
     return client
 
 
-def publish(topic: str, payload: dict) -> None:
+def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
     try:
         client = get_client()
         client.publish(
             f"{MQTT_BASE}/{topic}",
             json.dumps(payload),
-            qos=0,
-            retain=False,
+            qos=qos,
+            retain=retain,
         )
     except Exception as e:
         logger.warning(f"MQTT publish failed: {e}")
+
