@@ -251,7 +251,7 @@ def register_user_sensors(server: str, user: str):
         device=device,
     )
 
-def _update_user_history(server: str, user: str, stats_file: Path) -> None:
+def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
     """
     Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
     """
@@ -272,13 +272,27 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
         logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
         return
 
-    update_daily_usage(
-        server=server,
-        user=user,
-        time_spent_day=time_spent_day,
-        playtime_spent_day=playtime_spent_day,
-    )
+    if updated:
+        update_daily_usage(
+            server=server,
+            user=user,
+            time_spent_day=time_spent_day,
+            playtime_spent_day=playtime_spent_day,
+        )
+    
+    if not (f"{server_name}/{user}") in server_user_list:
+        register_user_sensors(server_name, user)
 
+    # MQTT publish actual time usage / user
+    publish(
+        f"stats/{server_name}/{user}",
+        {
+            "time_spent_day": time_spent_day,
+            "playtime_spent_day": playtime_spent_day,
+        },
+        qos=1,
+        retain=False,
+    )
 
 # -------------------------------------------------------------------
 # Download logic
@@ -327,24 +341,11 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 remote_path,
                 local,
             )
+            _update_user_history(server_name, user, local, updated)
             if updated:
                 logger.debug(f"[{server_name}] stats for {user} updated")
-                _update_user_history(server_name, user, local)
 
-            if not (f"{server_name}/{user}") in server_user_list:
-                register_user_sensors(server_name, user)
-        
-            # MQTT publish actual time usage / user
-            publish(
-                f"stats/{server_name}/{user}",
-                {
-                    "time_spent_day": time_spent_day,
-                    "playtime_spent_day": playtime_spent_day,
-                },
-                qos=1,
-                retain=False,
-            )
-        
+
         return True
 
     finally:
