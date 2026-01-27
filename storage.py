@@ -22,9 +22,7 @@ CACHE_DIR = DATA_ROOT / 'cache'
 KEYS_DIR = DATA_ROOT / 'ssh_keys'
 PENDING_DIR = DATA_ROOT / 'pending_uploads'
 SERVERS_FILE = DATA_ROOT / 'servers.json'
-
-HISTORY_DIR = DATA_ROOT / 'stats_history'
-HISTORY_DAYS = 30
+HISTORY_DIR = DATA_ROOT / 'history'
 
 
 # -------------------------------------------------------------------
@@ -38,6 +36,14 @@ def _ensure_dirs() -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 _ensure_dirs()
+
+
+# -------------------------------------------------------------------
+# History helpers
+# -------------------------------------------------------------------
+def history_file(server: str, user: str) -> Path:
+    return HISTORY_DIR / server / f"{user}.json"
+
 
 # -------------------------------------------------------------------
 # JSON helpers
