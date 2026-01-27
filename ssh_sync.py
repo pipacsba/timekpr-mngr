@@ -138,7 +138,7 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
         return client
 
     except (socket.error, paramiko.SSHException) as e:
-        logger.debug(f"SSH connect failed: {e}")
+        logger.warning(f"SSH connect failed: {e}")
         return None
 
 
