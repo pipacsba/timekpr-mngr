@@ -5,3 +5,4 @@ pyyaml>=6.0
 nicegui==3.5.0
 fastapi
 uvicorn
+paho-mqtt>=1.6.1
