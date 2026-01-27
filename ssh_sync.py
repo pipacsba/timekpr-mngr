@@ -279,7 +279,6 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
         playtime_spent_day=playtime_spent_day,
     )
 
-    )
 
 # -------------------------------------------------------------------
 # Download logic
@@ -344,6 +343,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 },
                 qos=1,
                 retain=False,
+            )
         
         return True
 
