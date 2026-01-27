@@ -41,8 +41,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-
 # only allow modern ciphers (AES and CHACHA20)
 paramiko.Transport._preferred_ciphers = (
     'aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'chacha20-poly1305@openssh.com'
@@ -99,6 +97,7 @@ class ServersWatcher:
         
 change_upload_is_pending = VariableWatcher()
 servers_online = ServersWatcher()
+server_user_list = list()
 
 
 # -------------------------------------------------------------------
@@ -232,6 +231,7 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
     """
     Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
     """
+    global server_user_list
     if not stats_file.exists():
         return
 
@@ -254,15 +254,44 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
         playtime_spent_day=playtime_spent_day,
     )
 
+    if not (f"{server}/{user}") in server_user_list:
+        register_user_sensors(server, user)
+
     # MQTT publish actual time usage / user
     publish(
         f"stats/{server}/{user}",
         {
-            "date": date.today().isoformat(),
             "time_spent_day": time_spent_day,
             "playtime_spent_day": playtime_spent_day,
         },
+        qos=1,
+        retain=False,
     )
+
+def register_user_sensors(server: str, user: str):
+    device = {
+        "identifiers": [f"timekpr_{server}"],
+        "name": f"TimeKPR {server}",
+        "manufacturer": "TimeKPR",
+        "model": "User Monitor",
+    }
+
+    publish_ha_sensor(
+        unique_id=f"timekpr_{server}_{user}_time",
+        name=f"{server} {user} Time Used Today",
+        state_topic=f"stats/{server}/{user}",
+        value_template="{{ value_json.time_spent_day }}",
+        device=device,
+    )
+
+    publish_ha_sensor(
+        unique_id=f"timekpr_{server}_{user}_playtime",
+        name=f"{server} {user} Playtime Today",
+        state_topic=f"stats/{server}/{user}",
+        value_template="{{ value_json.playtime_spent_day }}",
+        device=device,
+    )
+
 
 # -------------------------------------------------------------------
 # Download logic
@@ -408,9 +437,10 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         publish(
             "servers/online",
             {
-                "date": date.today().isoformat(),
                 "servers": online_servers,
             },
+            qos=1,
+            retain=True,
         )
         
         # clear trigger before waiting
