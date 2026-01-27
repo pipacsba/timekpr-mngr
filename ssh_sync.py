@@ -19,7 +19,7 @@ from typing import Dict
 from datetime import date
 
 from stats_history import update_daily_usage
-from mqtt_client import publish
+from mqtt_client import publish, publish_ha_sensor
 
 
 from servers import load_servers, get_remote_paths
@@ -227,47 +227,6 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     return result
 
 
-def _update_user_history(server: str, user: str, stats_file: Path) -> None:
-    """
-    Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
-    """
-    global server_user_list
-    if not stats_file.exists():
-        return
-
-    values = {}
-    for line in stats_file.read_text().splitlines():
-        if '=' in line:
-            k, v = line.split('=', 1)
-            values[k.strip()] = v.strip()
-
-    try:
-        time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
-        playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
-    except ValueError:
-        return
-
-    update_daily_usage(
-        server=server,
-        user=user,
-        time_spent_day=time_spent_day,
-        playtime_spent_day=playtime_spent_day,
-    )
-
-    if not (f"{server}/{user}") in server_user_list:
-        register_user_sensors(server, user)
-
-    # MQTT publish actual time usage / user
-    publish(
-        f"stats/{server}/{user}",
-        {
-            "time_spent_day": time_spent_day,
-            "playtime_spent_day": playtime_spent_day,
-        },
-        qos=1,
-        retain=False,
-    )
-
 def register_user_sensors(server: str, user: str):
     device = {
         "identifiers": [f"timekpr_{server}"],
@@ -292,6 +251,48 @@ def register_user_sensors(server: str, user: str):
         device=device,
     )
 
+def _update_user_history(server: str, user: str, stats_file: Path) -> None:
+    """
+    Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
+    """
+    global server_user_list
+    if not stats_file.exists():
+        logger.warning(f"No stats file found for {server} / {user} to read daily usage")
+        return
+
+    values = {}
+    for line in stats_file.read_text().splitlines():
+        if '=' in line:
+            k, v = line.split('=', 1)
+            values[k.strip()] = v.strip()
+
+    try:
+        time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
+        playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
+    except ValueError:
+        logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
+        return
+
+    update_daily_usage(
+        server=server,
+        user=user,
+        time_spent_day=time_spent_day,
+        playtime_spent_day=playtime_spent_day,
+    )
+
+    if not (f"{server}/{user}") in server_user_list:
+        register_user_sensors(server, user)
+
+    # MQTT publish actual time usage / user
+    publish(
+        f"stats/{server}/{user}",
+        {
+            "time_spent_day": time_spent_day,
+            "playtime_spent_day": playtime_spent_day,
+        },
+        qos=1,
+        retain=False,
+    )
 
 # -------------------------------------------------------------------
 # Download logic
@@ -437,7 +438,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         publish(
             "servers/online",
             {
-                "servers": online_servers,
+                "servers": servers_online.get_value(),
             },
             qos=1,
             retain=True,
