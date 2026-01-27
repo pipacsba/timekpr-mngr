@@ -38,3 +38,29 @@ def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) ->
     except Exception as e:
         logger.warning(f"MQTT publish failed: {e}")
 
+def publish_ha_sensor(
+    *,
+    unique_id: str,
+    name: str,
+    state_topic: str,
+    value_template: str,
+    unit: str = "s",
+    device: dict,
+):
+    payload = {
+        "name": name,
+        "state_topic": f"{MQTT_BASE}/{state_topic}",
+        "value_template": value_template,
+        "unit_of_measurement": unit,
+        "state_class": "measurement",
+        "device_class": "duration",
+        "unique_id": unique_id,
+        "device": device,
+    }
+
+    publish(
+        topic=f"homeassistant/sensor/{unique_id}/config",
+        payload=payload,
+        qos=1,
+        retain=True,
+    )
