@@ -17,8 +17,7 @@ import paramiko
 from pathlib import Path
 from typing import Dict
 
-from datetime import datetime, timedelta
-import json
+from stats_history import update_daily_usage
 
 from servers import load_servers, get_remote_paths
 from storage import (
@@ -226,6 +225,32 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     return result
 
 
+def _update_user_history(server: str, user: str, stats_file: Path) -> None:
+    """
+    Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
+    """
+    if not stats_file.exists():
+        return
+
+    values = {}
+    for line in stats_file.read_text().splitlines():
+        if '=' in line:
+            k, v = line.split('=', 1)
+            values[k.strip()] = v.strip()
+
+    try:
+        time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
+        playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
+    except ValueError:
+        return
+
+    update_daily_usage(
+        server=server,
+        user=user,
+        time_spent_day=time_spent_day,
+        playtime_spent_day=playtime_spent_day,
+    )
+
 # -------------------------------------------------------------------
 # Download logic
 # -------------------------------------------------------------------
@@ -265,14 +290,16 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
 
         # --- stats ---
         for user, remote_path in paths.get("stats", {}).items():
+            local = stats_cache_dir(server_name) / f'{user}.stats'
             updated = _scp_get_if_changed(
                 sftp,
                 remote_path,
-                stats_cache_dir(server_name) / f"{user}.stats",
+                local,
             )
             if updated:
                 logger.debug(f"[{server_name}] stats for {user} updated")
-
+                _update_user_history(server_name, user, local)
+        
         return True
 
     finally:
