@@ -255,7 +255,6 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
     """
     Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
     """
-    global server_user_list
     if not stats_file.exists():
         logger.warning(f"No stats file found for {server} / {user} to read daily usage")
         return
@@ -280,18 +279,6 @@ def _update_user_history(server: str, user: str, stats_file: Path) -> None:
         playtime_spent_day=playtime_spent_day,
     )
 
-    if not (f"{server}/{user}") in server_user_list:
-        register_user_sensors(server, user)
-
-    # MQTT publish actual time usage / user
-    publish(
-        f"stats/{server}/{user}",
-        {
-            "time_spent_day": time_spent_day,
-            "playtime_spent_day": playtime_spent_day,
-        },
-        qos=1,
-        retain=False,
     )
 
 # -------------------------------------------------------------------
@@ -303,7 +290,9 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
     Pull all known configs from a server.
     Returns True if server was reachable.
     """
+    global server_user_list
     client = _connect(server)
+
     if not client:
         return False
 
@@ -342,6 +331,19 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
             if updated:
                 logger.debug(f"[{server_name}] stats for {user} updated")
                 _update_user_history(server_name, user, local)
+
+            if not (f"{server_name}/{user}") in server_user_list:
+                register_user_sensors(server_name, user)
+        
+            # MQTT publish actual time usage / user
+            publish(
+                f"stats/{server_name}/{user}",
+                {
+                    "time_spent_day": time_spent_day,
+                    "playtime_spent_day": playtime_spent_day,
+                },
+                qos=1,
+                retain=False,
         
         return True
 
