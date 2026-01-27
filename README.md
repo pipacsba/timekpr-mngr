@@ -70,3 +70,17 @@ main.py
 - NiceGUI frontend (main.py):
   - Starts the UI
   - Launches SSH background sync thread
+ 
+history storage looks like:
+```
+{
+  "2026-01-25": {
+    "time_spent": 1800,
+    "playtime_spent": 900
+  },
+  "2026-01-26": {
+    "time_spent": 0,
+    "playtime_spent": 0
+  }
+}
+```
