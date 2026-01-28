@@ -60,6 +60,7 @@ def publish_ha_sensor(
     payload: dict,
     platform: str
 ):
+    logger.info(f"HA Discovery message is to be sent for platform {platform}")
     if MQTT_ENABLED:
         payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
         payload["device"] = get_device_info()
