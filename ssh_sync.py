@@ -238,7 +238,7 @@ def register_server_sensors(server: str):
             "platform": "binary_sensor",
             "qos": 1,
         },
-        "platform"= "binary_sensor",
+        platform = "binary_sensor",
     )
 
 def register_user_sensors(server: str, user: str):
@@ -252,7 +252,7 @@ def register_user_sensors(server: str, user: str):
             "device_class": "duration",
             "unique_id": f"timekpr_{server}_{user}_time",
         },
-        "platform"= "sensor",
+        platform = "sensor",
     )
 
     publish_ha_sensor(
@@ -265,7 +265,7 @@ def register_user_sensors(server: str, user: str):
             "device_class": "duration",
             "unique_id": f"timekpr_{server}_{user}_playtime",
         },
-        "platform": "sensor",
+        platform = "sensor",
     )
 
 def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
