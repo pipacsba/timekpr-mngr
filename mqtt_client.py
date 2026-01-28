@@ -48,38 +48,8 @@ def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) ->
 
 def publish_ha_sensor(
     *,
-    unique_id: str,
-    name: str,
-    state_topic: str,
-    value_template: str,
-    unit: str = "s",
-    device: dict,
-):
-    payload = {
-        "name": name,
-        "state_topic": f"{MQTT_BASE}/{state_topic}",
-        "value_template": value_template,
-        "unit_of_measurement": unit,
-        "state_class": "measurement",
-        "device_class": "duration",
-        "unique_id": unique_id,
-        "device": get_device_info(),
-    }
-
-    try:
-        client = get_client()
-        client.publish(
-            f"homeassistant/sensor/{unique_id}/config",
-            json.dumps(payload),
-            qos=1,
-            retain=True,
-        )
-    except Exception as e:
-        logger.warning(f"MQTT publish discovery data failed: {e}")
-
-def publish_ha_sensor(
-    *,
     payload: dict,
+    platform: str
 ):
 
     payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
