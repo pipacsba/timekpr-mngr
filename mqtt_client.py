@@ -59,8 +59,19 @@ def publish_ha_sensor(
     }
 
     publish(
-        topic=f"homeassistant/sensor/{unique_id}/config",
+        topic=,
         payload=payload,
         qos=1,
         retain=True,
     )
+
+    try:
+        client = get_client()
+        client.publish(
+            f"homeassistant/sensor/{unique_id}/config",
+            json.dumps(payload),
+            qos=1,
+            retain=True,
+        )
+    except Exception as e:
+        logger.warning(f"MQTT publish discovery data failed: {e}")
