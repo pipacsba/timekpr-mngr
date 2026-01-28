@@ -229,17 +229,27 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
 
 def register_user_sensors(server: str, user: str):
     publish_ha_sensor(
-        unique_id=f"timekpr_{server}_{user}_time",
-        name=f"{server} {user} Time Used Today",
-        state_topic=f"stats/{server}/{user}",
-        value_template="{{ value_json.time_spent_day }}",
+        payload = {
+            "name": f"{server} {user} Time Used Today",
+            "state_topic": f"stats/{server}/{user}",
+            "value_template": "{{ value_json.time_spent_day }}",
+            "unit_of_measurement": unit,
+            "state_class": "measurement",
+            "device_class": "duration",
+            "unique_id": f"timekpr_{server}_{user}_time",
+        }
     )
 
     publish_ha_sensor(
-        unique_id=f"timekpr_{server}_{user}_playtime",
-        name=f"{server} {user} Playtime Today",
-        state_topic=f"stats/{server}/{user}",
-        value_template="{{ value_json.playtime_spent_day }}",
+        payload = {
+            "name": f"{server} {user} Playtime Today",
+            "state_topic": f"stats/{server}/{user}",
+            "value_template": "{{ value_json.playtime_spent_day }}",
+            "unit_of_measurement": unit,
+            "state_class": "measurement",
+            "device_class": "duration",
+            "unique_id": f"timekpr_{server}_{user}_playtime",
+        }
     )
 
 def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
