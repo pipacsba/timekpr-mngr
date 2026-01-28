@@ -23,6 +23,7 @@ KEYS_DIR = DATA_ROOT / 'ssh_keys'
 PENDING_DIR = DATA_ROOT / 'pending_uploads'
 SERVERS_FILE = DATA_ROOT / 'servers.json'
 HISTORY_DIR = DATA_ROOT / 'history'
+ADDON_CONFIG_FILE = DATA_ROOT / 'options.json'
 
 
 # -------------------------------------------------------------------
