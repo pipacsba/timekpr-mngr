@@ -25,6 +25,14 @@ def get_client() -> mqtt.Client:
     logger.info("MQTT connected")
     return client
 
+def get_device_info() -> dict:
+    device = {
+        "identifiers": [f"timekpr-mngr"],
+        "name": f"timekpr-mngr",
+        "manufacturer": "timekpr-mngr",
+        "model": "User Monitor",
+    }    
+
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
     try:
@@ -55,16 +63,31 @@ def publish_ha_sensor(
         "state_class": "measurement",
         "device_class": "duration",
         "unique_id": unique_id,
-        "device": device,
+        "device": get_device_info(),
     }
 
-    publish(
-        topic=,
-        payload=payload,
-        qos=1,
-        retain=True,
-    )
+    try:
+        client = get_client()
+        client.publish(
+            f"homeassistant/sensor/{unique_id}/config",
+            json.dumps(payload),
+            qos=1,
+            retain=True,
+        )
+    except Exception as e:
+        logger.warning(f"MQTT publish discovery data failed: {e}")
 
+def publish_ha_sensor(
+    *,
+    unique_id: str,
+    name: str,
+    value_template: str,
+    unit: str = "s",
+    payload: dict,
+):
+
+    payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
+    
     try:
         client = get_client()
         client.publish(
