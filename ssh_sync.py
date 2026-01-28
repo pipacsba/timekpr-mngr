@@ -228,19 +228,11 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
 
 
 def register_user_sensors(server: str, user: str):
-    device = {
-        "identifiers": [f"timekpr_{server}"],
-        "name": f"TimeKPR {server}",
-        "manufacturer": "TimeKPR",
-        "model": "User Monitor",
-    }
-
     publish_ha_sensor(
         unique_id=f"timekpr_{server}_{user}_time",
         name=f"{server} {user} Time Used Today",
         state_topic=f"stats/{server}/{user}",
         value_template="{{ value_json.time_spent_day }}",
-        device=device,
     )
 
     publish_ha_sensor(
@@ -248,7 +240,6 @@ def register_user_sensors(server: str, user: str):
         name=f"{server} {user} Playtime Today",
         state_topic=f"stats/{server}/{user}",
         value_template="{{ value_json.playtime_spent_day }}",
-        device=device,
     )
 
 def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
