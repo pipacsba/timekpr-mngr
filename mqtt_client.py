@@ -79,14 +79,11 @@ def publish_ha_sensor(
 
 def publish_ha_sensor(
     *,
-    unique_id: str,
-    name: str,
-    value_template: str,
-    unit: str = "s",
     payload: dict,
 ):
 
     payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
+    payload["device"] = get_device_info()
     
     try:
         client = get_client()
