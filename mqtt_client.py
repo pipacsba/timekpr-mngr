@@ -3,12 +3,20 @@
 import json
 import logging
 import paho.mqtt.client as mqtt
+from storage import ADDON_CONFIG_FILE, load_json
 
 logger = logging.getLogger(__name__)
 
-MQTT_HOST = "mqtt.lan"
-MQTT_PORT = 1883
-MQTT_BASE = "timekpr"
+addon_options=load_json(ADDON_CONFIG_FILE, {})
+
+try:
+    MQTT_HOST = addon_options["mqtt"]["server"]
+    MQTT_PORT = addon_options["mqtt"]["port"]
+    MQTT_BASE = addon_options["mqtt"]["base_topic"]
+    MQTT_ENABLED = True
+except:
+    MQTT_ENABLED = False
+    logger.warning("No MQTT config could be read, disabled")
 
 _client = None
 
@@ -35,33 +43,34 @@ def get_device_info() -> dict:
 
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
-    try:
-        client = get_client()
-        client.publish(
-            f"{MQTT_BASE}/{topic}",
-            json.dumps(payload),
-            qos=qos,
-            retain=retain,
-        )
-    except Exception as e:
-        logger.warning(f"MQTT publish failed: {e}")
+    if MQTT_ENABLED:    
+        try:
+            client = get_client()
+            client.publish(
+                f"{MQTT_BASE}/{topic}",
+                json.dumps(payload),
+                qos=qos,
+                retain=retain,
+            )
+        except Exception as e:
+            logger.warning(f"MQTT publish failed: {e}")
 
 def publish_ha_sensor(
     *,
     payload: dict,
     platform: str
 ):
-
-    payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
-    payload["device"] = get_device_info()
-    
-    try:
-        client = get_client()
-        client.publish(
-            f"homeassistant/{platform}/{payload['unique_id']}/config",
-            json.dumps(payload),
-            qos=1,
-            retain=True,
-        )
-    except Exception as e:
-        logger.warning(f"MQTT publish discovery data failed: {e}")
+    if MQTT_ENABLED:
+        payload["state_topic"] = f"{MQTT_BASE}/{payload['state_topic']}"
+        payload["device"] = get_device_info()
+        
+        try:
+            client = get_client()
+            client.publish(
+                f"homeassistant/{platform}/{payload['unique_id']}/config",
+                json.dumps(payload),
+                qos=1,
+                retain=True,
+            )
+        except Exception as e:
+            logger.warning(f"MQTT publish discovery data failed: {e}")
