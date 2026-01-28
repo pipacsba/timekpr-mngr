@@ -58,7 +58,7 @@ def publish_ha_sensor(
     try:
         client = get_client()
         client.publish(
-            f"homeassistant/{platform}/{unique_id}/config",
+            f"homeassistant/{platform}/{payload['unique_id']}/config",
             json.dumps(payload),
             qos=1,
             retain=True,
