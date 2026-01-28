@@ -98,6 +98,7 @@ class ServersWatcher:
 change_upload_is_pending = VariableWatcher()
 servers_online = ServersWatcher()
 server_user_list = list()
+server_list = list()
 
 
 # -------------------------------------------------------------------
@@ -226,6 +227,20 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
         result = False
     return result
 
+def register_server_sensors(server: str):
+    publish_ha_sensor(
+        payload = {
+            "name": f"{server} status",
+            "state_topic": f"servers/online",
+            "value_template": f"{{ 'On' if '{server}' in value_json.servers else 'Off' }}",
+            "unit_of_measurement": "s",
+            "state_class": "measurement",
+            "device_class": "duration",
+            "unique_id": f"timekpr_{server}_time",
+            "platform": "binary_sensor",
+        },
+        platform="binary_sensor",
+    )
 
 def register_user_sensors(server: str, user: str):
     publish_ha_sensor(
@@ -233,11 +248,12 @@ def register_user_sensors(server: str, user: str):
             "name": f"{server} {user} Time Used Today",
             "state_topic": f"stats/{server}/{user}",
             "value_template": "{{ value_json.time_spent_day }}",
-            "unit_of_measurement": unit,
+            "unit_of_measurement": "s",
             "state_class": "measurement",
             "device_class": "duration",
             "unique_id": f"timekpr_{server}_{user}_time",
-        }
+        },
+        platform="sensor"
     )
 
     publish_ha_sensor(
@@ -245,17 +261,19 @@ def register_user_sensors(server: str, user: str):
             "name": f"{server} {user} Playtime Today",
             "state_topic": f"stats/{server}/{user}",
             "value_template": "{{ value_json.playtime_spent_day }}",
-            "unit_of_measurement": unit,
+            "unit_of_measurement": "s",
             "state_class": "measurement",
             "device_class": "duration",
             "unique_id": f"timekpr_{server}_{user}_playtime",
-        }
+        },
+        platform="sensor"
     )
 
 def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
     """
     Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
     """
+    global server_user_list
     if not stats_file.exists():
         logger.warning(f"No stats file found for {server} / {user} to read daily usage")
         return
@@ -283,6 +301,7 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
     
     if not (f"{server}/{user}") in server_user_list:
         register_user_sensors(server, user)
+        server_user_list.append(f"{server}/{user}")
 
     # MQTT publish actual time usage / user
     publish(
@@ -422,6 +441,7 @@ def trigger_ssh_sync():
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     global servers_online
+    global server_list
     logger.debug("SSH sync loop started")
     success = True
 
@@ -438,6 +458,10 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
 
+        if not server in server_list:
+            register_server_sensors(server)
+            server_list.append(f"{server}/{user}")
+        
         # MQTT publish online server list
         publish(
             "servers/online",
