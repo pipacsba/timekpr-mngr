@@ -15,12 +15,16 @@ logger = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 # Root & directory layout (configurable)
 # -------------------------------------------------------------------
+
 DATA_ROOT: Path = Path('/data')  # default, can be overridden from main.py
 
 CACHE_DIR = DATA_ROOT / 'cache'
 KEYS_DIR = DATA_ROOT / 'ssh_keys'
 PENDING_DIR = DATA_ROOT / 'pending_uploads'
 SERVERS_FILE = DATA_ROOT / 'servers.json'
+HISTORY_DIR = DATA_ROOT / 'history'
+ADDON_CONFIG_FILE = DATA_ROOT / 'options.json'
+
 
 # -------------------------------------------------------------------
 # Initialization
@@ -29,10 +33,18 @@ def _ensure_dirs() -> None:
     """
     Ensure required directories exist.
     """
-    for path in (DATA_ROOT, CACHE_DIR, KEYS_DIR, PENDING_DIR):
+    for path in (DATA_ROOT, CACHE_DIR, KEYS_DIR, PENDING_DIR, HISTORY_DIR):
         path.mkdir(parents=True, exist_ok=True)
 
 _ensure_dirs()
+
+
+# -------------------------------------------------------------------
+# History helpers
+# -------------------------------------------------------------------
+def history_file(server: str, user: str) -> Path:
+    return HISTORY_DIR / server / f"{user}.json"
+
 
 # -------------------------------------------------------------------
 # JSON helpers

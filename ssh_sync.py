@@ -16,6 +16,11 @@ import hashlib
 import paramiko
 from pathlib import Path
 from typing import Dict
+from datetime import date
+
+from stats_history import update_daily_usage
+from mqtt_client import publish, publish_ha_sensor
+
 
 from servers import load_servers, get_remote_paths
 from storage import (
@@ -34,6 +39,7 @@ trigger_event = threading.Event()
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 # only allow modern ciphers (AES and CHACHA20)
 paramiko.Transport._preferred_ciphers = (
@@ -91,6 +97,8 @@ class ServersWatcher:
         
 change_upload_is_pending = VariableWatcher()
 servers_online = ServersWatcher()
+server_user_list = list()
+server_list = list()
 
 
 # -------------------------------------------------------------------
@@ -131,7 +139,7 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
         return client
 
     except (socket.error, paramiko.SSHException) as e:
-        logger.debug(f"SSH connect failed: {e}")
+        logger.warning(f"SSH connect failed to {server['host']}: {e} ")
         return None
 
 
@@ -219,6 +227,91 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
         result = False
     return result
 
+def register_server_sensors(server: str):
+    publish_ha_sensor(
+        payload = {
+            "name": f"Timekpr Server {server} status",
+            "unique_id": f"timekpr_{server}_online",
+            "state_topic": f"servers/online",
+            "value_template": f"{{{{ '{server}' in value_json.servers }}}}",
+            "device_class": "connectivity",
+            "platform": "binary_sensor",
+            "qos": 1,
+        },
+        platform = "binary_sensor",
+    )
+
+def register_user_sensors(server: str, user: str):
+    publish_ha_sensor(
+        payload = {
+            "name": f"{server} {user} Time Used Today",
+            "state_topic": f"stats/{server}/{user}",
+            "value_template": "{{ value_json.time_spent_day }}",
+            "unit_of_measurement": "s",
+            "state_class": "measurement",
+            "device_class": "duration",
+            "unique_id": f"timekpr_{server}_{user}_time",
+        },
+        platform = "sensor",
+    )
+
+    publish_ha_sensor(
+        payload = {
+            "name": f"{server} {user} Playtime Today",
+            "state_topic": f"stats/{server}/{user}",
+            "value_template": "{{ value_json.playtime_spent_day }}",
+            "unit_of_measurement": "s",
+            "state_class": "measurement",
+            "device_class": "duration",
+            "unique_id": f"timekpr_{server}_{user}_playtime",
+        },
+        platform = "sensor",
+    )
+
+def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
+    """
+    Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
+    """
+    global server_user_list
+    if not stats_file.exists():
+        logger.warning(f"No stats file found for {server} / {user} to read daily usage")
+        return
+
+    values = {}
+    for line in stats_file.read_text().splitlines():
+        if '=' in line:
+            k, v = line.split('=', 1)
+            values[k.strip()] = v.strip()
+
+    try:
+        time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
+        playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
+    except ValueError:
+        logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
+        return
+
+    if updated:
+        update_daily_usage(
+            server=server,
+            user=user,
+            time_spent_day=time_spent_day,
+            playtime_spent_day=playtime_spent_day,
+        )
+    
+    if not (f"{server}/{user}") in server_user_list:
+        register_user_sensors(server, user)
+        server_user_list.append(f"{server}/{user}")
+
+    # MQTT publish actual time usage / user
+    publish(
+        f"stats/{server}/{user}",
+        {
+            "time_spent_day": time_spent_day,
+            "playtime_spent_day": playtime_spent_day,
+        },
+        qos=1,
+        retain=False,
+    )
 
 # -------------------------------------------------------------------
 # Download logic
@@ -229,7 +322,9 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
     Pull all known configs from a server.
     Returns True if server was reachable.
     """
+    global server_user_list
     client = _connect(server)
+
     if not client:
         return False
 
@@ -259,13 +354,16 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
 
         # --- stats ---
         for user, remote_path in paths.get("stats", {}).items():
+            local = stats_cache_dir(server_name) / f'{user}.stats'
             updated = _scp_get_if_changed(
                 sftp,
                 remote_path,
-                stats_cache_dir(server_name) / f"{user}.stats",
+                local,
             )
+            _update_user_history(server_name, user, local, updated)
             if updated:
                 logger.debug(f"[{server_name}] stats for {user} updated")
+
 
         return True
 
@@ -342,6 +440,7 @@ def trigger_ssh_sync():
 def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     global servers_online
+    global server_list
     logger.debug("SSH sync loop started")
     success = True
 
@@ -357,6 +456,21 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
 
         servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
+
+        if not name in server_list:
+            register_server_sensors(name)
+            server_list.append(name)
+        
+        # MQTT publish online server list
+        publish(
+            "servers/online",
+            {
+                "servers": servers_online.get_value(),
+            },
+            qos=1,
+            retain=True,
+        )
+        
         # clear trigger before waiting
         trigger_event.clear()
 
