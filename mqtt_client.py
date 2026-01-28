@@ -39,7 +39,8 @@ def get_device_info() -> dict:
         "name": f"timekpr-mngr",
         "manufacturer": "timekpr-mngr",
         "model": "User Monitor",
-    }    
+    }
+    return device
 
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
