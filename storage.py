@@ -100,7 +100,7 @@ def pending_stats_dir(server_name: str) -> Path:
 # -------------------------------------------------------------------
 # Addon config helpers
 # -------------------------------------------------------------------
-def get_admin_user_list() -> List():
+def get_admin_user_list() -> list():
     addon_options=load_json(ADDON_CONFIG_FILE, {})
     try:
         admin_users = addon_options["mqtt"]["server"]
