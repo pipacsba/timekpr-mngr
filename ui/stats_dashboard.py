@@ -13,6 +13,7 @@ from typing import Dict
 from datetime import datetime
 from nicegui import ui
 
+from stats_history import get_user_history
 from storage import stats_cache_dir
 
 import logging 
@@ -83,6 +84,50 @@ def _stat_card(title: str, value: str, icon: str):
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
 
+def _render_usage_history_chart(server_name: str, username: str):
+    history = get_user_history(server_name, username)
+    if not history:
+        return
+
+    dates = list(history.keys())
+    time_spent = [history[d]["time_spent"] for d in dates]
+    playtime_spent = [history[d]["playtime_spent"] for d in dates]
+
+    ui.highchart({
+        "chart": {
+            "type": "column",
+            "height": 250,
+        },
+        "title": {
+            "text": "Daily usage (last days)",
+        },
+        "xAxis": {
+            "categories": dates,
+        },
+        "yAxis": {
+            "min": 0,
+            "title": {
+                "text": "Seconds",
+            },
+        },
+        "tooltip": {
+            "shared": True,
+        },
+        "series": [
+            {
+                "name": "Time spent",
+                "data": time_spent,
+            },
+            {
+                "name": "Playtime spent",
+                "data": playtime_spent,
+            },
+        ],
+        "credits": {
+            "enabled": False,
+        },
+    }).classes("w-full")
+
 
 # -------------------------------------------------------------------
 # Dashboard renderer
@@ -108,7 +153,11 @@ def render_stats_dashboard(server_name: str, username: str):
                 icon='clock'
             )
 
-        
+        # Usage history chart next to LAST_CHECKED
+        with ui.card().classes('flex-1'):
+            _render_usage_history_chart(server_name, username)
+    
+    with ui.row().classes('gap-6 mt-4'):      
         if 'TIME_SPENT_BALANCE' in stats:
             _stat_card(
                 'total time balance spent for this day',
@@ -137,6 +186,7 @@ def render_stats_dashboard(server_name: str, username: str):
                 icon='date_range'
             )
 
+    with ui.row().classes('gap-6 mt-4'):
         if 'PLAYTIME_SPENT_BALANCE' in stats:
             _stat_card(
                 'total PlayTime balance spent for this day',
