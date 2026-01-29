@@ -16,7 +16,7 @@ import hashlib
 import paramiko
 from pathlib import Path
 from typing import Dict
-from datetime import date
+from datetime import datetime, date
 
 from stats_history import update_daily_usage
 from mqtt_client import publish, publish_ha_sensor
