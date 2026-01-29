@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict
 from datetime import datetime
 from nicegui import ui
+import plotly.graph_objects as go
 
 from stats_history import get_user_history
 from storage import stats_cache_dir
@@ -87,46 +88,37 @@ def _stat_card(title: str, value: str, icon: str):
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
     if not history:
+        ui.label('No historical data available').classes('text-gray')
         return
 
     dates = list(history.keys())
     time_spent = [history[d]["time_spent"] for d in dates]
     playtime_spent = [history[d]["playtime_spent"] for d in dates]
 
-    ui.highchart({
-        "chart": {
-            "type": "column",
-            "height": 250,
-        },
-        "title": {
-            "text": "Daily usage (last days)",
-        },
-        "xAxis": {
-            "categories": dates,
-        },
-        "yAxis": {
-            "min": 0,
-            "title": {
-                "text": "Seconds",
-            },
-        },
-        "tooltip": {
-            "shared": True,
-        },
-        "series": [
-            {
-                "name": "Time spent",
-                "data": time_spent,
-            },
-            {
-                "name": "Playtime spent",
-                "data": playtime_spent,
-            },
-        ],
-        "credits": {
-            "enabled": False,
-        },
-    }).classes("w-full")
+    fig = go.Figure()
+
+    fig.add_bar(
+        x=dates,
+        y=time_spent,
+        name="Time spent",
+    )
+
+    fig.add_bar(
+        x=dates,
+        y=playtime_spent,
+        name="Playtime spent",
+    )
+
+    fig.update_layout(
+        barmode="group",
+        height=250,
+        margin=dict(l=20, r=20, t=30, b=20),
+        xaxis_title="Date",
+        yaxis_title="Seconds",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    ui.plotly(fig).classes("w-full")
 
 
 # -------------------------------------------------------------------
