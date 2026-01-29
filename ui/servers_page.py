@@ -9,7 +9,7 @@ Responsibilities:
 """
 
 from pathlib import Path
-from nicegui import ui
+from nicegui import app, ui
 
 from servers import (
     load_servers,
@@ -277,7 +277,8 @@ def servers_page():
     logger.info(f"ui.servers.py servers_page generation is started")
     ui.label('Servers').classes('text-2xl font-bold')
 
-    ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
+    if app.storage.client.get('is_admin', False):
+        ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
 
     servers = load_servers()
     refreshables = []
@@ -293,9 +294,11 @@ def servers_page():
             with ui.row().classes('w-full'):
                 #ui.label(server_name).classes('text-lg font-bold')
                 #ui.link(server_name, f'/server/{server_name}')
-                with ui.link(target=f'/server/{server_name}'):
+                if app.storage.client.get('is_admin', False): 
+                    with ui.link(target=f'/server/{server_name}'):
+                        ui.label(server_name).classes('text-lg font-bold')
+                else:
                     ui.label(server_name).classes('text-lg font-bold')
-                
                 ui.space()
                 @ui.refreshable
                 def server_status(name=server_name):
@@ -305,12 +308,12 @@ def servers_page():
                         ui.chip('OFFLINE', color='gray')
                 server_status()
                 refreshables.append(server_status)
-                
-                ui.chip(icon='delete', color='warning',
-                    on_click=lambda s=server_name: (
-                        delete_server(s),
-                        _refresh()
-                    ),                
+                if app.storage.client.get('is_admin', False): 
+                    ui.chip(icon='delete', color='warning',
+                        on_click=lambda s=server_name: (
+                            delete_server(s),
+                            _refresh()
+                        ),                
                 ).props('color=negative')
 
             ui.label(f"Host: {server['host']}:{server.get('port', 22)}")
@@ -327,26 +330,31 @@ def servers_page():
                 for username in users:
                     with ui.row().classes('w-full'):
                         #ui.label(username)
-                        with ui.link(target=f'/server/{server_name}/user/{username}'):
-                                ui.label(username.capitalize())
+                        if app.storage.client.get('is_admin', False):                        
+                            with ui.link(target=f'/server/{server_name}/user/{username}'):
+                                    ui.label(username.capitalize())
+                        else:
+                            ui.label(username.capitalize())
                         ui.space()
-                        ui.chip(icon='iso', color='green',
-                            on_click=lambda s=server_name, u=username: _adjust_user_dialog(s, u),
-                        )
+                        if app.storage.client.get('is_admin', False):
+                            ui.chip(icon='iso', color='green',
+                                on_click=lambda s=server_name, u=username: _adjust_user_dialog(s, u),
+                            )
                         with ui.link(target=f'/server/{server_name}/stats/{username}'):
                                 ui.chip(icon='bar_chart')
-                        ui.space()
-                        ui.chip(icon='delete', color='warning',
-                            on_click=lambda  s=server_name, u=username: (
-                                delete_user(s, u),
-                                _refresh()
-                            ),           
+                        if app.storage.client.get('is_admin', False):
+                            ui.space()
+                            ui.chip(icon='delete', color='warning',
+                                on_click=lambda  s=server_name, u=username: (
+                                    delete_user(s, u),
+                                    _refresh()
+                                ),           
                         ).props('color=negative')
-                        
-            ui.button(
-                'Add user',
-                on_click=lambda s=server_name: _add_user_dialog(s),
-            ).classes('mb-2')
+            if app.storage.client.get('is_admin', False):            
+                ui.button(
+                    'Add user',
+                    on_click=lambda s=server_name: _add_user_dialog(s),
+                ).classes('mb-2')
 
     def on_servers_changed():
         for r in refreshables:
