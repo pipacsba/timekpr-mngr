@@ -109,4 +109,5 @@ def get_admin_user_list() -> list():
             user_list.append(admin["username"])
     except:
         logger.warning("No Admin users identified from config file")
+    logger.info(f"Admin users list: {user_list}")
     return user_list
