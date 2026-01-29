@@ -79,7 +79,7 @@ def home_page(request: Request):
     ha_user = request.headers.get("x-remote-user-name", "unknown")
     if app.storage.client.get('ha_username', "") != "":
             app.storage.general['admin_users'] = get_admin_user_list()
-    app.storage.client['is_admin'] = (ha_user in app.storage.general.get("admin_list", list=()))
+    app.storage.client['is_admin'] = (ha_user in app.storage.general.get("admin_list", list()))
     app.storage.client['ha_username'] = ha_user
     ui.navigate.history.replace('/servers')
     servers_page_wrapper()
