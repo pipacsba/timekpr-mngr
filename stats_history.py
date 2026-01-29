@@ -7,6 +7,9 @@ from typing import Dict
 
 from storage import history_file
 
+import logging 
+logger = logging.getLogger(__name__)
+
 MAX_DAYS = 30
 
 def _load(path: Path) -> Dict[str, dict]:
