@@ -192,15 +192,14 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
-def _trigger_user_file_renewal_over_ssh(a_server, a_username) -> bool:
+def _trigger_user_file_renewal_over_ssh(client, a_username) -> bool:
     result = True
     try:
         logger.info("ssh command to trigger user stats file renew started")
-        client = _connect(a_server)
 
         #This extra command is required to update the server side file to the Today's one
         command = f'timekpra --getuserinfo {a_username}'
-        stdin, stdout, stderr = a_client.exec_command(command)
+        stdin, stdout, stderr = client.exec_command(command)
         if (stdout.channel.recv_exit_status() == 0):
             logger.debug(f"ssh command to trigger user stats file renew returned with 0 exit code")
             result = (result and True)
@@ -287,7 +286,7 @@ def register_user_sensors(server: str, user: str):
         platform = "sensor",
     )
 
-def _update_user_history(server: str, user: str, stats_file: Path, updated: bool) -> None:
+def _update_user_history(server: str, user: str, stats_file: Path, updated: bool, client) -> None:
     """
     Extract TIME_SPENT_DAY and PLAYTIME_SPENT_DAY and update rolling history.
     """
@@ -312,7 +311,7 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
             time_spent_day = 0
             playtime_spent_day = 0
             #try to update server side file
-            _trigger_user_file_renewal_over_ssh(server, user) 
+            _trigger_user_file_renewal_over_ssh(client, user) 
     except ValueError:
         logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
         return
@@ -386,7 +385,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
                 remote_path,
                 local,
             )
-            _update_user_history(server_name, user, local, updated)
+            _update_user_history(server_name, user, local, updated, client)
             if updated:
                 logger.debug(f"[{server_name}] stats for {user} updated")
 
