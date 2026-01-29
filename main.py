@@ -4,7 +4,7 @@ import json
 import mimetypes
 import nicegui
 from nicegui import ui
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
 import ui.navigation as navigation
@@ -79,6 +79,21 @@ app = FastAPI(lifespan=lifespan)
 # -------------------
 # Ingress middleware (HTTP only)
 # -------------------
+# Security middleware to restrict access
+@app.middleware("http")
+async def check_ingress(request: Request, call_next):
+    # Only allow connections from the Home Assistant Supervisor IP
+    # and check if the Ingress path header exists.
+    if request.client.host != "172.30.32.2":
+         # Optional: Allow local dev if needed, else raise 403
+         # return await call_next(request) 
+         raise HTTPException(status_code=403, detail="Access denied: Use Home Assistant Ingress")
+    
+    if "x-ingress-path" not in request.headers:
+        raise HTTPException(status_code=403, detail="Direct access is disabled")
+        
+    return await call_next(request)
+
 class IngressMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         ingress_path = request.headers.get("X-Ingress-Path")
