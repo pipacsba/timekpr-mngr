@@ -11,10 +11,13 @@ MAX_DAYS = 30
 
 def _load(path: Path) -> Dict[str, dict]:
     if not path.exists():
+        logger.info(f"History stats file not found at {path}")
         return {}
     try:
+        logger.info("Histoy stats file is being read")
         return json.loads(path.read_text())
     except Exception:
+        logger.info(f"History stats file read error at {path}")
         return {}
 
 
@@ -63,6 +66,7 @@ def get_user_history(server: str, user: str) -> dict[str, dict]:
     raw_history = _load(path)
 
     if not raw_history:
+        loggel.warning("No history stats read returned empty")
         return {}
 
     # Parse available dates
