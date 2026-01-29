@@ -192,6 +192,23 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
         result = False
     return result
 
+def _trigger_user_file_renewal_over_ssh(a_server, a_username) -> bool:
+    result = true
+    try:
+        logger.debug("ssh command execution started")
+        client = _connect(server)
+
+        #This extra command is required to update the server side file to the Today's one
+        command = f'timekpra --getuserinfo {a_username}'
+        stdin, stdout, stderr = a_client.exec_command(command)
+        if (stdout.channel.recv_exit_status() == 0):
+            logger.debug(f"ssh command returned with 0 exit code")
+            result = (result and True)
+    except:
+        logger.warning("ssh command execution failed, caught by exception handler")
+        result = False
+    return result
+
 def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     result = True
     try:
@@ -293,6 +310,8 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
         else:
             time_spent_day = 0
             playtime_spent_day = 0
+            #try to update server side file
+            _trigger_user_file_renewal_over_ssh(server, user) 
     except ValueError:
         logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
         return
