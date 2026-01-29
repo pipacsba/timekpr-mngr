@@ -238,7 +238,6 @@ def register_server_sensors(server: str):
             "device_class": "connectivity",
             "value_on": "On",
             "value_off": "Off",
-            "platform": "binary_sensor",
             "qos": 1,
         },
         platform = "binary_sensor",
