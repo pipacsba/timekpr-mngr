@@ -78,7 +78,7 @@ def build_header(request: Request):
 @ui.page('/')
 def home_page(request: Request):
     ui.navigate.history.replace('/servers')
-    servers_page_wrapper()
+    servers_page_wrapper(request)
     #ui.navigate.to('/servers')
 #    dark = ui.dark_mode()
 #    dark.enable()
