@@ -195,17 +195,18 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
 def _trigger_user_file_renewal_over_ssh(a_server, a_username) -> bool:
     result = true
     try:
-        logger.debug("ssh command execution started")
+        logger.debug("ssh command to trigger user stats file renew started")
         client = _connect(server)
 
         #This extra command is required to update the server side file to the Today's one
         command = f'timekpra --getuserinfo {a_username}'
         stdin, stdout, stderr = a_client.exec_command(command)
         if (stdout.channel.recv_exit_status() == 0):
-            logger.debug(f"ssh command returned with 0 exit code")
+            logger.debug(f"ssh command to trigger user stats file renew returned with 0 exit code")
             result = (result and True)
+        client.close()
     except:
-        logger.warning("ssh command execution failed, caught by exception handler")
+        logger.warning("ssh command to trigger user stats file renew execution failed, caught by exception handler")
         result = False
     return result
 
