@@ -231,7 +231,7 @@ def register_server_sensors(server: str):
     publish_ha_sensor(
         payload = {
             "name": f"Timekpr Server {server} status",
-            "value_template": f"{{{{ '{server}' in value_json.servers }}}}",
+            "value_template": f"{{{{ 'true' if '{server}' in value_json.servers else 'false'  }}}}",
             "payload_on": "true",
             "payload_off": "false",
             "unique_id": f"timekpr_{server}_online",
