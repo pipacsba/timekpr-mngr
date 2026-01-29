@@ -105,7 +105,7 @@ def get_admin_user_list() -> list():
     user_list = list()
     try:
         admin_users = addon_options["admin_users"]
-        for admin in admin users
+        for admin in admin_users
             user_list.append(admin["username"])
     except:
         logger.warning("No Admin users identified from config file")
