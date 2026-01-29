@@ -277,7 +277,7 @@ def servers_page():
     logger.info(f"ui.servers.py servers_page generation is started")
     ui.label('Servers').classes('text-2xl font-bold')
 
-    if app.storage.client.get('is_admin', False):
+    if app.storage.general.get('is_admin', False):
         ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
 
     servers = load_servers()
@@ -294,7 +294,7 @@ def servers_page():
             with ui.row().classes('w-full'):
                 #ui.label(server_name).classes('text-lg font-bold')
                 #ui.link(server_name, f'/server/{server_name}')
-                if app.storage.client.get('is_admin', False): 
+                if app.storage.general.get('is_admin', False): 
                     with ui.link(target=f'/server/{server_name}'):
                         ui.label(server_name).classes('text-lg font-bold')
                 else:
@@ -308,7 +308,7 @@ def servers_page():
                         ui.chip('OFFLINE', color='gray')
                 server_status()
                 refreshables.append(server_status)
-                if app.storage.client.get('is_admin', False): 
+                if app.storage.general.get('is_admin', False): 
                     ui.chip(icon='delete', color='warning',
                         on_click=lambda s=server_name: (
                             delete_server(s),
@@ -330,19 +330,19 @@ def servers_page():
                 for username in users:
                     with ui.row().classes('w-full'):
                         #ui.label(username)
-                        if app.storage.client.get('is_admin', False):                        
+                        if app.storage.general.get('is_admin', False):                        
                             with ui.link(target=f'/server/{server_name}/user/{username}'):
                                     ui.label(username.capitalize())
                         else:
                             ui.label(username.capitalize())
                         ui.space()
-                        if app.storage.client.get('is_admin', False):
+                        if app.storage.general.get('is_admin', False):
                             ui.chip(icon='iso', color='green',
                                 on_click=lambda s=server_name, u=username: _adjust_user_dialog(s, u),
                             )
                         with ui.link(target=f'/server/{server_name}/stats/{username}'):
                                 ui.chip(icon='bar_chart')
-                        if app.storage.client.get('is_admin', False):
+                        if app.storage.general.get('is_admin', False):
                             ui.space()
                             ui.chip(icon='delete', color='warning',
                                 on_click=lambda  s=server_name, u=username: (
@@ -350,7 +350,7 @@ def servers_page():
                                     _refresh()
                                 ),           
                         ).props('color=negative')
-            if app.storage.client.get('is_admin', False):            
+            if app.storage.general.get('is_admin', False):            
                 ui.button(
                     'Add user',
                     on_click=lambda s=server_name: _add_user_dialog(s),
