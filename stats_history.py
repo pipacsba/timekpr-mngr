@@ -17,7 +17,7 @@ def _load(path: Path) -> Dict[str, dict]:
         logger.info(f"History stats file not found at {path}")
         return {}
     try:
-        logger.info("Histoy stats file is being read")
+        logger.info("History stats file is being read")
         return json.loads(path.read_text())
     except json.JSONDecodeError as e:
         # Specifically catch JSON errors to see syntax issues
