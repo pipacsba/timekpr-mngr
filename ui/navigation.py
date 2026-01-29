@@ -6,7 +6,7 @@ from ssh_sync import change_upload_is_pending, trigger_ssh_sync
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
-from storage import DATA_ROOT
+from storage import DATA_ROOT, get_admin_user_list
 
 import os
 import pty
@@ -66,7 +66,7 @@ def build_header():
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        ui.label(f"{app.storage.client.get('is_admin', False)}")
+        ui.label(f"{app.storage.client.get('ha_username', False)}").classes('font-bold text-brand')
         with ui.icon('refresh', color=f'green').on('click', refresh_ssh_sync).classes('text-5xl cursor-pointer'):
              ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
@@ -77,7 +77,9 @@ def build_header():
 @ui.page('/')
 def home_page(request: Request):
     ha_user = request.headers.get("x-remote-user-name", "unknown")
-    app.storage.client['is_admin'] = (ha_user in ['pipacsba'])
+    if app.storage.client.get('ha_username', "") != "":
+            app.storage.general['admin_users'] = get_admin_user_list()
+    app.storage.client['is_admin'] = (ha_user in app.storage.general.get("admin_list", list))
     app.storage.client['ha_username'] = ha_user
     ui.navigate.history.replace('/servers')
     servers_page_wrapper()
