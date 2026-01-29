@@ -222,11 +222,11 @@ def browse_folders():
                 # Create the tree with the built nodes
                 ui.tree(tree_nodes, label_key='label', on_select=handle_select).classes('w-full')
     
-        # Main Area: Content display
-        with ui.column().classes('w-3/4 p-4'):
-            ui.label('File Content').classes('text-lg font-bold mb-2')
-            content_display = ui.markdown('Select a file from the tree to view...') \
-                .classes('w-full border p-4 bg-gray-500 min-h-[500px] overflow-auto')
+            # Main Area: Content display
+            with ui.column().classes('w-3/4 p-4'):
+                ui.label('File Content').classes('text-lg font-bold mb-2')
+                content_display = ui.markdown('Select a file from the tree to view...') \
+                    .classes('w-full border p-4 bg-gray-500 min-h-[500px] overflow-auto')
 
     else:
         ui.label("No rights for this page")
