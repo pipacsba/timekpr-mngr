@@ -97,3 +97,16 @@ def pending_stats_dir(server_name: str) -> Path:
     path = pending_dir(server_name) / 'stats'
     path.mkdir(exist_ok=True)
     return path
+# -------------------------------------------------------------------
+# Addon config helpers
+# -------------------------------------------------------------------
+def get_admin_user_list() -> List()
+    addon_options=load_json(ADDON_CONFIG_FILE, {})
+    try:
+        admin_users = addon_options["mqtt"]["server"]
+        MQTT_PORT = addon_options["mqtt"]["port"]
+        MQTT_BASE = addon_options["mqtt"]["base_topic"]
+        MQTT_ENABLED = True
+    except:
+        MQTT_ENABLED = False
+        logger.warning("No MQTT config could be read, disabled")
