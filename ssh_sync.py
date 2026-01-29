@@ -287,12 +287,17 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
             values[k.strip()] = v.strip()
 
     try:
-        time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
-        playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
+        last_checked = values.get("LAST_CHECKED", "2000-01-01 01:13:08")
+        checked_dt = datetime.strptime(last_checked, "%Y-%m-%d %H:%M:%S")
+        if checked_dt.date() == date.today():
+            time_spent_day = int(values.get("TIME_SPENT_DAY", 0))
+            playtime_spent_day = int(values.get("PLAYTIME_SPENT_DAY", 0))
+        else:
+            time_spent_day = 0
+            playtime_spent_day = 0
     except ValueError:
         logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
         return
-
     if updated:
         update_daily_usage(
             server=server,
