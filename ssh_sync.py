@@ -235,6 +235,8 @@ def register_server_sensors(server: str):
             "state_topic": f"servers/online",
             "value_template": f"{{{{ '{server}' in value_json.servers }}}}",
             "device_class": "connectivity",
+            "value_on = True
+            "value_off = False
             "platform": "binary_sensor",
             "qos": 1,
         },
