@@ -1,5 +1,6 @@
 # ui/navigation.py
 from nicegui import ui
+from fastapi import Request
 from servers import load_servers, list_users
 from ssh_sync import change_upload_is_pending, trigger_ssh_sync
 from ui.servers_page import servers_page
@@ -55,7 +56,7 @@ def get_ha_user(request: Request):
 # -------------------
 # Header (called inside each page)
 # -------------------
-def build_header():
+def build_header(request: Request):
     dark = ui.dark_mode()
     dark.enable()
     with ui.header().classes('items-center'):
@@ -75,7 +76,7 @@ def build_header():
 # Pages
 # -------------------
 @ui.page('/')
-def home_page():
+def home_page(request: Request):
     ui.navigate.history.replace('/servers')
     servers_page_wrapper()
     #ui.navigate.to('/servers')
@@ -91,9 +92,9 @@ def home_page():
 #        ui.navigate.to('/servers')
 
 @ui.page('/servers')
-def servers_page_wrapper():
+def servers_page_wrapper(request: Request):
     logger.info("servers_page called")
-    build_header()
+    build_header(request)
     servers_page()
 
 
