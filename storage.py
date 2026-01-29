@@ -102,11 +102,11 @@ def pending_stats_dir(server_name: str) -> Path:
 # -------------------------------------------------------------------
 def get_admin_user_list() -> list():
     addon_options=load_json(ADDON_CONFIG_FILE, {})
+    user_list = list()
     try:
-        admin_users = addon_options["mqtt"]["server"]
-        MQTT_PORT = addon_options["mqtt"]["port"]
-        MQTT_BASE = addon_options["mqtt"]["base_topic"]
-        MQTT_ENABLED = True
+        admin_users = addon_options["admin_users"]
+        for admin in admin users
+            user_list.append(admin["username"])
     except:
-        MQTT_ENABLED = False
-        logger.warning("No MQTT config could be read, disabled")
+        logger.warning("No Admin users identified from config file")
+    return user_list
