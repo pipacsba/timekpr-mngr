@@ -19,8 +19,13 @@ def _load(path: Path) -> Dict[str, dict]:
     try:
         logger.info("Histoy stats file is being read")
         return json.loads(path.read_text())
-    except Exception:
-        logger.info(f"History stats file read error at {path}")
+    except json.JSONDecodeError as e:
+        # Specifically catch JSON errors to see syntax issues
+        logger.error(f"JSON syntax error in {path}: {e}")
+        return {}
+    except Exception as e:
+        # Catch other errors (permission, etc.)
+        logger.error(f"Unexpected error reading {path}: {e}")
         return {}
 
 
