@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Optional
 
-from nicegui import ui
+from nicegui import app, ui
 
 from storage import (
     server_cache_dir,
@@ -120,76 +120,78 @@ def render_config_editor(
     """
     config_type: 'server' | 'user' | 'stats'
     """
-  
-    logger.info(f"config_editor.py render_config_editor is started.")
-
-    # Resolve paths
-    if config_type == 'server':
-        source = server_cache_dir(server_name) / 'server.conf'
-        target = pending_dir(server_name) / 'server.conf'
-
-    elif config_type == 'user':
-        source = user_cache_dir(server_name) / f'{username}.conf'
-        target = pending_user_dir(server_name) / f'{username}.conf'
-
-    elif config_type == 'stats':
-        source = stats_cache_dir(server_name) / f'{username}.stats'
-        target = pending_stats_dir(server_name) / f'{username}.stats'
-
-    else:
-        raise ValueError('Invalid config type')
-
-    lines = _load_config(source)
-
-    if not lines:
-        
-        ui.notify(f'No {config_type} found Maybe later?', type='warning', close_button='OK')
-        return
-
-    # Current values
-    values: Dict[str, any] = {
-        line.key: line.value
-        for line in lines
-        if isinstance(line, Entry)
-    }
-
-    with ui.column().classes('w-full max-w-3xl'):
-        ui.label(source.name).classes('text-xl font-bold mb-2')
-
-        for line in lines:
-            if isinstance(line, Header):
-                ui.separator()
-                ui.label(line.name).classes('text-lg font-semibold')
-
-            elif isinstance(line, Comment):
-                ui.label(line.raw.lstrip('#')).classes(
-                    'text-sm text-gray-200'
+    if app.storage.client.get('is_admin', False):
+        logger.info(f"config_editor.py render_config_editor is started.")
+    
+        # Resolve paths
+        if config_type == 'server':
+            source = server_cache_dir(server_name) / 'server.conf'
+            target = pending_dir(server_name) / 'server.conf'
+    
+        elif config_type == 'user':
+            source = user_cache_dir(server_name) / f'{username}.conf'
+            target = pending_user_dir(server_name) / f'{username}.conf'
+    
+        elif config_type == 'stats':
+            source = stats_cache_dir(server_name) / f'{username}.stats'
+            target = pending_stats_dir(server_name) / f'{username}.stats'
+    
+        else:
+            raise ValueError('Invalid config type')
+    
+        lines = _load_config(source)
+    
+        if not lines:
+            
+            ui.notify(f'No {config_type} found Maybe later?', type='warning', close_button='OK')
+            return
+    
+        # Current values
+        values: Dict[str, any] = {
+            line.key: line.value
+            for line in lines
+            if isinstance(line, Entry)
+        }
+    
+        with ui.column().classes('w-full max-w-3xl'):
+            ui.label(source.name).classes('text-xl font-bold mb-2')
+    
+            for line in lines:
+                if isinstance(line, Header):
+                    ui.separator()
+                    ui.label(line.name).classes('text-lg font-semibold')
+    
+                elif isinstance(line, Comment):
+                    ui.label(line.raw.lstrip('#')).classes(
+                        'text-sm text-gray-200'
+                    )
+    
+                elif isinstance(line, Entry):
+                    values[line.key] = ui.input(
+                        label=line.key,
+                        value=line.value,
+                    ).classes('w-full')
+    
+            def save():
+                resolved = {
+                    key: widget.value
+                    if hasattr(widget, 'value')
+                    else widget
+                    for key, widget in values.items()
+                }
+                target.write_text(
+                    serialize_config(lines, resolved)
                 )
-
-            elif isinstance(line, Entry):
-                values[line.key] = ui.input(
-                    label=line.key,
-                    value=line.value,
-                ).classes('w-full')
-
-        def save():
-            resolved = {
-                key: widget.value
-                if hasattr(widget, 'value')
-                else widget
-                for key, widget in values.items()
-            }
-            target.write_text(
-                serialize_config(lines, resolved)
-            )
-            ui.notify(
-                'Saved locally (pending upload)',
-                type='positive',
-            )
-            trigger_ssh_sync()
-
-        ui.button('Save', on_click=save).classes('mt-4')
-
+                ui.notify(
+                    'Saved locally (pending upload)',
+                    type='positive',
+                )
+                trigger_ssh_sync()
+    
+            ui.button('Save', on_click=save).classes('mt-4')
+    else:
+        ui.label("No right to access page")
+        
 # -------------------------------------------------------------------
 # Add extra time
 # -------------------------------------------------------------------
