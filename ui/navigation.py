@@ -215,12 +215,12 @@ def browse_folders():
                 with ui.column().classes('w-1/4 bg-gray-500 p-4 border-r'):
                     ui.label('File Explorer').classes('text-lg font-bold mb-2')
             
-                tree_nodes = get_tree_data(DATA_ROOT)
-                if not tree_nodes:
-                    ui.label('No files found').classes('italic text-white')
-                else:
-                    # Create the tree with the built nodes
-                    ui.tree(tree_nodes, label_key='label', on_select=handle_select).classes('w-full')
+                    tree_nodes = get_tree_data(DATA_ROOT)
+                    if not tree_nodes:
+                        ui.label('No files found').classes('italic text-white')
+                    else:
+                        # Create the tree with the built nodes
+                        ui.tree(tree_nodes, label_key='label', on_select=handle_select).classes('w-full')
             
                 # Main Area: Content display
                 with ui.column().classes('w-3/4 p-4'):
