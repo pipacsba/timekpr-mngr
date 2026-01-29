@@ -1,7 +1,7 @@
 # stats_history.py
 
 import json
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict
 
@@ -47,3 +47,50 @@ def update_daily_usage(
         history.pop(d, None)
 
     _save(path, history)
+
+def get_user_history(server: str, user: str) -> dict[str, dict]:
+    """
+    Returns a date-indexed history for a user with gaps filled.
+    {
+        "YYYY-MM-DD": {
+            "time_spent": int,
+            "playtime_spent": int
+        }
+    }
+    """
+    
+    path = history_file(server, user)
+    raw_history = _load(path)
+
+    if not raw_history:
+        return {}
+
+    # Parse available dates
+    parsed_dates = sorted(
+        datetime.strptime(d, "%Y-%m-%d").date()
+        for d in raw_history.keys()
+    )
+
+    start_date = parsed_dates[0]
+    end_date = date.today()
+
+    filled_history: dict[str, dict] = {}
+
+    current = start_date
+    while current <= end_date:
+        key = current.isoformat()
+
+        if key in raw_history:
+            filled_history[key] = {
+                "time_spent": int(raw_history[key].get("time_spent", 0)),
+                "playtime_spent": int(raw_history[key].get("playtime_spent", 0)),
+            }
+        else:
+            filled_history[key] = {
+                "time_spent": 0,
+                "playtime_spent": 0,
+            }
+
+        current += timedelta(days=1)
+
+    return filled_history
