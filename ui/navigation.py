@@ -1,5 +1,5 @@
 # ui/navigation.py
-from nicegui import ui
+from nicegui import app, ui
 from fastapi import Request
 from servers import load_servers, list_users
 from ssh_sync import change_upload_is_pending, trigger_ssh_sync
@@ -56,7 +56,7 @@ def get_ha_user(request: Request):
 # -------------------
 # Header (called inside each page)
 # -------------------
-def build_header(request: Request):
+def build_header():
     dark = ui.dark_mode()
     dark.enable()
     with ui.header().classes('items-center'):
@@ -66,8 +66,7 @@ def build_header(request: Request):
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        username, _ = get_ha_user(request)
-        ui.label(f"{username or 'Unknown'}")
+        ui.label(f"{app.storage.client.get('is_admin', False}")
         with ui.icon('refresh', color=f'green').on('click', refresh_ssh_sync).classes('text-5xl cursor-pointer'):
              ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
@@ -77,8 +76,11 @@ def build_header(request: Request):
 # -------------------
 @ui.page('/')
 def home_page(request: Request):
+    ha_user = request.headers.get("x-remote-user-name", "unknown")
+    app.storage.client['is_admin'] = (ha_user in ['pipacsba'])
+    app.storage.client['ha_username'] = ha_user
     ui.navigate.history.replace('/servers')
-    servers_page_wrapper(request)
+    servers_page_wrapper()
     #ui.navigate.to('/servers')
 #    dark = ui.dark_mode()
 #    dark.enable()
@@ -92,9 +94,9 @@ def home_page(request: Request):
 #        ui.navigate.to('/servers')
 
 @ui.page('/servers')
-def servers_page_wrapper(request: Request):
+def servers_page_wrapper():
     logger.info("servers_page called")
-    build_header(request)
+    build_header()
     servers_page()
 
 
