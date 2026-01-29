@@ -110,6 +110,9 @@ def _render_usage_history_chart(server_name: str, username: str):
     )
 
     fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)", # Transparent outer area
+        plot_bgcolor="rgba(0,0,0,0)",  # Transparent plotting area
         barmode="group",
         height=250,
         margin=dict(l=20, r=20, t=30, b=20),
