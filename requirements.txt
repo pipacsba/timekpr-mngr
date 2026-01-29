@@ -6,3 +6,4 @@ nicegui==3.5.0
 fastapi
 uvicorn
 paho-mqtt>=1.6.1
+plotly>=5.18
