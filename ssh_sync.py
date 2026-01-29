@@ -233,10 +233,11 @@ def register_server_sensors(server: str):
             "name": f"Timekpr Server {server} status",
             "unique_id": f"timekpr_{server}_online",
             "state_topic": f"servers/online",
-            "value_template": f"{{{{ '{server}' in value_json.servers }}}}",
+            "value_template": f"{{{{ 'On' if '{server}' in value_json.servers else 'Off' }}}}"
+           # "value_template": f"{{{{ '{server}' in value_json.servers }}}}",
             "device_class": "connectivity",
-            "value_on = True
-            "value_off = False
+            "value_on" = "On"
+            "value_off" = "Off"
             "platform": "binary_sensor",
             "qos": 1,
         },
