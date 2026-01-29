@@ -193,10 +193,10 @@ def _scp_put(sftp, local: Path, remote: str) -> bool:
     return result
 
 def _trigger_user_file_renewal_over_ssh(a_server, a_username) -> bool:
-    result = true
+    result = True
     try:
         logger.debug("ssh command to trigger user stats file renew started")
-        client = _connect(server)
+        client = _connect(a_server)
 
         #This extra command is required to update the server side file to the Today's one
         command = f'timekpra --getuserinfo {a_username}'
