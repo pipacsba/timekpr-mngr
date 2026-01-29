@@ -120,7 +120,7 @@ def render_config_editor(
     """
     config_type: 'server' | 'user' | 'stats'
     """
-    if app.storage.client.get('is_admin', False):
+    if app.storage.general.get('is_admin', False):
         logger.info(f"config_editor.py render_config_editor is started.")
     
         # Resolve paths
