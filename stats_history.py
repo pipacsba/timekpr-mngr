@@ -69,7 +69,7 @@ def get_user_history(server: str, user: str) -> dict[str, dict]:
     raw_history = _load(path)
 
     if not raw_history:
-        loggel.warning("No history stats read returned empty")
+        logger.warning("No history stats read returned empty")
         return {}
 
     # Parse available dates
