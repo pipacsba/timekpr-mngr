@@ -122,9 +122,6 @@ def _file_hash(path: Path) -> str:
 
 
 def _connect(server: Dict) -> paramiko.SSHClient | None:
-    """
-    Create SSH connection or return None if unreachable.
-    """
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -138,9 +135,14 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
         )
         return client
 
-    except (socket.error, paramiko.SSHException) as e:
-        logger.warning(f"SSH connect failed to {server['host']}: {e} ")
+    except (socket.error, paramiko.SSHException, EOFError) as e:
+        logger.warning(f"SSH connect failed to {server['host']}: {e}")
+        try:
+            client.close()
+        except Exception:
+            pass
         return None
+
 
 
 def _scp_get_if_changed(sftp, remote: str, local: Path) -> bool:
@@ -203,7 +205,6 @@ def _trigger_user_file_renewal_over_ssh(client, a_username) -> bool:
         if (stdout.channel.recv_exit_status() == 0):
             logger.debug(f"ssh command to trigger user stats file renew returned with 0 exit code")
             result = (result and True)
-        client.close()
     except:
         logger.warning("ssh command to trigger user stats file renew execution failed, caught by exception handler")
         result = False
