@@ -63,7 +63,7 @@ def build_header():
         ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
-        ui.label(f"{app.storage.general.get('ha_username', "no user")}").classes('font-bold text-brand')
+        ui.label(f"{app.storage.user.get('ha_username', "no user")}").classes('font-bold text-brand')
         with ui.icon('refresh', color=f'green').on('click', refresh_ssh_sync).classes('text-5xl cursor-pointer'):
              ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
@@ -75,9 +75,9 @@ def build_header():
 def home_page(request: Request):
     ha_user = request.headers.get("x-remote-user-name", "unknown")
     #if app.storage.client.get('ha_username', "") != "":
-    app.storage.general['admin_users'] = get_admin_user_list()
-    app.storage.general['is_admin'] = (ha_user in app.storage.general.get("admin_users", list()))
-    app.storage.general['ha_username'] = ha_user
+    app.storage.user['admin_users'] = get_admin_user_list()
+    app.storage.user['is_admin'] = (ha_user in app.storage.user.get("admin_users", list()))
+    app.storage.user['ha_username'] = ha_user
     #ui.navigate.history.replace('/servers')
     servers_page_wrapper()
 
@@ -128,7 +128,7 @@ else:
 def pty_page():
     logger.info(f"pty is started")
     build_header()
-    if app.storage.general.get('is_admin', False):
+    if app.storage.user.get('is_admin', False):
                
             terminal = ui.xterm()
         
@@ -169,7 +169,7 @@ def browse_folders():
     logger.info(f"Folder browser is started")
     build_header()
 
-    if app.storage.general.get('is_admin', False):
+    if app.storage.user.get('is_admin', False):
             
             def get_tree_data(path):
                 """Recursively builds a list of dicts for ui.tree."""
