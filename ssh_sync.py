@@ -479,13 +479,14 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
             if reachable:
                 online_servers.append(name)
                 sync_from_server(name, server)
-
+            # independently if the server is reachable let's register it in Home Assistant
+            if not name in server_list:
+                register_server_sensors(name)
+                server_list.append(name)
+        
+        
         servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
-
-        if not name in server_list:
-            register_server_sensors(name)
-            server_list.append(name)
         
         # MQTT publish online server list
         publish(
