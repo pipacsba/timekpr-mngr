@@ -91,17 +91,14 @@ def _stat_card(title: str, value: str, icon: str):
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
     if not history:
-        # Add padding here since the parent card now has p-0
         ui.label('No historical data available').classes('text-gray p-4')
         return
 
     dates = list(history.keys())
-    # Convert seconds to hours
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
     fig = go.Figure()
-
     fig.add_bar(x=dates, y=time_spent, name="Time (h)")
     fig.add_bar(x=dates, y=playtime_spent, name="Playtime (h)")
 
@@ -111,32 +108,24 @@ def _render_usage_history_chart(server_name: str, username: str):
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
         autosize=True,
-        # Reduced height for mobile visibility
-        height=280, 
-        # SUPER TIGHT MARGINS: Crucial for phones
+        height=250,
         margin=dict(l=30, r=10, t=10, b=10),
-        xaxis=dict(
-            tickangle=-45,
-            automargin=True,
-            fixedrange=True
-        ),
-        yaxis=dict(
-            gridcolor='rgba(255, 255, 255, 0.1)',
-            fixedrange=True
-        ),
-        # Legend at bottom saves horizontal space
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.2,
-            xanchor="center",
-            x=0.5
-        ),
+        xaxis=dict(tickangle=-45, automargin=True, fixedrange=True),
+        yaxis=dict(gridcolor='rgba(255, 255, 255, 0.1)', fixedrange=True),
+        legend=dict(orientation="h", yanchor="top", y=-0.2, x=0.5, xanchor="center"),
         dragmode=False
     )
 
-    # config={'responsive': True} is essential for NiceGUI to resize the JS element
-    ui.plotly(fig).classes("w-full h-full").config({'displayModeBar': False, 'responsive': True})
+    # NUCLEAR FIX:
+    # 1. style='width: 100%' -> Force it to fill the container
+    # 2. style='max-width: 85vw' -> The Safety Limit. 
+    #    Even if the iframe lies about width, this prevents the chart 
+    #    from being wider than 85% of the viewport.
+    ui.plotly(fig).classes("w-full h-full").style('width: 100%; max-width: 85vw').config({
+        'displayModeBar': False, 
+        'responsive': True
+    })
+
 
 # -------------------------------------------------------------------
 # Dashboard renderer
@@ -168,14 +157,11 @@ def render_stats_dashboard(server_name: str, username: str):
 
         # Chart Container
         # FIX EXPLANATION:
-        # min-w-0: Allows this flex item to shrink below its content's default size.
-        # p-0: Removes padding so the chart can go edge-to-edge without overflow.
-        # overflow-hidden: Cuts off any tiny pixel calculation errors.
-        with ui.card().classes('w-full md:flex-1 min-w-0 p-0 overflow-hidden'):
-            # Re-add padding specifically for the title, so it looks nice
+        # min-w-0: Standard flex fix
+        # max-w-[88vw]: The Ingress Fix. Limits card width to 88% of viewport width.
+        # This overrides any "iframe expansion" issues.
+        with ui.card().classes('w-full md:flex-1 min-w-0 p-0 overflow-hidden max-w-[88vw] md:max-w-none'):
             ui.label("Last 7 Days").classes('text-lg font-bold m-4 mb-2')
-            
-            # Render chart in the remaining unpadded space
             _render_usage_history_chart(server_name, username)
     
     # 2. Stats Cards
