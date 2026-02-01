@@ -20,6 +20,15 @@ from storage import stats_cache_dir
 import logging 
 logger = logging.getLogger(__name__)
 
+# -------------------------------------------------------------------
+# CONFIGURATION
+# -------------------------------------------------------------------
+
+# This ensures ALL cards (stats and chart) have exactly the same width behavior
+# w-full: Full width on mobile
+# sm:w-48: Fixed width (approx 192px) on desktop/tablet
+UNIFIED_CARD_WIDTH = 'w-full sm:w-48'
+
 
 # -------------------------------------------------------------------
 # Parsing helpers
@@ -83,7 +92,8 @@ def _seconds_to_human(seconds: float) -> str:
 
 
 def _stat_card(title: str, value: str, icon: str):
-    with ui.card().classes('w-48 text-center'):
+    # Use the unified class here
+    with ui.card().classes(f'{UNIFIED_CARD_WIDTH} text-center'):
         ui.icon(icon).classes('text-3xl text-primary')
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
@@ -91,16 +101,17 @@ def _stat_card(title: str, value: str, icon: str):
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
     if not history:
-        ui.label('No historical data available').classes('text-gray p-4')
+        ui.label('No data').classes('text-gray p-4 text-xs')
         return
 
     dates = list(history.keys())
+    # ... (math remains the same) ...
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
     fig = go.Figure()
-    fig.add_bar(x=dates, y=time_spent, name="Time (h)")
-    fig.add_bar(x=dates, y=playtime_spent, name="Playtime (h)")
+    fig.add_bar(x=dates, y=time_spent, name="Time")
+    fig.add_bar(x=dates, y=playtime_spent, name="Play")
 
     fig.update_layout(
         template="plotly_dark",
@@ -108,23 +119,18 @@ def _render_usage_history_chart(server_name: str, username: str):
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
         autosize=True,
-        height=250,
-        margin=dict(l=30, r=10, t=10, b=10),
-        xaxis=dict(tickangle=-45, automargin=True, fixedrange=True),
-        yaxis=dict(gridcolor='rgba(255, 255, 255, 0.1)', fixedrange=True),
-        legend=dict(orientation="h", yanchor="top", y=-0.2, x=0.5, xanchor="center"),
+        # Slightly reduced height to match the look of small tiles
+        height=200, 
+        # Minimal margins
+        margin=dict(l=20, r=10, t=10, b=10),
+        xaxis=dict(tickangle=-90, automargin=True, fixedrange=True),
+        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True), # Hide Y axis details to save space
+        legend=dict(orientation="h", yanchor="top", y=-0.1, x=0.5, xanchor="center", font=dict(size=10)),
         dragmode=False
     )
 
-    # NUCLEAR FIX:
-    # 1. style='width: 100%' -> Force it to fill the container
-    # 2. style='max-width: 85vw' -> The Safety Limit. 
-    #    Even if the iframe lies about width, this prevents the chart 
-    #    from being wider than 85% of the viewport.
-    ui.plotly(fig).classes("w-full h-full").style('width: 100%; max-width: 85vw').config({
-        'displayModeBar': False, 
-        'responsive': True
-    })
+    # 100% width of the parent card
+    ui.plotly(fig).classes("w-full h-full").config({'displayModeBar': False, 'responsive': True})
 
 
 # -------------------------------------------------------------------
@@ -135,88 +141,53 @@ def render_stats_dashboard(server_name: str, username: str):
     logger.info(f"ui.stats_dashboard.py render_stats_dashboard generation is started")
     stats = _load_stats(server_name, username)
 
-    ui.label(f'Statistics: {username.capitalize()}').classes(
-        'text-2xl font-bold mb-4'
-    )
+ui.label(f'Statistics: {username.capitalize()}').classes('text-2xl font-bold mb-4')
 
     if not stats:
         ui.label('No statistics available').classes('text-red')
         return
 
-    # 1. Top Section
-    with ui.row().classes('w-full flex-wrap gap-4 mt-4 items-stretch'):
+    # MAIN GRID
+    # We dump everything into one big "flex-wrap" container 
+    # so they flow naturally like a grid of same-sized tiles.
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
         
-        # Last Checked
+        # 1. Last Update Card
         if 'LAST_CHECKED' in stats:
-            with ui.column().classes('w-full md:w-auto'):
-                 _stat_card(
-                    'Last Update',
-                    stats['LAST_CHECKED'].strftime("%Y-%m-%d %H:%M"),
-                    icon='clock'
-                )
-
-        # Chart Container
-        # FIX EXPLANATION:
-        # min-w-0: Standard flex fix
-        # max-w-[88vw]: The Ingress Fix. Limits card width to 88% of viewport width.
-        # This overrides any "iframe expansion" issues.
-        with ui.card().classes('w-full md:flex-1 min-w-0 p-0 overflow-hidden max-w-[88vw] md:max-w-none'):
-            ui.label("Last 7 Days").classes('text-lg font-bold m-4 mb-2')
-            _render_usage_history_chart(server_name, username)
-    
-    # 2. Stats Cards
-    # Using justify-center allows cards to look good if there are few of them
-    with ui.row().classes('w-full flex-wrap gap-4 mt-6 justify-center md:justify-start'):     
-        if 'TIME_SPENT_BALANCE' in stats:
-            _stat_card(
-                'Balance Today',
-                _seconds_to_human(stats['TIME_SPENT_BALANCE']),
-                icon='scale'
+             _stat_card(
+                'Last Update',
+                stats['LAST_CHECKED'].strftime("%Y-%m-%d %H:%M"),
+                icon='clock'
             )
+
+        # 2. History Chart Card
+        # Now uses UNIFIED_CARD_WIDTH instead of 'flex-1'
+        with ui.card().classes(f'{UNIFIED_CARD_WIDTH} p-0 overflow-hidden'):
+             # Smaller title to fit
+            ui.label("Last 7 Days").classes('text-sm font-bold m-2 text-center')
+            _render_usage_history_chart(server_name, username)
+
+        # 3. Time Stats
+        if 'TIME_SPENT_BALANCE' in stats:
+            _stat_card('Balance Today', _seconds_to_human(stats['TIME_SPENT_BALANCE']), icon='scale')
 
         if 'TIME_SPENT_DAY' in stats:
-            _stat_card(
-                'Total Today',
-                _seconds_to_human(stats['TIME_SPENT_DAY']),
-                icon='today'
-            )
+            _stat_card('Total Today', _seconds_to_human(stats['TIME_SPENT_DAY']), icon='today')
 
         if 'TIME_SPENT_WEEK' in stats:
-            _stat_card(
-                'Total Week',
-                _seconds_to_human(stats['TIME_SPENT_WEEK']),
-                icon='date_range'
-            )
+            _stat_card('Total Week', _seconds_to_human(stats['TIME_SPENT_WEEK']), icon='date_range')
         
         if 'TIME_SPENT_MONTH' in stats:
-            _stat_card(
-                'Total Month',
-                _seconds_to_human(stats['TIME_SPENT_MONTH']),
-                icon='calendar_month'
-            )
+            _stat_card('Total Month', _seconds_to_human(stats['TIME_SPENT_MONTH']), icon='calendar_month')
 
-    # 3. Playtime Specifics (New Row)
-    has_playtime = 'PLAYTIME_SPENT_BALANCE' in stats or 'PLAYTIME_SPENT_DAY' in stats
-    
-    if has_playtime:
-        ui.label("Playtime Breakdown").classes('text-xl font-bold mt-8 mb-2')
-        with ui.row().classes('w-full flex-wrap gap-4 justify-center md:justify-start'):
-            if 'PLAYTIME_SPENT_BALANCE' in stats:
-                _stat_card(
-                    'Playtime Balance',
-                    _seconds_to_human(stats['PLAYTIME_SPENT_BALANCE']),
-                    icon='videogame_asset'
-                )
+        # 4. Playtime Stats
+        if 'PLAYTIME_SPENT_BALANCE' in stats:
+            _stat_card('Play Balance', _seconds_to_human(stats['PLAYTIME_SPENT_BALANCE']), icon='videogame_asset')
 
-            if 'PLAYTIME_SPENT_DAY' in stats:
-                _stat_card(
-                    'Playtime Today',
-                    _seconds_to_human(stats['PLAYTIME_SPENT_DAY']),
-                    icon='sports_esports'
-                )
+        if 'PLAYTIME_SPENT_DAY' in stats:
+            _stat_card('Play Today', _seconds_to_human(stats['PLAYTIME_SPENT_DAY']), icon='sports_esports')
 
     # Optional raw view
     with ui.expansion('Raw stats').classes('w-full mt-8'):
         for key, value in stats.items():
-            # break-all prevents long strings from pushing the layout width out
             ui.label(f'{key} = {value}').classes('break-all')
