@@ -105,7 +105,6 @@ def _render_usage_history_chart(server_name: str, username: str):
         return
 
     dates = list(history.keys())
-    # ... (math remains the same) ...
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
@@ -119,18 +118,16 @@ def _render_usage_history_chart(server_name: str, username: str):
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
         autosize=True,
-        # Slightly reduced height to match the look of small tiles
         height=200, 
-        # Minimal margins
         margin=dict(l=20, r=10, t=10, b=10),
         xaxis=dict(tickangle=-90, automargin=True, fixedrange=True),
-        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True), # Hide Y axis details to save space
+        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
         legend=dict(orientation="h", yanchor="top", y=-0.1, x=0.5, xanchor="center", font=dict(size=10)),
         dragmode=False
     )
 
-    # 100% width of the parent card
-    ui.plotly(fig).classes("w-full h-full").config({'displayModeBar': False, 'responsive': True})
+    # CORRECTED LINE: pass 'config' as an argument, not a function call
+    ui.plotly(fig, config={'displayModeBar': False, 'responsive': True}).classes("w-full h-full")
 
 
 # -------------------------------------------------------------------
