@@ -91,57 +91,52 @@ def _stat_card(title: str, value: str, icon: str):
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
     if not history:
-        ui.label('No historical data available').classes('text-gray')
+        # Add padding here since the parent card now has p-0
+        ui.label('No historical data available').classes('text-gray p-4')
         return
 
     dates = list(history.keys())
-    # Convert seconds to hours for cleaner Y-axis numbers
+    # Convert seconds to hours
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
-    
+
     fig = go.Figure()
 
-    fig.add_bar(
-        x=dates,
-        y=time_spent,
-        name="Time [h]",
-    )
-
-    fig.add_bar(
-        x=dates,
-        y=playtime_spent,
-        name="Playtime [h]",
-    )
+    fig.add_bar(x=dates, y=time_spent, name="Time (h)")
+    fig.add_bar(x=dates, y=playtime_spent, name="Playtime (h)")
 
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)", 
-        plot_bgcolor="rgba(0,0,0,0)",  
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        height=300, # Increased height slightly for touch targets
-        margin=dict(l=10, r=10, t=20, b=10), # Tight margins for mobile
+        autosize=True,
+        # Reduced height for mobile visibility
+        height=280, 
+        # SUPER TIGHT MARGINS: Crucial for phones
+        margin=dict(l=30, r=10, t=10, b=10),
         xaxis=dict(
-            tickangle=-45, # Slant labels to fit narrow screens
-            automargin=True
+            tickangle=-45,
+            automargin=True,
+            fixedrange=True
         ),
         yaxis=dict(
-            gridcolor='rgba(255, 255, 255, 0.1)'
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            fixedrange=True
         ),
-        # Legend at bottom prevents overlapping the chart on narrow screens
+        # Legend at bottom saves horizontal space
         legend=dict(
-            orientation="h", 
-            yanchor="top", 
-            y=-0.3, 
-            xanchor="center", 
+            orientation="h",
+            yanchor="top",
+            y=-0.2,
+            xanchor="center",
             x=0.5
         ),
-        # CRITICAL FOR PHONES: Prevents chart from hijacking page scroll
-        dragmode=False 
+        dragmode=False
     )
 
-    # config={'responsive': True} helps Plotly resize when phone orientation changes
+    # config={'responsive': True} is essential for NiceGUI to resize the JS element
     ui.plotly(fig).classes("w-full h-full").config({'displayModeBar': False, 'responsive': True})
-
 
 # -------------------------------------------------------------------
 # Dashboard renderer
@@ -159,11 +154,10 @@ def render_stats_dashboard(server_name: str, username: str):
         ui.label('No statistics available').classes('text-red')
         return
 
-    # 1. Top Section: Last Update + History Chart
-    # flex-wrap allows items to stack on mobile
+    # 1. Top Section
     with ui.row().classes('w-full flex-wrap gap-4 mt-4 items-stretch'):
         
-        # Last Checked (Left or Top)
+        # Last Checked
         if 'LAST_CHECKED' in stats:
             with ui.column().classes('w-full md:w-auto'):
                  _stat_card(
@@ -172,9 +166,16 @@ def render_stats_dashboard(server_name: str, username: str):
                     icon='clock'
                 )
 
-        # Chart (Right or Bottom, takes remaining space)
-        with ui.card().classes('w-full md:flex-1 min-h-[350px]'):
-            ui.label("Last 7 Days").classes('text-lg font-bold mb-2')
+        # Chart Container
+        # FIX EXPLANATION:
+        # min-w-0: Allows this flex item to shrink below its content's default size.
+        # p-0: Removes padding so the chart can go edge-to-edge without overflow.
+        # overflow-hidden: Cuts off any tiny pixel calculation errors.
+        with ui.card().classes('w-full md:flex-1 min-w-0 p-0 overflow-hidden'):
+            # Re-add padding specifically for the title, so it looks nice
+            ui.label("Last 7 Days").classes('text-lg font-bold m-4 mb-2')
+            
+            # Render chart in the remaining unpadded space
             _render_usage_history_chart(server_name, username)
     
     # 2. Stats Cards
