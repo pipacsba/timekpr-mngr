@@ -141,7 +141,7 @@ def render_stats_dashboard(server_name: str, username: str):
     logger.info(f"ui.stats_dashboard.py render_stats_dashboard generation is started")
     stats = _load_stats(server_name, username)
 
-ui.label(f'Statistics: {username.capitalize()}').classes('text-2xl font-bold mb-4')
+    ui.label(f'Statistics: {username.capitalize()}').classes('text-2xl font-bold mb-4')
 
     if not stats:
         ui.label('No statistics available').classes('text-red')
