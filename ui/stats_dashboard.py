@@ -123,12 +123,13 @@ def _render_usage_history_chart(server_name: str, username: str):
         xaxis=dict(tickangle=-90, automargin=True, fixedrange=True),
         yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
         legend=dict(orientation="h", yanchor="top", y=-0.1, x=0.5, xanchor="center", font=dict(size=10)),
-        dragmode=False
+        dragmode=False,
+        # ALTERNATIVE: Remove buttons via layout since we can't use config
+        modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
     )
 
-    # CORRECTED LINE: pass 'config' as an argument, not a function call
-    ui.plotly(fig, config={'displayModeBar': False, 'responsive': True}).classes("w-full h-full")
-
+    # REMOVED: config={...} to fix the TypeError
+    ui.plotly(fig).classes("w-full h-full")
 
 # -------------------------------------------------------------------
 # Dashboard renderer
