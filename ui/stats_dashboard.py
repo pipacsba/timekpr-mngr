@@ -179,7 +179,8 @@ def _render_usage_history_chart(server_name: str, username: str):
     )
 
     # Apply style to the NiceGUI element
-    ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
+    ui.plotly(fig, config={'displayModeBar': False}).classes("w-full").style('height: 180px; margin-top: 5px;')
+    
 
 
 # -------------------------------------------------------------------
