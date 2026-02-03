@@ -100,7 +100,7 @@ def _stat_card(title: str, value: str, icon: str):
 
 
 def _render_usage_history_chart(server_name: str, username: str):
-    # Global CSS to hide the Plotly modebar completely
+    # Hide the Plotly modebar via CSS (the most reliable method)
     ui.add_head_html('<style>.modebar { display: none !important; }</style>')
 
     history = get_user_history(server_name, username)
@@ -108,25 +108,34 @@ def _render_usage_history_chart(server_name: str, username: str):
         ui.label('No data').classes('text-gray p-4 text-xs')
         return
 
-    dates = list(history.keys())
-    time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
-    playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
+    raw_dates = list(history.keys())
+    
+    # POLISH: Shorten dates (e.g., "2026-02-03" -> "03 Feb")
+    formatted_dates = []
+    for d in raw_dates:
+        try:
+            formatted_dates.append(datetime.strptime(d, '%Y-%m-%d').strftime('%d %b'))
+        except ValueError:
+            formatted_dates.append(d) # Fallback if format differs
+
+    time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in raw_dates]]
+    playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in raw_dates]]
 
     fig = go.Figure()
 
     # " Time" Bar - Translucent Blue
     fig.add_bar(
-        x=dates, 
+        x=formatted_dates, 
         y=time_spent, 
         name=" Time",
         marker_color='rgba(56, 189, 248, 0.3)', 
         marker_line_width=0,
-        hovertemplate='Total: %{y:.1f}h<extra></extra>' # <extra></extra> hides trace name in tooltip
+        hovertemplate='Total: %{y:.1f}h<extra></extra>'
     )
     
     # "PlayTime" Bar - Translucent Green
     fig.add_bar(
-        x=dates, 
+        x=formatted_dates, 
         y=playtime_spent, 
         name="PlayTime",
         marker_color='rgba(52, 211, 153, 0.7)',
@@ -143,11 +152,12 @@ def _render_usage_history_chart(server_name: str, username: str):
         height=180,
         margin=dict(l=0, r=0, t=30, b=0),
         xaxis=dict(
-            tickangle=0,
+            tickangle=0,          # Keep text horizontal for readability
             showgrid=False,
             showline=False,
             fixedrange=True,
-            tickfont=dict(size=10, color="#94a3b8")
+            tickfont=dict(size=10, color="#94a3b8"),
+            type='category'       # Ensures every date is shown as a label
         ),
         yaxis=dict(
             showgrid=False, 
@@ -167,11 +177,10 @@ def _render_usage_history_chart(server_name: str, username: str):
         dragmode=False,
     )
 
-    # Render the chart
-    # We apply a slight shadow to the container to give it that "TimeKpr" depth
+    # Render the chart and ensure height is fixed via CSS
     chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 10px;')
     
-    # Optional: Keep the programmatic disable as a backup
+    # Programmatic backup to hide modebar
     chart._props['config'] = {'displayModeBar': False}
     chart.update()
 
