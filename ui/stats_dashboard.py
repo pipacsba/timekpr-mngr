@@ -116,7 +116,7 @@ def _render_usage_history_chart(server_name: str, username: str):
         x=dates, 
         y=time_spent, 
         name=" Time",
-        marker_color='rgba(56, 189, 248, 0.4)', 
+        marker_color='rgba(56, 189, 248, 0.35)', # Lighter translucency
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
@@ -126,7 +126,7 @@ def _render_usage_history_chart(server_name: str, username: str):
         x=dates, 
         y=playtime_spent, 
         name="PlayTime",
-        marker_color='rgba(52, 211, 153, 0.7)',
+        marker_color='rgba(52, 211, 153, 0.75)', # Solid emerald
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
@@ -136,15 +136,9 @@ def _render_usage_history_chart(server_name: str, username: str):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        bargap=0.35,      
+        bargap=0.4, # Thinner bars feel more "rounded" and modern
         height=180,
         margin=dict(l=0, r=0, t=30, b=0),
-        
-        # This is the "safe" way to hide the menu via layout
-        modebar=dict(
-            displayModeBar=False, # Hides the entire bar
-            remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
-        ),
         
         xaxis=dict(
             tickangle=0,
@@ -168,16 +162,19 @@ def _render_usage_history_chart(server_name: str, username: str):
             font=dict(size=10, color="#64748b")
         ),
         hovermode="x unified",
-        dragmode=False
+        dragmode=False,
+        # We removed displayModeBar from here to stop the ValueError
     )
 
-    # We call ui.plotly without the 'config' argument to avoid the TypeError
+    # 1. Create the plot without the 'config' argument
     chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
     
-    # Workaround: Inject the config directly into the underlying plotly options
+    # 2. Inject the config into the NiceGUI options dictionary
+    # This is where 'displayModeBar' actually belongs
     chart.options['config'] = {'displayModeBar': False}
-    chart.update()
- 
+    
+    # 3. Update the element to apply the change
+    chart.update() 
 
 # -------------------------------------------------------------------
 # Dashboard renderer
