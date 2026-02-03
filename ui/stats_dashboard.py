@@ -98,6 +98,8 @@ def _stat_card(title: str, value: str, icon: str):
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
 
+import plotly.graph_objects as go
+
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
     if not history:
@@ -109,28 +111,63 @@ def _render_usage_history_chart(server_name: str, username: str):
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
     fig = go.Figure()
-    fig.add_bar(x=dates, y=time_spent, name="Time")
-    fig.add_bar(x=dates, y=playtime_spent, name="Play")
+
+    # Total Time - Cyan/Blue
+    fig.add_bar(
+        x=dates, 
+        y=time_spent, 
+        name="Total",
+        marker_color='#0ea5e9', 
+        marker_line_width=0,
+        hovertemplate='%{y:.1f}h' # Clean hover format
+    )
+    # Active Playtime - Green/Emerald
+    fig.add_bar(
+        x=dates, 
+        y=playtime_spent, 
+        name="Active",
+        marker_color='#10b981',
+        marker_line_width=0,
+        hovertemplate='%{y:.1f}h'
+    )
 
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        autosize=True,
-        height=200, 
-        margin=dict(l=20, r=10, t=10, b=10),
-        xaxis=dict(tickangle=-90, automargin=True, fixedrange=True),
-        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
-        legend=dict(orientation="h", yanchor="top", y=-0.1, x=0.5, xanchor="center", font=dict(size=10)),
+        bargap=0.3,
+        height=180,
+        margin=dict(l=0, r=0, t=20, b=0), # Reduced to the bone
+        
+        xaxis=dict(
+            tickangle=0,
+            showgrid=False,
+            showline=False,
+            fixedrange=True,
+            tickfont=dict(size=10, color="#64748b")
+        ),
+        yaxis=dict(
+            showgrid=False, 
+            showticklabels=False, 
+            fixedrange=True,
+            zeroline=False
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.1, # Push it slightly above the chart area
+            xanchor="center",
+            x=0.5,
+            font=dict(size=10, color="#94a3b8")
+        ),
+        hovermode="x unified", # Shows both bars in one tooltip like a pro dashboard
         dragmode=False,
-        # ALTERNATIVE: Remove buttons via layout since we can't use config
-        modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
+        modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian']
     )
 
-    # REMOVED: config={...} to fix the TypeError
-    ui.plotly(fig).classes("w-full h-full")
-
+    # Note: .style() works on NiceGUI elements to inject raw CSS
+    ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 10px;')
 # -------------------------------------------------------------------
 # Dashboard renderer
 # -------------------------------------------------------------------
