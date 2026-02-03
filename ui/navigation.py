@@ -2,7 +2,7 @@
 from nicegui import app, ui
 from fastapi import Request
 from servers import load_servers, list_users
-from ssh_sync import change_upload_is_pending, trigger_ssh_sync
+from ssh_sync import change_upload_is_pending, trigger_ssh_sync, sync_heartbeat
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
@@ -23,20 +23,32 @@ logger = logging.getLogger(__name__)
 
 @ui.refreshable
 def pending_ui():
+    upload_pending = change_upload_is_pending.get_value()
+    sync_alive = sync_heartbeat.is_alive()
+
+    if not sync_alive:
+        a_color = 'gray'
+        b_color = 'bg-gray'
+        b_text = 'Sync loop not running'
+
+    elif upload_pending:
+        a_color = 'red'
+        b_color = 'bg-red'
+        b_text = 'Upload is pending'
+
+    else:
         a_color = 'green'
-        if change_upload_is_pending.get_value():
-          a_color = 'red'
-          b_color = 'bg-red'
-          b_text = 'Upload is pending'
-        else:
-          a_color = 'green'
-          b_color = 'bg-green'
-          b_text = 'No upload is pending'
-        with ui.icon('circle', color=f'{a_color}').classes('text-5xl'):
-                ui.tooltip(f'{b_text}').classes(f'{b_color}')
+        b_color = 'bg-green'
+        b_text = 'Sync running, no upload pending'
+
+    with ui.icon('circle', color=a_color).classes('text-5xl'):
+        ui.tooltip(b_text).classes(b_color)
+
 
 def pending_ui_refresh():
   pending_ui.refresh()
+
+ui.timer(30.0, pending_ui.refresh)
         
 change_upload_is_pending.add_observer(pending_ui_refresh)
 
