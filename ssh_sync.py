@@ -121,7 +121,8 @@ def _file_hash(path: Path) -> str:
     return h.hexdigest()
 
 
-def _connect(server: Dict) -> paramiko.SSHClient | None:
+def _connect(server: Dict, servername: str) -> paramiko.SSHClient | None:
+    global servers_online
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -136,7 +137,10 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
         return client
 
     except (socket.error, paramiko.SSHException, EOFError) as e:
-        logger.warning(f"SSH connect failed to {server['host']}: {e}")
+        if servers_online.is_online(servername):
+            logger.warning(f"SSH connect failed to {server['host']}: {e}, which is not expected as in the last cycle the server was considered online")
+        else:
+            logger.debug(f"SSH connect failed to {server['host']}: {e}, but the servers was offline in the last cycle too")
         try:
             client.close()
         except Exception:
@@ -362,7 +366,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
     Returns True if server was reachable.
     """
     global server_user_list
-    client = _connect(server)
+    client = _connect(server, server_name)
 
     if not client:
         return False
@@ -419,7 +423,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
     Upload pending changes if server is reachable.
     """
     logger.debug("ssh upload pending started")
-    client = _connect(server)
+    client = _connect(server, server_name)
     success = True
     if not client:
         return False
