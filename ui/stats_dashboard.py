@@ -106,30 +106,27 @@ def _render_usage_history_chart(server_name: str, username: str):
         return
 
     dates = list(history.keys())
-    # Convert seconds to hours
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
     fig = go.Figure()
 
-    # "Time" Bar - Translucent Blue
+    # Time Bar - Translucent Blue
     fig.add_bar(
         x=dates, 
         y=time_spent, 
-        name="Time",
-        # Using RGBA for translucency (0.6 opacity)
-        marker_color='rgba(14, 165, 233, 0.6)', 
+        name=" Time",
+        marker_color='rgba(56, 189, 248, 0.4)', 
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
     
-    # "PlayTime" Bar - Translucent Green
+    # PlayTime Bar - Translucent Green
     fig.add_bar(
         x=dates, 
         y=playtime_spent, 
         name="PlayTime",
-        # Using RGBA for translucency (0.8 opacity for contrast)
-        marker_color='rgba(16, 185, 129, 0.8)',
+        marker_color='rgba(52, 211, 153, 0.7)',
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
@@ -139,17 +136,22 @@ def _render_usage_history_chart(server_name: str, username: str):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        bargap=0.4,       # Increased gap makes bars look thinner/sleeker
-        bargroupgap=0.05, # Tight gap between paired bars
+        bargap=0.35,      
         height=180,
         margin=dict(l=0, r=0, t=30, b=0),
+        
+        # This is the "safe" way to hide the menu via layout
+        modebar=dict(
+            displayModeBar=False, # Hides the entire bar
+            remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
+        ),
         
         xaxis=dict(
             tickangle=0,
             showgrid=False,
             showline=False,
             fixedrange=True,
-            tickfont=dict(size=10, color="#64748b")
+            tickfont=dict(size=10, color="#94a3b8")
         ),
         yaxis=dict(
             showgrid=False, 
@@ -163,25 +165,19 @@ def _render_usage_history_chart(server_name: str, username: str):
             y=1.1,
             xanchor="center",
             x=0.5,
-            font=dict(size=10, color="#94a3b8"),
-            itemclick=False, # Keeps dashboard consistent
-            itemdoubleclick=False
+            font=dict(size=10, color="#64748b")
         ),
-        # Unified hover displays both values in one clean popup
         hovermode="x unified",
-        hoverlabel=dict(
-            bgcolor="#1e293b",
-            bordercolor="#334155",
-            font_size=11
-        ),
-        dragmode=False,
-        modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian']
+        dragmode=False
     )
 
-    # Apply style to the NiceGUI element
-    ui.plotly(fig, config={'displayModeBar': False}).classes("w-full").style('height: 180px; margin-top: 5px;')
+    # We call ui.plotly without the 'config' argument to avoid the TypeError
+    chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
     
-
+    # Workaround: Inject the config directly into the underlying plotly options
+    chart.options['config'] = {'displayModeBar': False}
+    chart.update()
+ 
 
 # -------------------------------------------------------------------
 # Dashboard renderer
