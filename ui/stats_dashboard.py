@@ -111,22 +111,22 @@ def _render_usage_history_chart(server_name: str, username: str):
 
     fig = go.Figure()
 
-    # Time Bar - Translucent Blue
+    # Time Bar - Translucent Sky Blue
     fig.add_bar(
         x=dates, 
         y=time_spent, 
         name=" Time",
-        marker_color='rgba(56, 189, 248, 0.35)', # Lighter translucency
+        marker_color='rgba(56, 189, 248, 0.35)', 
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
     
-    # PlayTime Bar - Translucent Green
+    # PlayTime Bar - Translucent Emerald
     fig.add_bar(
         x=dates, 
         y=playtime_spent, 
         name="PlayTime",
-        marker_color='rgba(52, 211, 153, 0.75)', # Solid emerald
+        marker_color='rgba(52, 211, 153, 0.75)',
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
@@ -136,10 +136,9 @@ def _render_usage_history_chart(server_name: str, username: str):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        bargap=0.4, # Thinner bars feel more "rounded" and modern
+        bargap=0.4,       # Narrower bars look more modern/sleek
         height=180,
         margin=dict(l=0, r=0, t=30, b=0),
-        
         xaxis=dict(
             tickangle=0,
             showgrid=False,
@@ -163,18 +162,17 @@ def _render_usage_history_chart(server_name: str, username: str):
         ),
         hovermode="x unified",
         dragmode=False,
-        # We removed displayModeBar from here to stop the ValueError
     )
 
-    # 1. Create the plot without the 'config' argument
+    # 1. Create the chart normally
     chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
     
-    # 2. Inject the config into the NiceGUI options dictionary
-    # This is where 'displayModeBar' actually belongs
-    chart.options['config'] = {'displayModeBar': False}
+    # 2. Access the internal _props to set the config
+    # This is the "NiceGUI way" to pass displayModeBar when the constructor fails
+    chart._props['config'] = {'displayModeBar': False}
     
-    # 3. Update the element to apply the change
-    chart.update() 
+    # 3. Request an update to sync with the browser
+    chart.update()
 
 # -------------------------------------------------------------------
 # Dashboard renderer
