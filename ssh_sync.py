@@ -210,8 +210,15 @@ def _trigger_user_file_renewal_over_ssh(client, a_username) -> bool:
         result = False
     return result
 
+
+def _is_file_modified_today(path: Path) -> bool:
+    mtime = datetime.fromtimestamp(path.stat().st_mtime)
+    return mtime.date() == date.today()
+
+
 def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
     result = True
+
     try:
         #sftp.put(str(local), remote)
         logger.debug("ssh command execution started")
@@ -226,20 +233,26 @@ def _ssh_update_allowance(a_client, local: Path, a_username) -> bool:
             logger.warning(f"ssh command '{command}' returned with non-zero exit code")
             result = False
         time.sleep(0.5)
-        
-        text = local.read_text()
-        logger.debug("ssh command execution started, file is read")
-        for raw in text.splitlines():
-            command = raw
-            logger.debug(f"ssh command identified:  {command}")
-            stdin, stdout, stderr = a_client.exec_command(command)
-            logger.debug(f"ssh command returned")
-            if (stdout.channel.recv_exit_status() == 0):
-                logger.info(f"ssh command returned with 0 exit code")
-                result = (result and True)
-            else:
-                logger.warning(f"ssh command returned with non-zero exit code")
-                result = False
+
+        # Guard: only run if file is from today - extra time is granted (for) today
+        if not _is_file_modified_today(local):
+            logger.warning(
+                f"Skipping allowance update for {a_username}, it is not granted today. (Extra time is only allowed to grant for the day it is provided, if not used, it is lost) "
+            )
+        else:        
+            text = local.read_text()
+            logger.debug("ssh command execution started, file is read")
+            for raw in text.splitlines():
+                command = raw
+                logger.debug(f"ssh command identified:  {command}")
+                stdin, stdout, stderr = a_client.exec_command(command)
+                logger.debug(f"ssh command returned")
+                if (stdout.channel.recv_exit_status() == 0):
+                    logger.info(f"ssh command returned with 0 exit code")
+                    result = (result and True)
+                else:
+                    logger.warning(f"ssh command returned with non-zero exit code")
+                    result = False
     except:
         logger.warning("ssh command execution failed, caught by exception handler")
         result = False

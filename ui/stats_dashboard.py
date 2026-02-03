@@ -98,38 +98,92 @@ def _stat_card(title: str, value: str, icon: str):
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
 
+
 def _render_usage_history_chart(server_name: str, username: str):
+    # Hide the Plotly modebar via CSS (the most reliable method)
+    ui.add_head_html('<style>.modebar { display: none !important; }</style>')
+
     history = get_user_history(server_name, username)
     if not history:
         ui.label('No data').classes('text-gray p-4 text-xs')
         return
 
-    dates = list(history.keys())
-    time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
-    playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
+    raw_dates = list(history.keys())
+    
+    # POLISH: Shorten dates (e.g., "2026-02-03" -> "03 Feb")
+    formatted_dates = []
+    for d in raw_dates:
+        try:
+            formatted_dates.append(datetime.strptime(d, '%Y-%m-%d').strftime('%d %b'))
+        except ValueError:
+            formatted_dates.append(d) # Fallback if format differs
+
+    time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in raw_dates]]
+    playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in raw_dates]]
 
     fig = go.Figure()
-    fig.add_bar(x=dates, y=time_spent, name="Time")
-    fig.add_bar(x=dates, y=playtime_spent, name="Play")
+
+    # " Time" Bar - Translucent Blue
+    fig.add_bar(
+        x=formatted_dates, 
+        y=time_spent, 
+        name=" Time",
+        marker_color='rgba(56, 189, 248, 0.3)', 
+        marker_line_width=0,
+        hovertemplate='Total: %{y:.1f}h<extra></extra>'
+    )
+    
+    # "PlayTime" Bar - Translucent Green
+    fig.add_bar(
+        x=formatted_dates, 
+        y=playtime_spent, 
+        name="PlayTime",
+        marker_color='rgba(52, 211, 153, 0.7)',
+        marker_line_width=0,
+        hovertemplate='Play: %{y:.1f}h<extra></extra>'
+    )
 
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        autosize=True,
-        height=200, 
-        margin=dict(l=20, r=10, t=10, b=10),
-        xaxis=dict(tickangle=-90, automargin=True, fixedrange=True),
-        yaxis=dict(showgrid=False, showticklabels=False, fixedrange=True),
-        legend=dict(orientation="h", yanchor="top", y=-0.1, x=0.5, xanchor="center", font=dict(size=10)),
+        bargap=0.4,       
+        height=180,
+        margin=dict(l=0, r=0, t=30, b=0),
+        xaxis=dict(
+            tickangle=0,          # Keep text horizontal for readability
+            showgrid=False,
+            showline=False,
+            fixedrange=True,
+            tickfont=dict(size=10, color="#94a3b8"),
+            type='category'       # Ensures every date is shown as a label
+        ),
+        yaxis=dict(
+            showgrid=False, 
+            showticklabels=False, 
+            fixedrange=True,
+            zeroline=False
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.1,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=10, color="#64748b")
+        ),
+        hovermode="x unified",
         dragmode=False,
-        # ALTERNATIVE: Remove buttons via layout since we can't use config
-        modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
     )
 
-    # REMOVED: config={...} to fix the TypeError
-    ui.plotly(fig).classes("w-full h-full")
+    # Render the chart and ensure height is fixed via CSS
+    chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 10px;')
+    
+    # Programmatic backup to hide modebar
+    chart._props['config'] = {'displayModeBar': False}
+    chart.update()
+
 
 # -------------------------------------------------------------------
 # Dashboard renderer
