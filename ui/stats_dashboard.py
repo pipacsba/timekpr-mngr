@@ -100,6 +100,9 @@ def _stat_card(title: str, value: str, icon: str):
 
 
 def _render_usage_history_chart(server_name: str, username: str):
+    # Global CSS to hide the Plotly modebar completely
+    ui.add_head_html('<style>.modebar { display: none !important; }</style>')
+
     history = get_user_history(server_name, username)
     if not history:
         ui.label('No data').classes('text-gray p-4 text-xs')
@@ -111,24 +114,24 @@ def _render_usage_history_chart(server_name: str, username: str):
 
     fig = go.Figure()
 
-    # Time Bar - Translucent Sky Blue
+    # " Time" Bar - Translucent Blue
     fig.add_bar(
         x=dates, 
         y=time_spent, 
         name=" Time",
-        marker_color='rgba(56, 189, 248, 0.35)', 
+        marker_color='rgba(56, 189, 248, 0.3)', 
         marker_line_width=0,
-        hovertemplate='%{y:.1f}h'
+        hovertemplate='Total: %{y:.1f}h<extra></extra>' # <extra></extra> hides trace name in tooltip
     )
     
-    # PlayTime Bar - Translucent Emerald
+    # "PlayTime" Bar - Translucent Green
     fig.add_bar(
         x=dates, 
         y=playtime_spent, 
         name="PlayTime",
-        marker_color='rgba(52, 211, 153, 0.75)',
+        marker_color='rgba(52, 211, 153, 0.7)',
         marker_line_width=0,
-        hovertemplate='%{y:.1f}h'
+        hovertemplate='Play: %{y:.1f}h<extra></extra>'
     )
 
     fig.update_layout(
@@ -136,7 +139,7 @@ def _render_usage_history_chart(server_name: str, username: str):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        bargap=0.4,       # Narrower bars look more modern/sleek
+        bargap=0.4,       
         height=180,
         margin=dict(l=0, r=0, t=30, b=0),
         xaxis=dict(
@@ -164,15 +167,14 @@ def _render_usage_history_chart(server_name: str, username: str):
         dragmode=False,
     )
 
-    # 1. Create the chart normally
-    chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
+    # Render the chart
+    # We apply a slight shadow to the container to give it that "TimeKpr" depth
+    chart = ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 10px;')
     
-    # 2. Access the internal _props to set the config
-    # This is the "NiceGUI way" to pass displayModeBar when the constructor fails
+    # Optional: Keep the programmatic disable as a backup
     chart._props['config'] = {'displayModeBar': False}
-    
-    # 3. Request an update to sync with the browser
     chart.update()
+
 
 # -------------------------------------------------------------------
 # Dashboard renderer
