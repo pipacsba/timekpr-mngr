@@ -51,8 +51,11 @@ paramiko.Transport._preferred_keys = (
 
 #internal variables
 class Heartbeat:
-    def __init__(self, timeout: float = 10.0):
+    def __init__(self, timeout: float):
         self._last_seen = 0.0
+        self.timeout = timeout
+
+    def set_timeout(self, timeout: float):
         self.timeout = timeout
 
     def beat(self):
@@ -503,6 +506,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global sync_heartbeat
     logger.debug("SSH sync loop started")
     success = True
+    sync_heartbeat.set_timeout(interval_seconds * 2)
 
     while not stop_event.is_set():
         online_servers = []
