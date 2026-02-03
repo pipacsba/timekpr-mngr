@@ -98,7 +98,6 @@ def _stat_card(title: str, value: str, icon: str):
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
 
-import plotly.graph_objects as go
 
 def _render_usage_history_chart(server_name: str, username: str):
     history = get_user_history(server_name, username)
@@ -107,26 +106,30 @@ def _render_usage_history_chart(server_name: str, username: str):
         return
 
     dates = list(history.keys())
+    # Convert seconds to hours
     time_spent = [x / 3600 for x in [history[d]["time_spent"] for d in dates]]
     playtime_spent = [x / 3600 for x in [history[d]["playtime_spent"] for d in dates]]
 
     fig = go.Figure()
 
-    # Total Time - Cyan/Blue
+    # "Time" Bar - Translucent Blue
     fig.add_bar(
         x=dates, 
         y=time_spent, 
-        name="Total",
-        marker_color='#0ea5e9', 
+        name="Time",
+        # Using RGBA for translucency (0.6 opacity)
+        marker_color='rgba(14, 165, 233, 0.6)', 
         marker_line_width=0,
-        hovertemplate='%{y:.1f}h' # Clean hover format
+        hovertemplate='%{y:.1f}h'
     )
-    # Active Playtime - Green/Emerald
+    
+    # "PlayTime" Bar - Translucent Green
     fig.add_bar(
         x=dates, 
         y=playtime_spent, 
-        name="Active",
-        marker_color='#10b981',
+        name="PlayTime",
+        # Using RGBA for translucency (0.8 opacity for contrast)
+        marker_color='rgba(16, 185, 129, 0.8)',
         marker_line_width=0,
         hovertemplate='%{y:.1f}h'
     )
@@ -136,9 +139,10 @@ def _render_usage_history_chart(server_name: str, username: str):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
-        bargap=0.3,
+        bargap=0.4,       # Increased gap makes bars look thinner/sleeker
+        bargroupgap=0.05, # Tight gap between paired bars
         height=180,
-        margin=dict(l=0, r=0, t=20, b=0), # Reduced to the bone
+        margin=dict(l=0, r=0, t=30, b=0),
         
         xaxis=dict(
             tickangle=0,
@@ -156,18 +160,28 @@ def _render_usage_history_chart(server_name: str, username: str):
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.1, # Push it slightly above the chart area
+            y=1.1,
             xanchor="center",
             x=0.5,
-            font=dict(size=10, color="#94a3b8")
+            font=dict(size=10, color="#94a3b8"),
+            itemclick=False, # Keeps dashboard consistent
+            itemdoubleclick=False
         ),
-        hovermode="x unified", # Shows both bars in one tooltip like a pro dashboard
+        # Unified hover displays both values in one clean popup
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="#1e293b",
+            bordercolor="#334155",
+            font_size=11
+        ),
         dragmode=False,
         modebar_remove=['zoom', 'pan', 'select', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian']
     )
 
-    # Note: .style() works on NiceGUI elements to inject raw CSS
-    ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 10px;')
+    # Apply style to the NiceGUI element
+    ui.plotly(fig).classes("w-full").style('height: 180px; margin-top: 5px;')
+
+
 # -------------------------------------------------------------------
 # Dashboard renderer
 # -------------------------------------------------------------------
