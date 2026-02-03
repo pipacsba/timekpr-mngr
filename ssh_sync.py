@@ -50,6 +50,22 @@ paramiko.Transport._preferred_keys = (
 )
 
 #internal variables
+class Heartbeat:
+    def __init__(self, timeout: float = 10.0):
+        self._last_seen = 0.0
+        self.timeout = timeout
+
+    def beat(self):
+        self._last_seen = time.time()
+
+    def is_alive(self) -> bool:
+        return (time.time() - self._last_seen) < self.timeout
+
+
+sync_heartbeat = Heartbeat(timeout=10)
+
+
+
 class VariableWatcher:
     def __init__(self):
         self._value = True
@@ -484,6 +500,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     global servers_online
     global server_list
+    global sync_heartbeat
     logger.debug("SSH sync loop started")
     success = True
 
@@ -504,6 +521,7 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
         
         servers_online.set_value(online_servers)
         change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
+        sync_heartbeat.beat()
         
         # MQTT publish online server list
         publish(
