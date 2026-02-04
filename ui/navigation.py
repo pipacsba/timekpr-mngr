@@ -7,6 +7,7 @@ from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
 from storage import DATA_ROOT, get_admin_user_list
+from datetime import datetime
 
 import os
 import pty
@@ -39,7 +40,7 @@ def pending_ui():
     else:
         a_color = 'green'
         b_color = 'bg-green'
-        b_text = 'Sync running, no upload pending'
+        b_text = f'Sync running, no upload pending  ({datetime.now().strftime("%H:%M")})'
 
     with ui.icon('circle', color=a_color).classes('text-5xl'):
         ui.tooltip(b_text).classes(b_color)
