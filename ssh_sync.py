@@ -509,34 +509,36 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     sync_heartbeat.set_timeout(interval_seconds * 2)
 
     while not stop_event.is_set():
-        online_servers = []
-        servers = load_servers()
-
-        for name, server in servers.items():
-            reachable = upload_pending(name, server)
-            if reachable:
-                online_servers.append(name)
-                sync_from_server(name, server)
-            # independently if the server is reachable let's register it in Home Assistant
-            if not name in server_list:
-                register_server_sensors(name)
-                server_list.append(name)
-        
-        
-        servers_online.set_value(online_servers)
-        change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
-        sync_heartbeat.beat()
-        
-        # MQTT publish online server list
-        publish(
-            "servers/online",
-            {
-                "servers": servers_online.get_value(),
-            },
-            qos=1,
-            retain=True,
-        )
-        
+        try:
+            online_servers = []
+            servers = load_servers()
+    
+            for name, server in servers.items():
+                reachable = upload_pending(name, server)
+                if reachable:
+                    online_servers.append(name)
+                    sync_from_server(name, server)
+                # independently if the server is reachable let's register it in Home Assistant
+                if not name in server_list:
+                    register_server_sensors(name)
+                    server_list.append(name)
+            
+            
+            servers_online.set_value(online_servers)
+            change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
+            # MQTT publish online server list
+            publish(
+                "servers/online",
+                {
+                    "servers": servers_online.get_value(),
+                },
+                qos=1,
+                retain=True,
+            )
+            sync_heartbeat.beat()
+        except:
+            logger.exception("SSH sync loop iteration failed (will retry)")
+            
         # clear trigger before waiting
         trigger_event.clear()
 
