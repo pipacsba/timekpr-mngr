@@ -5,6 +5,7 @@ Filesystem layout and persistence helpers.
 All data for the application lives under DATA_ROOT (default /data).
 """
 
+import os
 from pathlib import Path
 import json
 from typing import Any
@@ -25,6 +26,9 @@ SERVERS_FILE = DATA_ROOT / 'servers.json'
 HISTORY_DIR = DATA_ROOT / 'history'
 ADDON_CONFIG_FILE = DATA_ROOT / 'options.json'
 
+
+CHANNEL = os.getenv("TIMEKPR_MNGR_CHANNEL", "unknown").lower()
+IS_EDGE = CHANNEL in ("edge", "unstable", "dev")
 
 # -------------------------------------------------------------------
 # Initialization
