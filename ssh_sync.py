@@ -50,6 +50,25 @@ paramiko.Transport._preferred_keys = (
 )
 
 #internal variables
+class Heartbeat:
+    def __init__(self, timeout: float):
+        self._last_seen = 0.0
+        self.timeout = timeout
+
+    def set_timeout(self, timeout: float):
+        self.timeout = timeout
+
+    def beat(self):
+        self._last_seen = time.time()
+
+    def is_alive(self) -> bool:
+        return (time.time() - self._last_seen) < self.timeout
+
+
+sync_heartbeat = Heartbeat(timeout=10)
+
+
+
 class VariableWatcher:
     def __init__(self):
         self._value = True
@@ -121,7 +140,8 @@ def _file_hash(path: Path) -> str:
     return h.hexdigest()
 
 
-def _connect(server: Dict) -> paramiko.SSHClient | None:
+def _connect(server: Dict, servername: str) -> paramiko.SSHClient | None:
+    global servers_online
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -136,7 +156,10 @@ def _connect(server: Dict) -> paramiko.SSHClient | None:
         return client
 
     except (socket.error, paramiko.SSHException, EOFError) as e:
-        logger.warning(f"SSH connect failed to {server['host']}: {e}")
+        if servers_online.is_online(servername):
+            logger.warning(f"SSH connect failed to {server['host']}: {e}, which is not expected as in the last cycle the server was considered online")
+        else:
+            logger.debug(f"SSH connect failed to {server['host']}: {e}, but the servers was offline in the last cycle too")
         try:
             client.close()
         except Exception:
@@ -362,7 +385,7 @@ def sync_from_server(server_name: str, server: Dict) -> bool:
     Returns True if server was reachable.
     """
     global server_user_list
-    client = _connect(server)
+    client = _connect(server, server_name)
 
     if not client:
         return False
@@ -419,7 +442,7 @@ def upload_pending(server_name: str, server: Dict) -> bool:
     Upload pending changes if server is reachable.
     """
     logger.debug("ssh upload pending started")
-    client = _connect(server)
+    client = _connect(server, server_name)
     success = True
     if not client:
         return False
@@ -480,37 +503,42 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     global change_upload_is_pending
     global servers_online
     global server_list
+    global sync_heartbeat
     logger.debug("SSH sync loop started")
     success = True
+    sync_heartbeat.set_timeout(interval_seconds * 2)
 
     while not stop_event.is_set():
-        online_servers = []
-        servers = load_servers()
-
-        for name, server in servers.items():
-            reachable = upload_pending(name, server)
-            if reachable:
-                online_servers.append(name)
-                sync_from_server(name, server)
-            # independently if the server is reachable let's register it in Home Assistant
-            if not name in server_list:
-                register_server_sensors(name)
-                server_list.append(name)
-        
-        
-        servers_online.set_value(online_servers)
-        change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
-        
-        # MQTT publish online server list
-        publish(
-            "servers/online",
-            {
-                "servers": servers_online.get_value(),
-            },
-            qos=1,
-            retain=True,
-        )
-        
+        try:
+            online_servers = []
+            servers = load_servers()
+    
+            for name, server in servers.items():
+                reachable = upload_pending(name, server)
+                if reachable:
+                    online_servers.append(name)
+                    sync_from_server(name, server)
+                # independently if the server is reachable let's register it in Home Assistant
+                if not name in server_list:
+                    register_server_sensors(name)
+                    server_list.append(name)
+            
+            
+            servers_online.set_value(online_servers)
+            change_upload_is_pending.set_value(_tree_has_any_file(PENDING_DIR))
+            # MQTT publish online server list
+            publish(
+                "servers/online",
+                {
+                    "servers": servers_online.get_value(),
+                },
+                qos=1,
+                retain=True,
+            )
+            sync_heartbeat.beat()
+        except:
+            logger.exception("SSH sync loop iteration failed (will retry)")
+            
         # clear trigger before waiting
         trigger_event.clear()
 
