@@ -6,7 +6,7 @@ from ssh_sync import change_upload_is_pending, trigger_ssh_sync, sync_heartbeat
 from ui.servers_page import servers_page
 from ui.config_editor import render_config_editor
 from ui.stats_dashboard import render_stats_dashboard
-from storage import DATA_ROOT, get_admin_user_list
+from storage import DATA_ROOT, get_admin_user_list, IS_EDGE 
 from datetime import datetime
 
 import os
@@ -71,7 +71,8 @@ def build_header():
         ui.colors(brand='#424242')
         ui.label('TimeKPR Manager').classes('text-lg font-bold text-brand')
         ui.link('Servers', '/servers').classes('font-bold text-brand')
-        ui.link('pty', '/pty').classes('font-bold text-brand')
+        if IS_EDGE:
+            ui.link('pty', '/pty').classes('font-bold text-brand')
         ui.link('browse_folders', '/browse_folders').classes('font-bold text-brand')
         ui.space()
         ui.label(f"{app.storage.user.get('ha_username', "no user")}").classes('font-bold text-brand')
@@ -136,44 +137,44 @@ else:
                     render_stats_dashboard(s, u)
             make_user_page(server, user)
 
-@ui.page('/pty')
-def pty_page():
-    logger.info(f"pty is started")
-    build_header()
-    if app.storage.user.get('is_admin', False):
-               
-            terminal = ui.xterm()
-        
-            pty_pid, pty_fd = pty.fork()  # create a new pseudo-terminal (pty) fork of the process
-            if pty_pid == pty.CHILD:
-                os.execv('/bin/bash', ('bash',))  # child process of the fork gets replaced with "bash"
-            print('Terminal opened')
-        
-            @partial(core.loop.add_reader, pty_fd)
-            def pty_to_terminal():
-                try:
-                    data = os.read(pty_fd, 1024)
-                except OSError:
-                    print('Stopping reading from pty')  # error reading the pty; probably bash was exited
-                    core.loop.remove_reader(pty_fd)
-                else:
-                    terminal.write(data)
-        
-            @terminal.on_data
-            def terminal_to_pty(event: events.XtermDataEventArguments):
-                try:
-                    os.write(pty_fd, event.data.encode('utf-8'))
-                except OSError:
-                    pass  # error writing to the pty; probably bash was exited
-        
-            @ui.context.client.on_delete
-            def kill_bash():
-                os.close(pty_fd)
-                os.kill(pty_pid, signal.SIGKILL)
-                logger.info(f"pty is closed")
-    else:
-        ui.label("No rights for this page")
-
+if IS_EDGE :
+    @ui.page('/pty')
+    def pty_page():
+        logger.info(f"pty is started")
+        build_header()
+        if app.storage.user.get('is_admin', False):
+                   
+                terminal = ui.xterm()
+            
+                pty_pid, pty_fd = pty.fork()  # create a new pseudo-terminal (pty) fork of the process
+                if pty_pid == pty.CHILD:
+                    os.execv('/bin/bash', ('bash',))  # child process of the fork gets replaced with "bash"
+                print('Terminal opened')
+            
+                @partial(core.loop.add_reader, pty_fd)
+                def pty_to_terminal():
+                    try:
+                        data = os.read(pty_fd, 1024)
+                    except OSError:
+                        print('Stopping reading from pty')  # error reading the pty; probably bash was exited
+                        core.loop.remove_reader(pty_fd)
+                    else:
+                        terminal.write(data)
+            
+                @terminal.on_data
+                def terminal_to_pty(event: events.XtermDataEventArguments):
+                    try:
+                        os.write(pty_fd, event.data.encode('utf-8'))
+                    except OSError:
+                        pass  # error writing to the pty; probably bash was exited
+            
+                @ui.context.client.on_delete
+                def kill_bash():
+                    os.close(pty_fd)
+                    os.kill(pty_pid, signal.SIGKILL)
+                    logger.info(f"pty is closed")
+        else:
+            ui.label("No rights for this page")
 
 
 @ui.page('/browse_folders')
