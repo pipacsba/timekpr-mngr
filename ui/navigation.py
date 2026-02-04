@@ -49,8 +49,6 @@ def pending_ui():
 def pending_ui_refresh():
   pending_ui.refresh()
 
-ui.timer(30.0, pending_ui.refresh)
-        
 change_upload_is_pending.add_observer(pending_ui_refresh)
 
 def refresh_ssh_sync():
@@ -80,6 +78,7 @@ def build_header():
         with ui.icon('refresh', color=f'green').on('click', refresh_ssh_sync).classes('text-5xl cursor-pointer'):
              ui.tooltip(f'Reload server info').classes(f'green')
         pending_ui()
+        ui.timer(30.0, pending_ui.refresh)
 
 # -------------------
 # Pages
