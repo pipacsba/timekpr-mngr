@@ -10,6 +10,7 @@ Responsibilities:
 
 from pathlib import Path
 from nicegui import app, ui
+import asyncio
 
 from servers import (
     load_servers,
