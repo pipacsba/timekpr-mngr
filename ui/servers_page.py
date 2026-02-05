@@ -10,6 +10,7 @@ Responsibilities:
 
 from pathlib import Path
 from nicegui import app, ui
+import asyncio
 
 from servers import (
     load_servers,
@@ -79,16 +80,20 @@ def _add_server_dialog():
 
         ui.label('Or upload a new SSH private key').classes('text-sm text-gray-200').classes('w-full')
 
-        def upload_key(e):
-            target = KEYS_DIR / e.name
-            target.write_bytes(e.content)
-
+        async def upload_key(e):
+            filename = e.file.name
+            target = KEYS_DIR / filename
+        
+            content = await e.file.read()  # <-- this is the key line
+            target.write_bytes(content)
+            target.chmod(0o600)  # <-- important
+        
             updated_keys = list_keys()
             selected_key.options = updated_keys
-            selected_key.value = e.name
+            selected_key.value = filename
             selected_key.enable()
-
-            ui.notify(f'SSH key "{e.name}" uploaded', type='positive')
+        
+            ui.notify(f'SSH key "{filename}" uploaded', type='positive')
 
         ui.upload(
             label='Upload SSH private key',

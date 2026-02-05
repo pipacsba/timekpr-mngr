@@ -40,6 +40,12 @@ def _ensure_dirs() -> None:
     for path in (DATA_ROOT, CACHE_DIR, KEYS_DIR, PENDING_DIR, HISTORY_DIR):
         path.mkdir(parents=True, exist_ok=True)
 
+    # SSH is picky about permissions
+    try:
+        KEYS_DIR.chmod(0o700)
+    except Exception:
+        logger.warning("ssh keys directory access right set is not successfull")
+
 _ensure_dirs()
 
 
