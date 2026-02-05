@@ -280,10 +280,31 @@ def _adjust_user_dialog(server: str, user: str):
 
 def servers_page():
     logger.info(f"ui.servers.py servers_page generation is started")
-    ui.label('Servers').classes('text-2xl font-bold')
 
+    # Admin Maintenance Section
     if app.storage.user.get('is_admin', False):
-        ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
+        with ui.card().classes('w-full mb-6 bg-blue-50 dark:bg-slate-800 border-dashed border-2 border-blue-200'):
+            with ui.row().classes('items-center w-full px-2'):
+                ui.icon('settings', color='primary').classes('text-2xl')
+                ui.label('Admin Maintenance').classes('text-lg font-bold')
+            
+            ui.separator()
+            
+            with ui.row().classes('gap-4 p-2'):
+                # Add Server Button (Existing functionality)
+                ui.button('Add Server', icon='add', on_click=_add_server_dialog)
+                
+                # Backup Button (UI Placeholder)
+                ui.button('Backup', icon='cloud_upload', color='secondary', 
+                          on_click=lambda: ui.notify('Backup feature coming soon...', type='info'))
+                
+                # Restore Button (UI Placeholder)
+                ui.button('Restore', icon='cloud_download', color='secondary',
+                          on_click=lambda: ui.notify('Restore feature coming soon...', type='info'))
+    
+    
+    
+    ui.label('Servers').classes('text-2xl font-bold')
 
     servers = load_servers()
     refreshables = []
