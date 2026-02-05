@@ -19,7 +19,7 @@ from servers import (
     add_user,
     delete_user,
 )
-from storage import KEYS_DIR, create_backup
+from storage import KEYS_DIR, create_backup, restore_backup
 from ui.config_editor import add_user_extra_time
 from ssh_sync import servers_online
 
@@ -306,10 +306,39 @@ def servers_page():
 
                 ui.button('Backup', icon='cloud_upload', color='secondary', on_click=handle_backup)
                 
-                # Restore Button (UI Placeholder)
-                ui.button('Restore', icon='cloud_download', color='secondary',
-                          on_click=lambda: ui.notify('Restore feature coming soon...', type='info'))
-    
+                # --- Restore Implementation ---
+                async def handle_restore(e):
+                    # Save the uploaded file temporarily to process it
+                    temp_path = DATA_ROOT / 'temp_restore.zip'
+                    content = await e.file.read()
+                    temp_path.write_bytes(content)
+
+                    # Confirmation Dialog
+                    with ui.dialog() as confirm_dialog, ui.card():
+                        ui.label('Confirm Restore').classes('text-lg font-bold text-red-600')
+                        ui.markdown('**Warning:** This will permanently replace all current servers, SSH keys, and history with the data from this backup. **This cannot be undone.**')
+                        
+                        with ui.row().classes('justify-end'):
+                            ui.button('Cancel', on_click=confirm_dialog.close)
+                            def do_restore():
+                                if restore_backup(temp_path):
+                                    ui.notify('Restore successful. Reloading...', type='positive')
+                                    # Refresh the page to load the new servers.json
+                                    ui.timer(1.5, lambda: ui.navigate.to('/servers'))
+                                else:
+                                    ui.notify('Restore failed. Check logs.', type='negative')
+                                confirm_dialog.close()
+                                temp_path.unlink(missing_ok=True) # Cleanup
+                            
+                            ui.button('Overwrite Everything', color='negative', on_click=do_restore)
+
+                    confirm_dialog.open()
+
+                ui.upload(
+                    label='Restore from Zip',
+                    auto_upload=True,
+                    on_upload=handle_restore,
+                ).classes('w-full mt-4').props('accept=.zip max-files=1')
     
     
     ui.label('Servers').classes('text-2xl font-bold')
