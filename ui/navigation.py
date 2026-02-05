@@ -177,69 +177,165 @@ if IS_EDGE :
             ui.label("No rights for this page")
 
 
-@ui.page('/browse_folders')
 def browse_folders():
     logger.info(f"Folder browser is started")
     build_header()
 
     if app.storage.user.get('is_admin', False):
-            
-            def get_tree_data(path):
-                """Recursively builds a list of dicts for ui.tree."""
-                nodes = []
-                # Sort to show directories first, then files
-                items = sorted(os.listdir(path), key=lambda x: (not os.path.isdir(os.path.join(path, x)), x))
-                
-                for name in items:
-                    full_path = os.path.join(path, name)
-                    is_dir = os.path.isdir(full_path)
-                    
-                    node = {'id': full_path, 'label': name}
-                    if is_dir:
-                        # Recursively add children for subfolders
-                        node['children'] = get_tree_data(full_path)
-                        node['icon'] = 'folder'
-                    else:
-                        # Only include text-like files
-                        if name.endswith(('.conf', '.json', '.stats')):
-                            node['icon'] = 'description'
-                            nodes.append(node)
-                        continue # Skip non-text files
-                        
+
+        selected_dir: Path = Path(DATA_ROOT)  # default upload target
+
+        def get_tree_data(path):
+            """Recursively builds a list of dicts for ui.tree."""
+            nodes = []
+            items = sorted(
+                os.listdir(path),
+                key=lambda x: (not os.path.isdir(os.path.join(path, x)), x),
+            )
+
+            for name in items:
+                full_path = os.path.join(path, name)
+                is_dir = os.path.isdir(full_path)
+
+                node = {'id': full_path, 'label': name}
+                if is_dir:
+                    node['children'] = get_tree_data(full_path)
+                    node['icon'] = 'folder'
                     nodes.append(node)
-                return nodes
-            
-            def handle_select(e):
-                """Event handler for when a node in the tree is clicked."""
-                selected_path = e.value
-                if selected_path and os.path.isfile(selected_path):
+                else:
+                    if name.endswith(('.conf', '.json', '.stats')):
+                        node['icon'] = 'description'
+                        nodes.append(node)
+                    # Skip non-text files
+            return nodes
+
+        def refresh_tree():
+            tree_nodes = get_tree_data(DATA_ROOT)
+            tree.props(f'nodes={tree_nodes}')
+
+        def update_selected_dir_label():
+            selected_dir_label.set_text(f'Upload target: {selected_dir}')
+
+        def handle_select(e):
+            """Event handler for when a node in the tree is clicked."""
+            nonlocal selected_dir
+
+            selected_path = e.value
+            if not selected_path:
+                return
+
+            selected_path = Path(selected_path)
+
+            if selected_path.is_file():
+                # upload should go to the parent dir of the file
+                selected_dir = selected_path.parent
+                update_selected_dir_label()
+
+                try:
+                    with open(selected_path, 'r', encoding='utf-8') as f:
+                        content_display.set_content(f'```text\n{f.read()}\n```')
+                except Exception as err:
+                    ui.notify(f'Error: {err}', type='negative')
+
+            elif selected_path.is_dir():
+                selected_dir = selected_path
+                update_selected_dir_label()
+                content_display.set_content('*Select a file to view content*')
+
+        async def upload_file(e):
+            nonlocal selected_dir
+
+            if not selected_dir:
+                selected_dir = Path(DATA_ROOT)
+
+            filename = e.file.name
+            target = selected_dir / filename
+
+            try:
+                content = await e.file.read()  # SmallFileUpload
+                target.write_bytes(content)
+            except Exception as err:
+                ui.notify(f'Upload failed: {err}', type='negative')
+                return
+
+            ui.notify(f'Uploaded: {filename}', type='positive')
+            refresh_tree()
+
+        def open_create_folder_dialog():
+            with ui.dialog() as dialog, ui.card().classes('w-[520px]'):
+                ui.label('Create folder').classes('text-lg font-bold')
+
+                folder_name = ui.input('Folder name').classes('w-full')
+
+                def create():
+                    nonlocal selected_dir
+
+                    name = (folder_name.value or '').strip()
+                    if not name:
+                        ui.notify('Folder name is required', type='negative')
+                        return
+
+                    # prevent weird path tricks
+                    if '/' in name or '\\' in name:
+                        ui.notify('Folder name must not contain slashes', type='negative')
+                        return
+
                     try:
-                        with open(selected_path, 'r', encoding='utf-8') as f:
-                            content_display.set_content(f'```text\n{f.read()}\n```')
+                        target = selected_dir / name
+                        target.mkdir(parents=True, exist_ok=False)
+                    except FileExistsError:
+                        ui.notify('Folder already exists', type='warning')
+                        return
                     except Exception as err:
-                        ui.notify(f'Error: {err}', type='negative')
-                elif selected_path and os.path.isdir(selected_path):
-                    # Optional: update display to indicate a folder was selected
-                    content_display.set_content('*Select a file to view content*')
-            
-            # --- UI Layout ---
-            with ui.row().classes('w-full h-screen no-wrap'):
-                # Sidebar: Directory Tree
-                with ui.column().classes('w-1/4 bg-gray-500 p-4 border-r'):
-                    ui.label('File Explorer').classes('text-lg font-bold mb-2')
-            
-                    tree_nodes = get_tree_data(DATA_ROOT)
-                    if not tree_nodes:
-                        ui.label('No files found').classes('italic text-white')
-                    else:
-                        # Create the tree with the built nodes
-                        ui.tree(tree_nodes, label_key='label', on_select=handle_select).classes('w-full')
-            
-                # Main Area: Content display
-                with ui.column().classes('w-3/4 p-4'):
-                    ui.label('File Content').classes('text-lg font-bold mb-2')
-                    content_display = ui.markdown('Select a file from the tree to view...') \
-                        .classes('w-full border p-4 bg-gray-500 min-h-[500px] overflow-auto')
+                        ui.notify(f'Failed to create folder: {err}', type='negative')
+                        return
+
+                    ui.notify(f'Folder created: {name}', type='positive')
+                    refresh_tree()
+                    dialog.close()
+
+                with ui.row().classes('justify-end gap-2 w-full'):
+                    ui.button('Cancel', on_click=dialog.close)
+                    ui.button('Create', on_click=create)
+
+            dialog.open()
+
+        # --- UI Layout ---
+        with ui.row().classes('w-full h-screen no-wrap'):
+            # Sidebar: Directory Tree
+            with ui.column().classes('w-1/4 bg-gray-500 p-4 border-r'):
+                ui.label('File Explorer').classes('text-lg font-bold mb-2')
+
+                selected_dir_label = ui.label(f'Upload target: {selected_dir}') \
+                    .classes('text-sm text-white mb-2')
+
+                ui.button(
+                    'Create folder',
+                    icon='create_new_folder',
+                    on_click=open_create_folder_dialog,
+                ).classes('w-full mb-2')
+
+                ui.upload(
+                    label='Upload file to selected folder',
+                    auto_upload=True,
+                    on_upload=upload_file,
+                ).classes('w-full mb-4')
+
+                tree_nodes = get_tree_data(DATA_ROOT)
+                if not tree_nodes:
+                    ui.label('No files found').classes('italic text-white')
+                else:
+                    tree = ui.tree(
+                        tree_nodes,
+                        label_key='label',
+                        on_select=handle_select,
+                    ).classes('w-full')
+
+            # Main Area: Content display
+            with ui.column().classes('w-3/4 p-4'):
+                ui.label('File Content').classes('text-lg font-bold mb-2')
+                content_display = ui.markdown('Select a file from the tree to view...') \
+                    .classes('w-full border p-4 bg-gray-500 min-h-[500px] overflow-auto')
 
     else:
         ui.label("No rights for this page")
