@@ -274,6 +274,39 @@ def _adjust_user_dialog(server: str, user: str):
 
     dialog.open()
 
+
+# --- New Restore Dialog ---
+def _restore_dialog():
+    with ui.dialog() as dialog, ui.card().classes('w-lvw'):
+        ui.label('Restore from Backup').classes('text-lg font-bold w-full text-red-600')
+        ui.markdown('**Warning:** This will replace all current servers, keys, and history. **This action is permanent.**')
+        
+        async def handle_upload(e):
+            temp_zip = DATA_ROOT / 'restore_upload.zip'
+            try:
+                content = await e.file.read()
+                temp_zip.write_bytes(content)
+                if restore_backup(temp_zip):
+                    ui.notify('System restored successfully!', type='positive')
+                    dialog.close()
+                    _refresh()
+                else:
+                    ui.notify('Restore failed: Invalid file.', type='negative')
+            finally:
+                temp_zip.unlink(missing_ok=True)
+
+        ui.upload(
+            label='Select Backup Zip', 
+            auto_upload=True, 
+            on_upload=handle_upload
+        ).props('accept=.zip').classes('w-full')
+        
+        with ui.row().classes('justify-end w-full'):
+            ui.button('Cancel', on_click=dialog.close)
+
+    dialog.open()
+
+
 # -------------------------------------------------------------------
 # Main page
 # -------------------------------------------------------------------
@@ -306,39 +339,8 @@ def servers_page():
 
                 ui.button('Backup', icon='cloud_upload', color='secondary', on_click=handle_backup)
                 
-                # --- Restore Implementation ---
-                async def handle_restore(e):
-                    # Save the uploaded file temporarily to process it
-                    temp_path = DATA_ROOT / 'temp_restore.zip'
-                    content = await e.file.read()
-                    temp_path.write_bytes(content)
-
-                    # Confirmation Dialog
-                    with ui.dialog() as confirm_dialog, ui.card():
-                        ui.label('Confirm Restore').classes('text-lg font-bold text-red-600')
-                        ui.markdown('**Warning:** This will permanently replace all current servers, SSH keys, and history with the data from this backup. **This cannot be undone.**')
-                        
-                        with ui.row().classes('justify-end'):
-                            ui.button('Cancel', on_click=confirm_dialog.close)
-                            def do_restore():
-                                if restore_backup(temp_path):
-                                    ui.notify('Restore successful. Reloading...', type='positive')
-                                    # Refresh the page to load the new servers.json
-                                    ui.timer(1.5, lambda: ui.navigate.to('/servers'))
-                                else:
-                                    ui.notify('Restore failed. Check logs.', type='negative')
-                                confirm_dialog.close()
-                                temp_path.unlink(missing_ok=True) # Cleanup
-                            
-                            ui.button('Overwrite Everything', color='negative', on_click=do_restore)
-
-                    confirm_dialog.open()
-
-                ui.upload(
-                    label='Restore from Zip',
-                    auto_upload=True,
-                    on_upload=handle_restore,
-                ).classes('w-full mt-4').props('accept=.zip max-files=1')
+                ui.button('Restore', icon='cloud_download', color='secondary', 
+                                      on_click=_restore_dialog)
     
     
     ui.label('Servers').classes('text-2xl font-bold')
