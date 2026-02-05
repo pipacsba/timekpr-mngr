@@ -1,4 +1,6 @@
-# ui/navigation.py
+# ui/navigation.py2
+import os
+from pathlib import Path
 from nicegui import app, ui
 from fastapi import Request
 from servers import load_servers, list_users
