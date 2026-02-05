@@ -80,7 +80,7 @@ def _add_server_dialog():
 
         ui.label('Or upload a new SSH private key').classes('text-sm text-gray-200').classes('w-full')
 
-        def upload_key(e):
+        async def upload_key(e):
             filename = e.file.name
             target = KEYS_DIR / filename
         
