@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 from typing import Any
 import zipfile
+import shutil
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -127,7 +128,7 @@ def get_admin_user_list() -> list():
 
 
 # -------------------------------------------------------------------
-# Addon config helpers
+# Backup and restore
 # -------------------------------------------------------------------
 def create_backup() -> Path:
     """
@@ -155,3 +156,36 @@ def create_backup() -> Path:
     
     logger.info(f"Backup created at {BACKUP_FILE}")
     return BACKUP_FILE
+
+
+def restore_backup(zip_path: Path) -> bool:
+    """
+    Restores data from a zip file by overwriting current data.
+    Returns True if successful.
+    """
+    try:
+        if not zipfile.is_zipfile(zip_path):
+            logger.error("Restore failed: Uploaded file is not a valid zip archive.")
+            return False
+
+        # 1. Clean up existing data to avoid conflicts
+        items_to_remove = [KEYS_DIR, PENDING_DIR, HISTORY_DIR, SERVERS_FILE]
+        for item in items_to_remove:
+            if item.exists():
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+        
+        # 2. Extract contents into DATA_ROOT
+        with zipfile.ZipFile(zip_path, 'r') as zipf:
+            zipf.extractall(DATA_ROOT)
+        
+        # 3. Re-run directory initialization to fix permissions (important for SSH keys)
+        _ensure_dirs()
+        
+        logger.info("Restore completed successfully.")
+        return True
+    except Exception as e:
+        logger.error(f"Restore failed with error: {e}")
+        return False
