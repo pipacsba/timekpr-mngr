@@ -117,6 +117,8 @@ def get_admin_user_list() -> list():
         admin_users = addon_options["admin_users"]
         for admin in admin_users:
             user_list.append(admin["username"])
+        if not admin_users:
+            logger.warning("No Admin users identified from config file")
     except:
         logger.warning("No Admin users identified from config file")
     logger.info(f"Admin users list: {user_list}")
