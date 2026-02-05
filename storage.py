@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import json
 from typing import Any
+import zipfile
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ PENDING_DIR = DATA_ROOT / 'pending_uploads'
 SERVERS_FILE = DATA_ROOT / 'servers.json'
 HISTORY_DIR = DATA_ROOT / 'history'
 ADDON_CONFIG_FILE = DATA_ROOT / 'options.json'
-
+BACKUP_FILE = DATA_ROOT / 'backup.zip'
 
 CHANNEL = os.getenv("TIMEKPR_MNGR_CHANNEL", "unknown").lower()
 IS_EDGE = CHANNEL in ("edge", "unstable", "dev")
@@ -123,3 +124,34 @@ def get_admin_user_list() -> list():
         logger.warning("No Admin users identified from config file")
     logger.info(f"Admin users list: {user_list}")
     return user_list
+
+
+# -------------------------------------------------------------------
+# Addon config helpers
+# -------------------------------------------------------------------
+def create_backup() -> Path:
+    """
+    Zips the configuration, keys, pending uploads, and history.
+    Returns the path to the created zip file.
+    """
+    with zipfile.ZipFile(BACKUP_FILE, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # List of items to include
+        items_to_backup = [
+            (KEYS_DIR, 'ssh_keys'),
+            (PENDING_DIR, 'pending_uploads'),
+            (SERVERS_FILE, 'servers.json'),
+            (HISTORY_DIR, 'history'),
+        ]
+
+        for path, arcname in items_to_backup:
+            if path.exists():
+                if path.is_file():
+                    zipf.write(path, arcname)
+                else:
+                    # Recursively add directory contents
+                    for file in path.rglob('*'):
+                        # arcname / relative path within the directory
+                        zipf.write(file, arcname / file.relative_to(path))
+    
+    logger.info(f"Backup created at {BACKUP_FILE}")
+    return BACKUP_FILE
