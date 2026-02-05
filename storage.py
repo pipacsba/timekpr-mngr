@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import json
 from typing import Any
+import zipfile
+import shutil
 
 import logging 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,7 @@ PENDING_DIR = DATA_ROOT / 'pending_uploads'
 SERVERS_FILE = DATA_ROOT / 'servers.json'
 HISTORY_DIR = DATA_ROOT / 'history'
 ADDON_CONFIG_FILE = DATA_ROOT / 'options.json'
-
+BACKUP_FILE = DATA_ROOT / 'backup.zip'
 
 CHANNEL = os.getenv("TIMEKPR_MNGR_CHANNEL", "unknown").lower()
 IS_EDGE = CHANNEL in ("edge", "unstable", "dev")
@@ -42,9 +44,16 @@ def _ensure_dirs() -> None:
 
     # SSH is picky about permissions
     try:
+        # Directory must be 700
         KEYS_DIR.chmod(0o700)
-    except Exception:
-        logger.warning("ssh keys directory access right set is not successfull")
+        
+        # All files inside must be 600 for SSH to accept them
+        for key_file in KEYS_DIR.glob('*'):
+            if key_file.is_file():
+                key_file.chmod(0o600)
+        logger.info("Storage directories initialized and key permissions verified.")
+    except Exception as e:
+        logger.warning(f"Setting access rights failed: {e}")
 
 _ensure_dirs()
 
@@ -117,7 +126,73 @@ def get_admin_user_list() -> list():
         admin_users = addon_options["admin_users"]
         for admin in admin_users:
             user_list.append(admin["username"])
+        if not admin_users:
+            logger.warning("No Admin users identified from config file")
     except:
         logger.warning("No Admin users identified from config file")
     logger.info(f"Admin users list: {user_list}")
     return user_list
+
+
+# -------------------------------------------------------------------
+# Backup and restore
+# -------------------------------------------------------------------
+def create_backup() -> Path:
+    """
+    Zips the configuration, keys, pending uploads, and history.
+    Returns the path to the created zip file.
+    """
+    with zipfile.ZipFile(BACKUP_FILE, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # List of items to include
+        items_to_backup = [
+            (KEYS_DIR, 'ssh_keys'),
+            (PENDING_DIR, 'pending_uploads'),
+            (SERVERS_FILE, 'servers.json'),
+            (HISTORY_DIR, 'history'),
+        ]
+
+        for path, arcname in items_to_backup:
+            if path.exists():
+                if path.is_file():
+                    zipf.write(path, arcname)
+                else:
+                    # Recursively add directory contents
+                    for file in path.rglob('*'):
+                        # arcname / relative path within the directory
+                        zipf.write(file, arcname / file.relative_to(path))
+    
+    logger.info(f"Backup created at {BACKUP_FILE}")
+    return BACKUP_FILE
+
+
+def restore_backup(zip_path: Path) -> bool:
+    """
+    Restores data from a zip file by overwriting current data.
+    Returns True if successful.
+    """
+    try:
+        if not zipfile.is_zipfile(zip_path):
+            logger.error("Restore failed: Uploaded file is not a valid zip archive.")
+            return False
+
+        # 1. Clean up existing data to avoid conflicts
+        items_to_remove = [KEYS_DIR, PENDING_DIR, HISTORY_DIR, SERVERS_FILE]
+        for item in items_to_remove:
+            if item.exists():
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+        
+        # 2. Extract contents into DATA_ROOT
+        with zipfile.ZipFile(zip_path, 'r') as zipf:
+            zipf.extractall(DATA_ROOT)
+        
+        # 3. Re-run directory initialization to fix permissions (important for SSH keys)
+        _ensure_dirs()
+        
+        logger.info("Restore completed successfully.")
+        return True
+    except Exception as e:
+        logger.error(f"Restore failed with error: {e}")
+        return False

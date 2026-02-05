@@ -19,7 +19,7 @@ from servers import (
     add_user,
     delete_user,
 )
-from storage import KEYS_DIR
+from storage import KEYS_DIR, create_backup, restore_backup, DATA_ROOT
 from ui.config_editor import add_user_extra_time
 from ssh_sync import servers_online
 
@@ -274,16 +274,76 @@ def _adjust_user_dialog(server: str, user: str):
 
     dialog.open()
 
+
+# --- New Restore Dialog ---
+def _restore_dialog():
+    with ui.dialog() as dialog, ui.card().classes('w-lvw'):
+        ui.label('Restore from Backup').classes('text-lg font-bold w-full text-red-600')
+        ui.markdown('**Warning:** This will replace all current servers, keys, and history. **This action is permanent.**')
+        
+        async def handle_upload(e):
+            temp_zip = DATA_ROOT / 'restore_upload.zip'
+            try:
+                content = await e.file.read()
+                temp_zip.write_bytes(content)
+                if restore_backup(temp_zip):
+                    ui.notify('System restored successfully!', type='positive')
+                    dialog.close()
+                    _refresh()
+                else:
+                    ui.notify('Restore failed: Invalid file.', type='negative')
+            finally:
+                temp_zip.unlink(missing_ok=True)
+
+        ui.upload(
+            label='Select Backup Zip', 
+            auto_upload=True, 
+            on_upload=handle_upload
+        ).props('accept=.zip').classes('w-full')
+        
+        with ui.row().classes('justify-end w-full'):
+            ui.button('Cancel', on_click=dialog.close)
+
+    dialog.open()
+
+
 # -------------------------------------------------------------------
 # Main page
 # -------------------------------------------------------------------
 
 def servers_page():
     logger.info(f"ui.servers.py servers_page generation is started")
-    ui.label('Servers').classes('text-2xl font-bold')
 
+    # Admin Maintenance Section
     if app.storage.user.get('is_admin', False):
-        ui.button('Add server', on_click=_add_server_dialog).classes('mb-4')
+        with ui.card().classes('w-full mb-6 bg-blue-50 dark:bg-slate-800 border-dashed border-2 border-blue-200'):
+            with ui.row().classes('items-center w-full px-2'):
+                ui.icon('settings', color='primary').classes('text-2xl')
+                ui.label('Admin Maintenance').classes('text-lg font-bold')
+            
+            ui.separator()
+            
+            with ui.row().classes('gap-4 p-2'):
+                # Add Server Button (Existing functionality)
+                ui.button('Add Server', icon='add', on_click=_add_server_dialog)
+                
+                # Backup Button (UI Placeholder)
+                def handle_backup():
+                    try:
+                        backup_path = create_backup()
+                        ui.download(backup_path)
+                        ui.notify('Backup created and download started', type='positive')
+                    except Exception as e:
+                        logger.error(f"Backup failed: {e}")
+                        ui.notify(f'Backup failed: {e}', type='negative')
+
+                ui.button('Backup', icon='cloud_upload', color='secondary', on_click=handle_backup)
+                
+                ui.button('Restore', icon='cloud_download', color='secondary', 
+                                      on_click=_restore_dialog)
+    
+    
+    ui.label('Servers').classes('text-2xl font-bold')
 
     servers = load_servers()
     refreshables = []

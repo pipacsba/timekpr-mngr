@@ -32,6 +32,7 @@ from storage import (
     pending_dir,
     pending_user_dir,
     pending_stats_dir,
+    create_backup,
 )
 
 import threading
@@ -508,6 +509,9 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
     success = True
     sync_heartbeat.set_timeout(interval_seconds * 2)
 
+    # Track the last time a backup was performed
+    last_backup_date = None
+
     while not stop_event.is_set():
         try:
             online_servers = []
@@ -535,7 +539,20 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
                 qos=1,
                 retain=True,
             )
+
+            # --- Daily Backup Logic ---
+            now = datetime.now()
+            # If it's 11 PM and we haven't backed up today yet
+            if now.hour == 23 and last_backup_date != now.date():
+                logger.info(f"Triggering scheduled daily backup at {now.strftime('%H:%M:%S')}")
+                try:
+                    create_backup()
+                    last_backup_date = now.date()
+                except Exception as backup_err:
+                    logger.error(f"Scheduled backup failed: {backup_err}")
+            
             sync_heartbeat.beat()
+            
         except:
             logger.exception("SSH sync loop iteration failed (will retry)")
             
