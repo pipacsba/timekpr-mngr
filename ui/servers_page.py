@@ -81,9 +81,10 @@ def _add_server_dialog():
 
         def upload_key(e):
             filename = e.file.name
+            content = e.file.content  # <-- bytes
             target = KEYS_DIR / filename
-        
-            target.write_bytes(e.content)
+                
+            target.write_bytes(content)
             target.chmod(0o600)  # <-- important
         
             updated_keys = list_keys()
