@@ -19,7 +19,7 @@ from servers import (
     add_user,
     delete_user,
 )
-from storage import KEYS_DIR
+from storage import KEYS_DIR, create_backup
 from ui.config_editor import add_user_extra_time
 from ssh_sync import servers_online
 
@@ -295,8 +295,16 @@ def servers_page():
                 ui.button('Add Server', icon='add', on_click=_add_server_dialog)
                 
                 # Backup Button (UI Placeholder)
-                ui.button('Backup', icon='cloud_upload', color='secondary', 
-                          on_click=lambda: ui.notify('Backup feature coming soon...', type='info'))
+                def handle_backup():
+                    try:
+                        backup_path = create_backup()
+                        ui.download(backup_path)
+                        ui.notify('Backup created and download started', type='positive')
+                    except Exception as e:
+                        logger.error(f"Backup failed: {e}")
+                        ui.notify(f'Backup failed: {e}', type='negative')
+
+                ui.button('Backup', icon='cloud_upload', color='secondary', on_click=handle_backup)
                 
                 # Restore Button (UI Placeholder)
                 ui.button('Restore', icon='cloud_download', color='secondary',
