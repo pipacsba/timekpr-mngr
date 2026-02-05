@@ -177,6 +177,7 @@ if IS_EDGE :
             ui.label("No rights for this page")
 
 
+@ui.page('/browse_folders')
 def browse_folders():
     logger.info(f"Folder browser is started")
     build_header()
