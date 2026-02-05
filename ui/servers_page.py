@@ -19,7 +19,7 @@ from servers import (
     add_user,
     delete_user,
 )
-from storage import KEYS_DIR, create_backup, restore_backup
+from storage import KEYS_DIR, create_backup, restore_backup, DATA_ROOT
 from ui.config_editor import add_user_extra_time
 from ssh_sync import servers_online
 
