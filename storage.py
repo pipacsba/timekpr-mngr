@@ -44,9 +44,16 @@ def _ensure_dirs() -> None:
 
     # SSH is picky about permissions
     try:
+        # Directory must be 700
         KEYS_DIR.chmod(0o700)
-    except Exception:
-        logger.warning("ssh keys directory access right set is not successfull")
+        
+        # All files inside must be 600 for SSH to accept them
+        for key_file in KEYS_DIR.glob('*'):
+            if key_file.is_file():
+                key_file.chmod(0o600)
+        logger.info("Storage directories initialized and key permissions verified.")
+    except Exception as e:
+        logger.warning(f"Setting access rights failed: {e}")
 
 _ensure_dirs()
 
