@@ -24,10 +24,8 @@ logger = logging.getLogger(__name__)
 # CONFIGURATION
 # -------------------------------------------------------------------
 
-# This ensures ALL cards (stats and chart) have exactly the same width behavior
-# w-full: Full width on mobile
-# sm:w-48: Fixed width (approx 192px) on desktop/tablet
-UNIFIED_CARD_WIDTH = 'w-full sm:w-48'
+UNIFIED_CARD_WIDTH = 'w-full sm:w-48 h-full'  # Added h-full for stretching
+CHART_CARD_WIDTH = 'w-full sm:w-96 h-full'    # Wider for desktop charts
 
 
 # -------------------------------------------------------------------
@@ -202,7 +200,7 @@ def render_stats_dashboard(server_name: str, username: str):
     # MAIN GRID
     # We dump everything into one big "flex-wrap" container 
     # so they flow naturally like a grid of same-sized tiles.
-    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start items-stretch'):
         
         # 1. Last Update Card
         if 'LAST_CHECKED' in stats:
@@ -211,11 +209,9 @@ def render_stats_dashboard(server_name: str, username: str):
                 stats['LAST_CHECKED'].strftime("%Y-%m-%d %H:%M"),
                 icon='clock'
             )
-
-        # 2. History Chart Card
-        # Now uses UNIFIED_CARD_WIDTH instead of 'flex-1'
-        with ui.card().classes(f'{UNIFIED_CARD_WIDTH} p-0 overflow-hidden'):
-             # Smaller title to fit
+    
+        # 2. History Chart Card - Now uses CHART_CARD_WIDTH
+        with ui.card().classes(f'{CHART_CARD_WIDTH} p-0 overflow-hidden'):
             ui.label("Last 7 Days").classes('text-sm font-bold m-2 text-center')
             _render_usage_history_chart(server_name, username)
 
