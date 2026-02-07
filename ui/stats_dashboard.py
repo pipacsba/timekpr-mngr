@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # -------------------------------------------------------------------
 
 UNIFIED_CARD_WIDTH = 'w-full sm:w-48 h-full'  # Added h-full for stretching
-CHART_CARD_WIDTH = 'w-full sm:w-96 h-full'    # Wider for desktop charts
+CHART_CARD_WIDTH = 'w-full sm:w-[450px] h-full' # Wider for desktop charts
 
 
 # -------------------------------------------------------------------
@@ -210,7 +210,7 @@ def render_stats_dashboard(server_name: str, username: str):
                 icon='clock'
             )
     
-        # 2. History Chart Card - Now uses CHART_CARD_WIDTH
+        # 2. History Chart Card - Uses specific wider width
         with ui.card().classes(f'{CHART_CARD_WIDTH} p-0 overflow-hidden'):
             ui.label("Last 7 Days").classes('text-sm font-bold m-2 text-center')
             _render_usage_history_chart(server_name, username)
