@@ -24,11 +24,9 @@ logger = logging.getLogger(__name__)
 # CONFIGURATION
 # -------------------------------------------------------------------
 
-# This ensures ALL cards (stats and chart) have exactly the same width behavior
-# w-full: Full width on mobile
-# sm:w-48: Fixed width (approx 192px) on desktop/tablet
 UNIFIED_CARD_WIDTH = 'w-full sm:w-48'
-
+CHART_CARD_WIDTH = 'w-full sm:w-[450px]' # Wider for better display
+FIXED_HEIGHT = 'h-[250px]' # Define a consistent height
 
 # -------------------------------------------------------------------
 # Parsing helpers
@@ -92,8 +90,8 @@ def _seconds_to_human(seconds: float) -> str:
 
 
 def _stat_card(title: str, value: str, icon: str):
-    # Use the unified class here
-    with ui.card().classes(f'{UNIFIED_CARD_WIDTH} text-center'):
+    # Added h-full and justify-center
+    with ui.card().classes(f'{UNIFIED_CARD_WIDTH} h-full text-center justify-center'):
         ui.icon(icon).classes('text-3xl text-primary')
         ui.label(title).classes('text-sm text-gray-500')
         ui.label(value).classes('text-xl font-bold')
@@ -149,8 +147,8 @@ def _render_usage_history_chart(server_name: str, username: str):
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="group",
         bargap=0.4,       
-        height=180,
-        margin=dict(l=0, r=0, t=30, b=0),
+        height=200, # Matches the visual height you want inside the card
+        margin=dict(l=10, r=10, t=30, b=30), # Add some breathing room
         xaxis=dict(
             tickangle=0,          # Keep text horizontal for readability
             showgrid=False,
@@ -202,23 +200,18 @@ def render_stats_dashboard(server_name: str, username: str):
     # MAIN GRID
     # We dump everything into one big "flex-wrap" container 
     # so they flow naturally like a grid of same-sized tiles.
-    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
+    with ui.row().classes(f'w-full flex-wrap gap-4 items-stretch justify-center md:justify-start'):
         
         # 1. Last Update Card
-        if 'LAST_CHECKED' in stats:
-             _stat_card(
-                'Last Update',
-                stats['LAST_CHECKED'].strftime("%Y-%m-%d %H:%M"),
-                icon='clock'
-            )
-
+        with ui.column().classes(f'{UNIFIED_CARD_WIDTH} {FIXED_HEIGHT}'): # Wrapper to force height
+             _stat_card('Last Update', stats['LAST_CHECKED'].strftime("%Y-%m-%d %H:%M"), 'clock')
+    
         # 2. History Chart Card
-        # Now uses UNIFIED_CARD_WIDTH instead of 'flex-1'
-        with ui.card().classes(f'{UNIFIED_CARD_WIDTH} p-0 overflow-hidden'):
-             # Smaller title to fit
+        with ui.card().classes(f'{CHART_CARD_WIDTH} {FIXED_HEIGHT} p-0 overflow-hidden'):
             ui.label("Last 7 Days").classes('text-sm font-bold m-2 text-center')
             _render_usage_history_chart(server_name, username)
 
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
         # 3. Time Stats
         if 'TIME_SPENT_BALANCE' in stats:
             _stat_card('Balance Today', _seconds_to_human(stats['TIME_SPENT_BALANCE']), icon='scale')
@@ -232,6 +225,7 @@ def render_stats_dashboard(server_name: str, username: str):
         if 'TIME_SPENT_MONTH' in stats:
             _stat_card('Total Month', _seconds_to_human(stats['TIME_SPENT_MONTH']), icon='calendar_month')
 
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
         # 4. Playtime Stats
         if 'PLAYTIME_SPENT_BALANCE' in stats:
             _stat_card('Play Balance', _seconds_to_human(stats['PLAYTIME_SPENT_BALANCE']), icon='videogame_asset')
@@ -240,6 +234,6 @@ def render_stats_dashboard(server_name: str, username: str):
             _stat_card('Play Today', _seconds_to_human(stats['PLAYTIME_SPENT_DAY']), icon='sports_esports')
 
     # Optional raw view
-    with ui.expansion('Raw stats').classes('w-full mt-8'):
+    with ui.expansion('Raw stats').classes('w-auto mt-8'):
         for key, value in stats.items():
             ui.label(f'{key} = {value}').classes('break-all')
