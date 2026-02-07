@@ -219,6 +219,7 @@ def render_stats_dashboard(server_name: str, username: str):
             ui.label("Last 7 Days").classes('text-sm font-bold m-2 text-center')
             _render_usage_history_chart(server_name, username)
 
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
         # 3. Time Stats
         if 'TIME_SPENT_BALANCE' in stats:
             _stat_card('Balance Today', _seconds_to_human(stats['TIME_SPENT_BALANCE']), icon='scale')
@@ -232,6 +233,7 @@ def render_stats_dashboard(server_name: str, username: str):
         if 'TIME_SPENT_MONTH' in stats:
             _stat_card('Total Month', _seconds_to_human(stats['TIME_SPENT_MONTH']), icon='calendar_month')
 
+    with ui.row().classes('w-full flex-wrap gap-4 mt-4 justify-center md:justify-start'):
         # 4. Playtime Stats
         if 'PLAYTIME_SPENT_BALANCE' in stats:
             _stat_card('Play Balance', _seconds_to_human(stats['PLAYTIME_SPENT_BALANCE']), icon='videogame_asset')
@@ -240,6 +242,6 @@ def render_stats_dashboard(server_name: str, username: str):
             _stat_card('Play Today', _seconds_to_human(stats['PLAYTIME_SPENT_DAY']), icon='sports_esports')
 
     # Optional raw view
-    with ui.expansion('Raw stats').classes('w-full mt-8'):
+    with ui.expansion('Raw stats').classes('w-auto mt-8'):
         for key, value in stats.items():
             ui.label(f'{key} = {value}').classes('break-all')
