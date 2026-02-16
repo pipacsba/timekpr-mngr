@@ -349,7 +349,8 @@ def _update_user_history(server: str, user: str, stats_file: Path, updated: bool
             time_spent_day = 0
             playtime_spent_day = 0
             #try to update server side file
-            _trigger_user_file_renewal_over_ssh(client, user) 
+            if client is not None:
+                _trigger_user_file_renewal_over_ssh(client, user) 
     except ValueError:
         logger.warning(f"ValueError on reading daily usage for {server} / {user}")        
         return
@@ -522,6 +523,11 @@ def run_sync_loop_with_stop(stop_event, interval_seconds: int = 180) -> None:
                 if reachable:
                     online_servers.append(name)
                     sync_from_server(name, server)
+                else:
+                    paths = get_remote_paths(name)
+                    for user, remote_path in paths.get("stats", {}).items():
+                        local = stats_cache_dir(name) / f'{user}.stats'
+                        _update_user_history(name, user, local, False, None)
                 # independently if the server is reachable let's register it in Home Assistant
                 if not name in server_list:
                     register_server_sensors(name)
