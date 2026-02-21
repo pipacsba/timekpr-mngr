@@ -101,7 +101,6 @@ def serialize_config(lines: List[Line], values: Dict[str, str], new_activities: 
     for line in lines:
         if isinstance(line, Entry) and line.key.startswith("PLAYTIME_ACTIVITY_"):
             try:
-                # Extract NNN from PLAYTIME_ACTIVITY_NNN
                 idx_str = line.key.split('_')[-1]
                 existing_indices.append(int(idx_str))
             except (ValueError, IndexError):
@@ -116,7 +115,6 @@ def serialize_config(lines: List[Line], values: Dict[str, str], new_activities: 
         
         elif isinstance(line, ActivityMarker):
             output.append(line.raw)
-            # If we have new activities, insert them immediately after the marker
             if new_activities:
                 for act in new_activities:
                     key = f"PLAYTIME_ACTIVITY_{str(next_idx).zfill(3)}"
@@ -155,19 +153,15 @@ def render_config_editor(
     if app.storage.user.get('is_admin', False):
         logger.info(f"config_editor.py render_config_editor is started.")
     
-        # Resolve paths
         if config_type == 'server':
             source = server_cache_dir(server_name) / 'server.conf'
             target = pending_dir(server_name) / 'server.conf'
-    
         elif config_type == 'user':
             source = user_cache_dir(server_name) / f'{username}.conf'
             target = pending_user_dir(server_name) / f'{username}.conf'
-    
         elif config_type == 'stats':
             source = stats_cache_dir(server_name) / f'{username}.stats'
             target = pending_stats_dir(server_name) / f'{username}.stats'
-    
         else:
             raise ValueError('Invalid config type')
     
@@ -177,7 +171,6 @@ def render_config_editor(
             ui.notify(f'No {config_type} found Maybe later?', type='warning', close_button='OK')
             return
     
-        # Current values and temporary storage for new entries
         values: Dict[str, any] = {}
         pending_new_activities = []
     
@@ -190,8 +183,8 @@ def render_config_editor(
                     ui.label(line.name).classes('text-lg font-semibold')
     
                 elif isinstance(line, Comment):
-                    # Display comments with a gray italic look
-                    ui.label(line.raw).classes('text-sm text-gray-400 italic')
+                    # Restored original styling: showing # and using text-gray-200
+                    ui.label(line.raw).classes('text-sm text-gray-200')
     
                 elif isinstance(line, Entry):
                     values[line.key] = ui.input(
@@ -200,12 +193,14 @@ def render_config_editor(
                     ).classes('w-full')
                 
                 elif isinstance(line, ActivityMarker):
-                    ui.label("--- PlayTime Activities Section ---").classes('text-blue-400 font-bold mt-4')
+                    ui.label(line.raw).classes('text-sm text-gray-200')
+                    ui.label("--- New Activities Pending Save ---").classes('text-blue-400 font-bold mt-2')
 
             # Add activity section for user configurations
             if config_type == 'user':
-                with ui.card().classes('w-full mt-4 bg-gray-100'):
-                    ui.label("Add New PlayTime Activity Rule").classes('font-bold')
+                # Replaced greyish card with transparent container to match original theme visibility
+                with ui.column().classes('w-full mt-4 p-4 border border-gray-700 rounded'):
+                    ui.label("Add New PlayTime Activity Rule").classes('font-bold text-white')
                     with ui.row().classes('w-full items-center'):
                         mask_input = ui.input(label="Process Mask (Regexp)").classes('col-grow')
                         desc_input = ui.input(label="Description").classes('col-grow')
@@ -222,7 +217,7 @@ def render_config_editor(
                             else:
                                 ui.notify("Please provide both mask and description", type='negative')
 
-                        ui.button(icon='add', on_click=add_activity_to_list).props('round color=green')
+                        ui.button(icon='add', on_click=add_activity_to_list).props('round color=primary')
 
             def save():
                 resolved = {
@@ -232,14 +227,9 @@ def render_config_editor(
                     for key, widget in values.items()
                 }
                 
-                # Use extended serialization to include new activities
                 content = serialize_config(lines, resolved, pending_new_activities)
-                
                 target.write_text(content)
-                ui.notify(
-                    'Saved locally (pending upload)',
-                    type='positive',
-                )
+                ui.notify('Saved locally (pending upload)', type='positive')
                 trigger_ssh_sync()
     
             ui.button('Save Changes', on_click=save).classes('mt-6 w-full').props('color=primary')
@@ -257,35 +247,18 @@ def add_user_extra_time(
     time_to_add_sec: int,
     playtime_to_add_sec: int
 ):
-    """
-    timekpra --setplaytimeleft 'testuser' '+' '3600'
-    timekpra --settimeleft 'testuser' '+' '3600'
-    """
-  
     target = pending_stats_dir(server_name) / f'{username}.stats'
-
     lines = []
-    a_sign = "+"
-    if time_to_add_sec < 0:
-        a_sign = "-"
-    logger.debug(f'Command to write to the file is: timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
-    lines.append(Line(
-            raw = f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
-                )
-    b_sign = "+"
-    if playtime_to_add_sec < 0:
-        b_sign = "-"
-    logger.debug(f'Command to write to the file is: timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
-    lines.append(Line(
-            raw = f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
-                )
     
-    target.write_text(
-        serialize_config(lines, {})
-    )
-    ui.notify(
-        'Saved locally (pending upload)',
-        type='positive',
-    )
+    a_sign = "+" if time_to_add_sec >= 0 else "-"
+    logger.debug(f'Command: timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"')
+    lines.append(Line(raw=f'timekpra --settimeleft "{username}" "{a_sign}" "{abs(time_to_add_sec)}"'))
+    
+    b_sign = "+" if playtime_to_add_sec >= 0 else "-"
+    logger.debug(f'Command: timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"')
+    lines.append(Line(raw=f'timekpra --setplaytimeleft "{username}" "{b_sign}" "{abs(playtime_to_add_sec)}"'))
+    
+    target.write_text(serialize_config(lines, {}))
+    ui.notify('Saved locally (pending upload)', type='positive')
     trigger_ssh_sync()
     logger.info(f'Additional time is granted to {username}')
