@@ -231,5 +231,10 @@ def add_user_extra_time(*, server_name: str, username: str, time_to_add_sec: int
     
     # Empty values dict as these lines are not Entry objects
     target.write_text(serialize_config(lines, {}))
-    ui.notify('Saved locally (pending upload)', type='positive')
+    try:
+        ui.notify('Saved locally (pending upload)', type='positive')
+    except RuntimeError:
+        # Safe fallback if called from a REST API outside a browser session context
+        logger.info('Saved locally (pending upload)')
+    
     trigger_ssh_sync()
