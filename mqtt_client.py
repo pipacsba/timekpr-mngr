@@ -21,6 +21,7 @@ except:
 _client = None
 
 def on_message(client, userdata, msg):
+    logger.info(f"MQTT message received.")
     try:
         if msg.topic == "timekpr/command/add_time":
             # Move the import inside the function to avoid the circular loop
@@ -74,6 +75,7 @@ def get_device_info() -> dict:
 def on_connect(client, userdata, flags, rc):
     # Your existing subscriptions...
     client.subscribe("timekpr/command/add_time")
+    logger.info(f"MQTT successfully subscribed for timekpr/command/add_time")
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
     if MQTT_ENABLED:    
