@@ -55,6 +55,12 @@ def get_client() -> mqtt.Client:
         return _client
 
     client = mqtt.Client(client_id="timekpr-mngr")
+
+    # ─── LINK THE CALLBACKS HERE ──────────────────────────────
+    client.on_connect = on_connect
+    client.on_message = on_message
+    # ──────────────────────────────────────────────────────────
+    
     client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
     client.loop_start()
 
