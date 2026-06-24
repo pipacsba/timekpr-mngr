@@ -20,11 +20,20 @@ except:
 
 _client = None
 
+# Make sure you subscribe to the topic when the client connects:
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        topic = f"{MQTT_BASE}/command/add_time"
+        client.subscribe(topic)
+        logger.info(f"MQTT successfully subscribed to {topic}")
+    else:
+        logger.error(f"MQTT connection failed with return code {rc}")
+
 def on_message(client, userdata, msg):
     logger.info(f"MQTT message received.")
     try:
         if msg.topic == f"{MQTT_BASE}/command/add_time":
-            # Move the import inside the function to avoid the circular loop
+            # Deferred import inside the function context breaks the circular dependency loop
             from ui.config_editor import add_user_extra_time
             
             payload = json.loads(msg.payload.decode('utf-8'))
@@ -76,12 +85,6 @@ def get_device_info() -> dict:
         "model": "User Monitor",
     }
     return device
-
-# Make sure you subscribe to the topic when the client connects:
-def on_connect(client, userdata, flags, rc):
-    # Your existing subscriptions...
-    client.subscribe(f"{MQTT_BASE}/command/add_time")
-    logger.info(f"MQTT successfully subscribed for timekpr/command/add_time")
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
     if MQTT_ENABLED:    
