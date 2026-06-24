@@ -109,6 +109,20 @@ Supported entity types:
 - binary_sensor → server online status
 - sensor → daily user usage (TIME_SPENT_DAY / PLAYTIME_SPENT_DAY)
 
+## Grant extra (play)time via MQTT
+```
+action: mqtt.publish
+data:
+  topic: "timekpr/command/add_time"
+  payload: >-
+    {
+      "server_name": "my-linux-pc",
+      "username": "kid_account",
+      "time_to_add_sec": 1800,
+      "playtime_to_add_sec": 1800
+    }
+```
+
 ## Background Execution Model
 
 - SSH sync runs in a dedicated thread started via FastAPI lifespan
