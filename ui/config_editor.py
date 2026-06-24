@@ -222,6 +222,30 @@ def render_config_editor(
 
 
 def add_user_extra_time(*, server_name: str, username: str, time_to_add_sec: int, playtime_to_add_sec: int):
+
+    # 1. Validate if server and user exist
+    from servers import get_server
+    
+    server = get_server(server_name)
+    if not server:
+        msg = f"Validation failed: Server '{server_name}' does not exist."
+        logger.error(msg)
+        try:
+            ui.notify(msg, type='negative')
+        except RuntimeError:
+            pass
+        return False
+
+    if username not in server.get('users', {}):
+        msg = f"Validation failed: User '{username}' does not exist on server '{server_name}'."
+        logger.error(msg)
+        try:
+            ui.notify(msg, type='negative')
+        except RuntimeError:
+            pass
+        return False
+
+    # 2. Proceed with creating the stats file if validation passes
     target = pending_stats_dir(server_name) / f'{username}.stats'
     lines = []
     a_sign = "+" if time_to_add_sec >= 0 else "-"
@@ -231,5 +255,11 @@ def add_user_extra_time(*, server_name: str, username: str, time_to_add_sec: int
     
     # Empty values dict as these lines are not Entry objects
     target.write_text(serialize_config(lines, {}))
-    ui.notify('Saved locally (pending upload)', type='positive')
+    try:
+        ui.notify('Saved locally (pending upload)', type='positive')
+    except RuntimeError:
+        # Safe fallback if called from a REST API outside a browser session context
+        logger.info('Saved locally (pending upload)')
+    
     trigger_ssh_sync()
+    return True

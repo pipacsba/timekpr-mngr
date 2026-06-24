@@ -20,12 +20,56 @@ except:
 
 _client = None
 
+# Make sure you subscribe to the topic when the client connects:
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        topic = f"{MQTT_BASE}/command/add_time"
+        client.subscribe(topic)
+        logger.info(f"MQTT successfully subscribed to {topic}")
+    else:
+        logger.error(f"MQTT connection failed with return code {rc}")
+
+def on_message(client, userdata, msg):
+    logger.info(f"MQTT message received.")
+    try:
+        if msg.topic == f"{MQTT_BASE}/command/add_time":
+            # Deferred import inside the function context breaks the circular dependency loop
+            from ui.config_editor import add_user_extra_time
+            
+            payload = json.loads(msg.payload.decode('utf-8'))
+            
+            server_name = payload.get("server_name")
+            username = payload.get("username")
+            time_to_add = int(payload.get("time_to_add_sec", 0))
+            playtime_to_add = int(payload.get("playtime_to_add_sec", 0))
+            
+            if not server_name or not username:
+                logger.error("MQTT Add Time failed: Missing server_name or username")
+                return
+                
+            add_user_extra_time(
+                server_name=server_name,
+                username=username,
+                time_to_add_sec=time_to_add,
+                playtime_to_add_sec=playtime_to_add
+            )
+            logger.info(f"MQTT successfully added time for {username} on {server_name}")
+            
+    except Exception as e:
+        logger.error(f"Error processing MQTT command: {str(e)}")
+
 def get_client() -> mqtt.Client:
     global _client
     if _client:
         return _client
 
     client = mqtt.Client(client_id="timekpr-mngr")
+
+    # ─── LINK THE CALLBACKS HERE ──────────────────────────────
+    client.on_connect = on_connect
+    client.on_message = on_message
+    # ──────────────────────────────────────────────────────────
+    
     client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
     client.loop_start()
 
@@ -41,7 +85,6 @@ def get_device_info() -> dict:
         "model": "User Monitor",
     }
     return device
-
 
 def publish(topic: str, payload: dict, *, qos: int = 1, retain: bool = False) -> None:
     if MQTT_ENABLED:    
